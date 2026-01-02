@@ -1,0 +1,17 @@
+{
+  "dev": {
+    "baseUrl": "https://api.dev.growfirst.com",
+    "enableDatadog": false,
+    "enableSentry": false
+  },
+  "staging": {
+    "baseUrl": "https://api.staging.growfirst.com",
+    "enableDatadog": true,
+    "enableSentry": true
+  },
+  "prod": {
+    "baseUrl": "https://api.growfirst.com",
+    "enableDatadog": true,
+    "enableSentry": true
+  }
+}
