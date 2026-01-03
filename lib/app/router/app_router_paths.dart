@@ -44,7 +44,7 @@ class AppRouterPaths {
       '/${AppRouterNames.customerSelectDateAndTimeForBooking}/:listingId/:locationId/:staffId';
 
   static String customerBookingAddPersonalInformationPath =
-      '/${AppRouterNames.customerBookingAddPersonalInformation}';
+      '/${AppRouterNames.customerBookingAddPersonalInformation}/:listingId/:locationId/:staffId';
 
   static String customerCartPath = '/${AppRouterNames.customerCart}';
 

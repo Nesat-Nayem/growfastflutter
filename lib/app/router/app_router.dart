@@ -286,7 +286,13 @@ class AppRouter {
         GoRoute(
           name: AppRouterNames.customerBookingAddPersonalInformation,
           path: AppRouterPaths.customerBookingAddPersonalInformationPath,
-          builder: (_, state) => CustomerBookingAddPersonalInformation(),
+          builder: (_, state) => CustomerBookingAddPersonalInformation(
+            listingId: state.pathParameters['listingId'].toString(),
+            locationId: state.pathParameters['locationId'].toString(),
+            staffId: state.pathParameters['staffId'].toString(),
+            date: state.uri.queryParameters['date'] ?? "",
+            time: state.uri.queryParameters['time'] ?? "",
+          ),
         ),
         GoRoute(
           name: AppRouterNames.customerCart,

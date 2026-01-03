@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:grow_first/core/network/dio_client.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/core/storage/secure_storage.dart';
@@ -36,7 +37,7 @@ class AuthInjections {
 
     // Datasource
     sl.registerLazySingleton<AuthRemoteDataSource>(
-      () => AuthRemoteDataSourceImpl(sl<Dio>()),
+      () => AuthRemoteDataSourceImpl(sl<DioClient>().dio),
     );
 
     sl.registerCachedFactory<AppStore>(() => AppStore(sl<ISecureStore>()));

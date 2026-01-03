@@ -30,3 +30,32 @@ class SetSelectedBookingLocation extends BookingsEvent {
   final BookingLocation selectedLocation;
   SetSelectedBookingLocation(this.selectedLocation);
 }
+
+class SetSelectedBookingStaff extends BookingsEvent {
+  final BookingStaff selectedStaff;
+  SetSelectedBookingStaff(this.selectedStaff);
+}
+
+class ToggleAdditionalService extends BookingsEvent {
+  final BookingServiceDetail service;
+  ToggleAdditionalService(this.service);
+}
+
+class ConfirmBooking extends BookingsEvent {
+  final int cartId;
+  final String paymentMethod;
+  final String paymentGateway;
+  final dynamic response;
+
+  ConfirmBooking({
+    required this.cartId,
+    required this.paymentMethod,
+    required this.paymentGateway,
+    required this.response,
+  });
+}
+
+class AddToCart extends BookingsEvent {
+  final AddToCartParams params;
+  AddToCart(this.params);
+}

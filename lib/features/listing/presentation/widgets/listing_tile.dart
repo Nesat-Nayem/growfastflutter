@@ -66,8 +66,10 @@ class ListingTile extends StatelessWidget {
                           text: "Buy Now",
                           onTap: () {
                             context.pushNamed(
-                              AppRouterNames.contactSupplier,
-                              pathParameters: {"listingId": "r567uyi"},
+                              AppRouterNames.customerSelectBookingLocation,
+                              pathParameters: {
+                                "listingId": listing?.id.toString() ?? ""
+                              },
                             );
                           },
                           padding: verticalPadding12,
@@ -135,7 +137,14 @@ class ListingTile extends StatelessWidget {
                       Expanded(
                         child: GradientButton(
                           text: "Buy Now",
-                          onTap: () {},
+                          onTap: () {
+                            context.pushNamed(
+                              AppRouterNames.customerSelectBookingLocation,
+                              pathParameters: {
+                                "listingId": listing?.id.toString() ?? ""
+                              },
+                            );
+                          },
                           padding: verticalPadding12,
                           borderRadius: 6,
                           textStyle: context.labelLarge.copyWith(

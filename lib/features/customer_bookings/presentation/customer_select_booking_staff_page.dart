@@ -93,10 +93,16 @@ class _CustomerSelectBookingStaffPageState
                   child: ListView.builder(
                     itemCount: state.staffs.length,
                     itemBuilder: (context, index) {
+                      final staff = state.staffs[index];
+                      final isSelected = state.selectedStaff?.id == staff.id;
                       return CustomerBooking(
                         statusButtonText: "{Pending From API} Services",
-                        showEmail: state.staffs[index].email,
+                        showEmail: staff.email,
                         showLocation: false,
+                        isSelected: isSelected,
+                        onSelected: (val) {
+                          sl<BookingsBloc>().add(SetSelectedBookingStaff(staff));
+                        },
                       );
                     },
                   ),
@@ -109,14 +115,13 @@ class _CustomerSelectBookingStaffPageState
       bottomNavigationBar: CustomBottomNavNextBackBtns(
         showSelectAnyoneOption: true,
         onPressedOne: () {
+          final selectedStaff = sl<BookingsBloc>().state.selectedStaff;
           context.pushNamed(
             AppRouterNames.customerSelectAdditionalServiceBooking,
             pathParameters: {
               "listingId": widget.listingId,
               "locationId": widget.locationId,
-              "staffId": sl<BookingsBloc>().state.staffs.isNotEmpty
-                  ? sl<BookingsBloc>().state.staffs[0].id.toString()
-                  : "0",
+              "staffId": selectedStaff?.id.toString() ?? "0",
             },
           );
         },

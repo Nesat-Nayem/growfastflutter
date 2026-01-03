@@ -91,17 +91,22 @@ class _CustomerBookingAdditionalServicePageState
                     child: ListView.builder(
                       itemCount: state.serviceDetail?.length,
                       itemBuilder: (context, index) {
+                        final service = state.serviceDetail![index];
+                        final isSelected = state.selectedAdditionalServices
+                            .any((s) => s.id == service.id);
                         return CustomerBookingAdditionalServiceCard(
-                          title: state.serviceDetail![index].title,
+                          title: service.title,
                           imageUrl:
                               "https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                          price: state.serviceDetail?[index].price ?? 0.00,
+                          price: service.price,
                           duration:
-                              "${state.serviceDetail?[index].duration} ${state.serviceDetail?[index].durationUnit}",
+                              "${service.duration} ${service.durationUnit}",
                           rating: 4.9,
                           reviews: 255,
-                          isSelected: true,
-                          onAdd: () {},
+                          isSelected: isSelected,
+                          onAdd: () {
+                            sl<BookingsBloc>().add(ToggleAdditionalService(service));
+                          },
                         );
                       },
                     ),
@@ -117,9 +122,9 @@ class _CustomerBookingAdditionalServicePageState
           context.pushNamed(
             AppRouterNames.customerSelectDateAndTimeForBooking,
             pathParameters: {
-              "listingId": "1132323",
-              "locationId": "464662",
-              "staffId": "12342",
+              "listingId": widget.listingId,
+              "locationId": widget.locationId,
+              "staffId": widget.staffId,
             },
           );
         },

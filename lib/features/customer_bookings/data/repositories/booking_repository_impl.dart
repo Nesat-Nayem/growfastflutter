@@ -54,4 +54,66 @@ class BookingRepositoryImpl implements BookingRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> confirmBooking({
+    required int cartId,
+    required String paymentMethod,
+    required String paymentGateway,
+    required dynamic response,
+  }) async {
+    try {
+      final result = await remote.confirmBooking(
+        cartId: cartId,
+        paymentMethod: paymentMethod,
+        paymentGateway: paymentGateway,
+        response: response,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> addToCart({
+    required int staffId,
+    required int serviceId,
+    required String bookingDate,
+    required String bookingTime,
+    required String bookingNotes,
+    required List<int> additionalServiceIds,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String streetAddress,
+    required String postalCode,
+    required String country,
+    required String state,
+    required String city,
+  }) async {
+    try {
+      final result = await remote.addToCart(
+        staffId: staffId,
+        serviceId: serviceId,
+        bookingDate: bookingDate,
+        bookingTime: bookingTime,
+        bookingNotes: bookingNotes,
+        additionalServiceIds: additionalServiceIds,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        streetAddress: streetAddress,
+        postalCode: postalCode,
+        country: country,
+        state: state,
+        city: city,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }

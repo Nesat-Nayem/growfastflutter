@@ -1,5 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:grow_first/core/network/dio_client.dart';
 import 'package:grow_first/features/vendor_dashboard/data/datasource_impl/vendor_remote_datasource_impl.dart';
 import 'package:grow_first/features/vendor_dashboard/data/datasources/vendor_remote_datasource.dart';
 import 'package:grow_first/features/vendor_dashboard/data/repositories/vendor_repository_impl.dart';
@@ -47,7 +47,7 @@ class VendorInjections {
     // Data sources
     // -----------------------------
     sl.registerLazySingleton<VendorRemoteDatasource>(
-      () => VendorRemoteDatasourceImpl(sl<Dio>()),
+      () => VendorRemoteDatasourceImpl(sl<DioClient>().dio),
     );
   }
 }

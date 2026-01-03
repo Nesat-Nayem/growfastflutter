@@ -73,4 +73,78 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
     return services;
   }
+
+  @override
+  Future<bool> confirmBooking({
+    required int cartId,
+    required String paymentMethod,
+    required String paymentGateway,
+    required dynamic response,
+  }) async {
+    final getToken = await sl<ISecureStore>().read("token");
+    final res = await NetworkHelper.sendRequest(
+      dio,
+      RequestType.post,
+      'booking/payment-success',
+      headers: {'Authorization': 'Bearer $getToken'},
+      data: {
+        'cart_id': cartId,
+        'payment_method': paymentMethod,
+        'payment_gateway': paymentGateway,
+        'response': response,
+      },
+    );
+
+    return res['success'] == true;
+  }
+
+  @override
+  Future<int> addToCart({
+    required int staffId,
+    required int serviceId,
+    required String bookingDate,
+    required String bookingTime,
+    required String bookingNotes,
+    required List<int> additionalServiceIds,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String streetAddress,
+    required String postalCode,
+    required String country,
+    required String state,
+    required String city,
+  }) async {
+    final getToken = await sl<ISecureStore>().read("token");
+    final res = await NetworkHelper.sendRequest(
+      dio,
+      RequestType.post,
+      'customer/cart-add',
+      headers: {'Authorization': 'Bearer $getToken'},
+      data: {
+        'staff_id': staffId,
+        'service_id': serviceId,
+        'booking_date': bookingDate,
+        'booking_time': bookingTime,
+        'booking_notes': bookingNotes,
+        'additional_service_ids': additionalServiceIds,
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'phone': phone,
+        'street_address': streetAddress,
+        'postal_code': postalCode,
+        'country': country,
+        'state': state,
+        'city': city,
+      },
+    );
+
+    if (res['success'] == true) {
+      return res['cart_id'];
+    } else {
+      throw Exception(res['message'] ?? 'Failed to add to cart');
+    }
+  }
 }

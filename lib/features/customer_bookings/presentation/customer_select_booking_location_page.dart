@@ -74,9 +74,15 @@ class _CustomerSelectBookingLocationPageState
                   return ListView.builder(
                     itemCount: state.locations.length,
                     itemBuilder: (context, index) {
+                      final location = state.locations[index];
+                      final isSelected = state.selectedLocation?.id == location.id;
                       return CustomerBooking(
-                        bookingLocation: state.locations[index],
+                        bookingLocation: location,
                         isMainSelectLocationCard: true,
+                        isSelected: isSelected,
+                        onSelected: (val) {
+                          sl<BookingsBloc>().add(SetSelectedBookingLocation(location));
+                        },
                       );
                     },
                   );

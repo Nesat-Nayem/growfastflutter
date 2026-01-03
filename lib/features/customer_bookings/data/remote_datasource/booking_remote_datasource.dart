@@ -13,4 +13,29 @@ abstract class BookingRemoteDataSource {
   });
 
   Future<List<BookingServiceDetailModel>> getServiceDetail(int serviceId);
+
+  Future<bool> confirmBooking({
+    required int cartId,
+    required String paymentMethod,
+    required String paymentGateway,
+    required dynamic response,
+  });
+
+  Future<int> addToCart({
+    required int staffId,
+    required int serviceId,
+    required String bookingDate,
+    required String bookingTime,
+    required String bookingNotes,
+    required List<int> additionalServiceIds,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String streetAddress,
+    required String postalCode,
+    required String country,
+    required String state,
+    required String city,
+  });
 }

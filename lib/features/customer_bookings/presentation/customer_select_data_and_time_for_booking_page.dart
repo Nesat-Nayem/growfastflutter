@@ -23,6 +23,9 @@ class CustomerSelectDataAndTimeForBookingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _CustomerSelectDataAndTimeForBookingPageContent(
+      listingId: listingId,
+      locationId: locationId,
+      staffId: staffId,
       startDate: DateTime.now(),
       daysToShow: 7,
       bookedSlots: ["11:00 AM", "12:00 PM", "02:00 PM"],
@@ -61,6 +64,9 @@ class CustomerSelectDataAndTimeForBookingPage extends StatelessWidget {
 }
 
 class _CustomerSelectDataAndTimeForBookingPageContent extends StatefulWidget {
+  final String listingId;
+  final String locationId;
+  final String staffId;
   final DateTime startDate;
   final int daysToShow;
   final List<String> bookedSlots;
@@ -68,6 +74,9 @@ class _CustomerSelectDataAndTimeForBookingPageContent extends StatefulWidget {
   final Function(DateTime date, String time) onNext;
 
   const _CustomerSelectDataAndTimeForBookingPageContent({
+    required this.listingId,
+    required this.locationId,
+    required this.staffId,
     required this.startDate,
     this.daysToShow = 7,
     required this.bookedSlots,
@@ -127,8 +136,23 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
       ),
       bottomNavigationBar: CustomBottomNavNextBackBtns(
         onPressedOne: () {
+          if (selectedTime == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Please select a time slot")),
+            );
+            return;
+          }
           context.pushNamed(
             AppRouterNames.customerBookingAddPersonalInformation,
+            pathParameters: {
+              "listingId": widget.listingId,
+              "locationId": widget.locationId,
+              "staffId": widget.staffId,
+            },
+            queryParameters: {
+              "date": DateFormat('yyyy-MM-dd').format(selectedDate),
+              "time": selectedTime!,
+            },
           );
         },
       ),
