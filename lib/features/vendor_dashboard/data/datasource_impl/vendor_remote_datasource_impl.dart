@@ -17,7 +17,7 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.get,
-      'http://laravel.test/api/country',
+      'country',
     );
 
     if (response['status'] == 'success') {
@@ -34,7 +34,7 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.get,
-      'http://laravel.test/api/state/$countryId',
+      'state/$countryId',
     );
 
     if (response['status'] == 'success') {
@@ -51,7 +51,7 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.get,
-      'http://laravel.test/api/city/$stateId',
+      'city/$stateId',
     );
 
     if (response['status'] == 'success') {
@@ -68,7 +68,7 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.post,
-      'http://laravel.test/api/vendor/register/step1',
+      'vendor/register/step1',
       data: request.toJson(),
     );
 

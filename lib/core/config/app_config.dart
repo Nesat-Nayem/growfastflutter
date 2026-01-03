@@ -3,11 +3,13 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class AppConfig {
   final String baseUrl;
+  final String imageBaseUrl;
   final bool enableDatadog;
   final bool enableSentry;
 
   AppConfig({
     required this.baseUrl,
+    required this.imageBaseUrl,
     required this.enableDatadog,
     required this.enableSentry,
   });
@@ -15,6 +17,7 @@ class AppConfig {
   factory AppConfig.fromJson(Map<String, dynamic> json) {
     return AppConfig(
       baseUrl: json['baseUrl'],
+      imageBaseUrl: json['imageBaseUrl'] ?? json['baseUrl'].toString().replaceAll('/api/', ''),
       enableDatadog: json['enableDatadog'] ?? false,
       enableSentry: json['enableSentry'] ?? false,
     );

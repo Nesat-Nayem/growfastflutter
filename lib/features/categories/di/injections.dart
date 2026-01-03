@@ -1,5 +1,5 @@
 import 'package:get_it/get_it.dart';
-import 'package:dio/dio.dart';
+import 'package:grow_first/core/network/dio_client.dart';
 import 'package:grow_first/features/categories/data/datasource/category_remote_data_source.dart';
 import 'package:grow_first/features/categories/data/datasource_impl/category_remote_data_source_impl.dart';
 import 'package:grow_first/features/categories/data/repostories/category_repository_impl.dart';
@@ -12,7 +12,6 @@ final sl = GetIt.instance; // optional: use app-level sl if already defined
 
 class CategoryInjections {
   static Future<void> register() async {
-    final dio = Dio();
     // -----------------------------
     // Bloc
     // -----------------------------
@@ -35,9 +34,7 @@ class CategoryInjections {
     // Data sources
     // -----------------------------
     sl.registerLazySingleton<CategoryRemoteDataSource>(
-      () => CategoryRemoteDataSourceImpl(sl<Dio>()),
+      () => CategoryRemoteDataSourceImpl(sl<DioClient>().dio),
     );
-
-    sl.registerFactory<Dio>(() => dio);
   }
 }

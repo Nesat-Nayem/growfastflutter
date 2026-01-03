@@ -11,8 +11,8 @@ import 'core/config/app_config.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Choose environment (could be from --dart-define, here hardcoded for production)
-  const env = 'prod';
+  // Choose environment (could be from --dart-define, here hardcoded for development)
+  const env = 'dev';
 
   late AppConfig config;
   try {

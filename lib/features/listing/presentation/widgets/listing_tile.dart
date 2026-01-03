@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:grow_first/app/di/app_injections.dart';
+import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
@@ -170,7 +172,7 @@ class _ServiceImage extends StatelessWidget {
           : BorderRadiusGeometry.circular(16),
       child: CachedNetworkImage(
         imageUrl:
-            "http://laravel.test/storage/${listing?.gallery.first.img}" ??
+            "${sl<AppConfig>().imageBaseUrl}/storage/${listing?.gallery.first.img}" ??
             "https://plus.unsplash.com/premium_photo-1664536392896-cd1743f9c02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBiZWluZ3N8ZW58MHx8MHx8fDA%3D",
         height: isGridView ? 135 : 65,
         width: isGridView ? double.infinity : 65,

@@ -27,14 +27,13 @@ class NetworkHelper {
       ),
     );
 
-    debugPrint("Payload ${queryParams ?? data}");
-
-    // bool isDeviceConnected = await InternetConnectionChecker().hasConnection;
-    // if (!isDeviceConnected) {
-    //   runApp(const NoInternetConnection());
-    // }else{
-    //   runMainApp();
-    // }
+    // Log request details
+    final fullUrl = '${dio.options.baseUrl}$path';
+    debugPrint("\n========== API REQUEST ==========");
+    debugPrint("URL: $fullUrl");
+    debugPrint("Method: ${type.name.toUpperCase()}");
+    debugPrint("Payload: ${queryParams ?? data}");
+    debugPrint("=================================\n");
 
     try {
       Response response;
@@ -68,9 +67,11 @@ class NetworkHelper {
           return null;
       }
 
-      debugPrint(
-        "$path response ${response.statusCode} with ${response.statusMessage}",
-      );
+      // Log response details
+      debugPrint("\n========== API RESPONSE ==========");
+      debugPrint("URL: $fullUrl");
+      debugPrint("Status: ${response.statusCode} ${response.statusMessage}");
+      debugPrint("==================================\n");
 
       if (response.statusCode == 200) {
         logger.i(jsonEncode(response.data));

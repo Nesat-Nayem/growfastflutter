@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
+import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
@@ -106,7 +107,7 @@ class _HomePageContentState extends State<HomePageContent> {
                   return HomePageBanners(
                     height: context.height * 0.22,
                     images: List.generate(state.bannerImages.length, (index) {
-                      return "http://laravel.test/uploads/${state.bannerImages[index]}";
+                      return "${sl<AppConfig>().imageBaseUrl}/uploads/${state.bannerImages[index]}";
                     }),
                   );
                 }
@@ -170,6 +171,7 @@ class _HomePageContentState extends State<HomePageContent> {
                           itemBuilder: (context, index) {
                             return InkWell(
                               onTap: () {
+                                final categoryBloc = context.read<CategoryBloc>();
                                 showGeneralDialog(
                                   context: context,
                                   barrierDismissible: true,
@@ -180,13 +182,13 @@ class _HomePageContentState extends State<HomePageContent> {
                                   ),
                                   pageBuilder:
                                       (context, animation1, animation2) {
-                                        return BlocProvider.value(
-                                          value: sl.get<CategoryBloc>(),
-                                          child: SubCategoriesPopUp(
-                                            category: state.categories[index],
-                                          ),
-                                        );
-                                      },
+                                    return BlocProvider<CategoryBloc>.value(
+                                      value: categoryBloc,
+                                      child: SubCategoriesPopUp(
+                                        category: state.categories[index],
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                               child: CategoryTile(
@@ -233,7 +235,7 @@ class _HomePageContentState extends State<HomePageContent> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.network(
-                              "http://laravel.test/uploads/1761633123_69006363e4e24.webp",
+                              "https://picsum.photos/seed/grow1/400/300",
                               fit: BoxFit.cover,
                               width: double.infinity,
                             ),
@@ -244,7 +246,7 @@ class _HomePageContentState extends State<HomePageContent> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.network(
-                              "http://laravel.test/storage/services/v1fGDzbnv3BUgDs5nQfIN41yyCbzQyRI7aTZEb23.jpg",
+                              "https://picsum.photos/seed/grow2/400/300",
                               fit: BoxFit.cover,
                               width: double.infinity,
                               alignment: Alignment.bottomRight,
@@ -261,11 +263,11 @@ class _HomePageContentState extends State<HomePageContent> {
             HomePageBanners(
               height: context.height * 0.20,
               images: [
-                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
-                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
-                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
-                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
-                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                "https://picsum.photos/seed/blog1/800/400",
+                "https://picsum.photos/seed/blog2/800/400",
+                "https://picsum.photos/seed/blog3/800/400",
+                "https://picsum.photos/seed/blog4/800/400",
+                "https://picsum.photos/seed/blog5/800/400",
               ],
             ),
             verticalMargin8,

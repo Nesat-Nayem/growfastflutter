@@ -14,6 +14,18 @@ class ExploreCategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl.get<CategoryBloc>()..add(LoadCategories()),
+      child: const _ExploreCategoriesView(),
+    );
+  }
+}
+
+class _ExploreCategoriesView extends StatelessWidget {
+  const _ExploreCategoriesView();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomerHomeAppBar(),
       body: Padding(
@@ -32,7 +44,6 @@ class ExploreCategoriesPage extends StatelessWidget {
             ),
             verticalMargin12,
             BlocBuilder<CategoryBloc, CategoryState>(
-              bloc: sl.get<CategoryBloc>(),
               builder: (context, state) {
                 if (state.isLoading) {
                   return Expanded(
@@ -65,6 +76,7 @@ class ExploreCategoriesPage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         return InkWell(
                           onTap: () {
+                            final categoryBloc = context.read<CategoryBloc>();
                             showGeneralDialog(
                               context: context,
                               barrierDismissible: true,
@@ -72,8 +84,8 @@ class ExploreCategoriesPage extends StatelessWidget {
                               barrierColor: Colors.black54,
                               transitionDuration: Duration(milliseconds: 300),
                               pageBuilder: (context, animation1, animation2) {
-                                return BlocProvider.value(
-                                  value: sl.get<CategoryBloc>(),
+                                return BlocProvider<CategoryBloc>.value(
+                                  value: categoryBloc,
                                   child: SubCategoriesPopUp(
                                     category: state.categories[index],
                                   ),

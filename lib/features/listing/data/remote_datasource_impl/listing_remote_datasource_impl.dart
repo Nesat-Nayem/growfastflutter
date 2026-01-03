@@ -18,7 +18,7 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.get,
-      'http://laravel.test/api/customer/services',
+      'customer/services',
       queryParams: params.toQuery(),
     );
 
@@ -43,7 +43,7 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.get,
-      'http://laravel.test/api/customer/service/$id',
+      'customer/service/$id',
     );
 
     if (response['status'] == true) {

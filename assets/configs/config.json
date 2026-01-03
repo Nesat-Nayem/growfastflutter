@@ -1,16 +1,19 @@
 {
   "dev": {
-    "baseUrl": "https://api.dev.growfirst.com",
+    "baseUrl": "http://10.0.2.2:8000/api/",
+    "imageBaseUrl": "http://10.0.2.2:8000",
     "enableDatadog": false,
     "enableSentry": false
   },
   "staging": {
     "baseUrl": "https://api.staging.growfirst.com",
+    "imageBaseUrl": "https://www.growfirst.org",
     "enableDatadog": true,
     "enableSentry": true
   },
   "prod": {
     "baseUrl": "https://api.growfirst.com",
+    "imageBaseUrl": "https://www.growfirst.org",
     "enableDatadog": true,
     "enableSentry": true
   }

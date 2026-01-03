@@ -40,7 +40,7 @@ class MyReviewsPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       child: CachedNetworkImage(
                         imageUrl:
-                            "http://laravel.test/storage/services/XizJH1aguhYRN9BQovGI9AwBTUGkpenPQuo8vRoZ.jpg",
+                            "https://picsum.photos/seed/service1/200/200",
                         width: 60,
                         height: 65,
                         fit: BoxFit.cover,
@@ -100,10 +100,10 @@ class MyReviewsPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 16,
                       backgroundImage: CachedNetworkImageProvider(
-                        "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                        "https://picsum.photos/seed/avatar1/100/100",
                       ),
                     ),
                     horizontalMargin12,

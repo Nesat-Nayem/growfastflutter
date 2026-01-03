@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/di/app_injections.dart';
+import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/core/storage/secure_storage.dart';
@@ -71,7 +72,7 @@ ${listing.title}
 📞 Phone: ${listing.user.phone}
 
 View details:
-http://laravel.test/service/${listing.slug}
+${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
 ''';
 
     SharePlus.instance.share(
@@ -119,7 +120,7 @@ http://laravel.test/service/${listing.slug}
                       borderRadius: BorderRadius.circular(12),
                       child: CachedNetworkImage(
                         imageUrl:
-                            "http://laravel.test/storage/${listing?.gallery.first.img}",
+                            "${sl<AppConfig>().imageBaseUrl}/storage/${listing?.gallery.first.img}",
                         height: 220,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -139,7 +140,7 @@ http://laravel.test/service/${listing.slug}
                               borderRadius: BorderRadius.circular(8),
                               child: CachedNetworkImage(
                                 imageUrl:
-                                    "http://laravel.test/storage/${url}",
+                                    "${sl<AppConfig>().imageBaseUrl}/storage/${url}",
                                 width: 70,
                                 height: 70,
                                 fit: BoxFit.cover,

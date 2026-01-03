@@ -1,5 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:grow_first/app/di/app_injections.dart';
+import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
@@ -18,12 +20,11 @@ class CategoryTile extends StatelessWidget {
   final Subcategory? subcategory;
   final bool isSubcategory;
 
-  String get imageUrl {
-    if (isSubcategory) {
-      return "http://laravel.test/storage/" + (subcategory?.image ?? "");
-    } else {
-      return "http://laravel.test/storage/" + (category?.image ?? "");
-    }
+  String? get imageUrl {
+    final image = isSubcategory ? subcategory?.image : category?.image;
+    if (image == null || image.isEmpty) return null;
+    if (image.startsWith('http')) return image;
+    return "${sl<AppConfig>().imageBaseUrl}/storage/$image";
   }
 
   String get title {
@@ -53,7 +54,27 @@ class CategoryTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: .center,
         children: [
-          CachedNetworkImage(imageUrl: imageUrl, height: 45, width: 45),
+          imageUrl != null
+              ? CachedNetworkImage(
+                  imageUrl: imageUrl!,
+                  height: 45,
+                  width: 45,
+                  errorWidget: (context, url, error) => Icon(
+                    CupertinoIcons.photo,
+                    size: 45,
+                    color: whiteColor.withOpacity(0.5),
+                  ),
+                  placeholder: (context, url) => Icon(
+                    CupertinoIcons.photo,
+                    size: 45,
+                    color: whiteColor.withOpacity(0.3),
+                  ),
+                )
+              : Icon(
+                  CupertinoIcons.photo,
+                  size: 45,
+                  color: whiteColor.withOpacity(0.5),
+                ),
           verticalMargin4,
           Text(
             title,

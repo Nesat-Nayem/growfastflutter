@@ -50,7 +50,7 @@ class CustomerBookingAddPersonalInformation extends StatelessWidget {
               CustomerBookingAdditionalServiceCard(
                 title: "Switches Changes",
                 imageUrl:
-                    "http://laravel.test/storage/services/XizJH1aguhYRN9BQovGI9AwBTUGkpenPQuo8vRoZ.jpg",
+                    "https://picsum.photos/seed/service2/200/200",
                 price: 400,
                 duration: "30 min",
                 rating: 4.9,
