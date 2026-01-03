@@ -37,7 +37,7 @@ class CustomerAccountSettings extends StatelessWidget {
                     child: ClipOval(
                       child: CachedNetworkImage(
                         imageUrl:
-                            "https://www.growfirst.org/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                            "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
                         fit: BoxFit.cover,
                         width: 40,
                         height: 40,

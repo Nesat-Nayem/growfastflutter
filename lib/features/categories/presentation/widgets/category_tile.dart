@@ -20,9 +20,9 @@ class CategoryTile extends StatelessWidget {
 
   String get imageUrl {
     if (isSubcategory) {
-      return "https://www.growfirst.org/storage/" + (subcategory?.image ?? "");
+      return "http://laravel.test/storage/" + (subcategory?.image ?? "");
     } else {
-      return "https://www.growfirst.org/storage/" + (category?.image ?? "");
+      return "http://laravel.test/storage/" + (category?.image ?? "");
     }
   }
 

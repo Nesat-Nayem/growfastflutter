@@ -29,7 +29,7 @@ class CustomerBookingCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: CachedNetworkImage(
                 imageUrl:
-                    "https://www.growfirst.org/storage/services/XizJH1aguhYRN9BQovGI9AwBTUGkpenPQuo8vRoZ.jpg",
+                    "http://laravel.test/storage/services/XizJH1aguhYRN9BQovGI9AwBTUGkpenPQuo8vRoZ.jpg",
                 fit: BoxFit.fitHeight,
               ),
             ),

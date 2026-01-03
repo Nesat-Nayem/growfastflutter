@@ -71,7 +71,7 @@ ${listing.title}
 📞 Phone: ${listing.user.phone}
 
 View details:
-https://growfirst.org/service/${listing.slug}
+http://laravel.test/service/${listing.slug}
 ''';
 
     SharePlus.instance.share(
@@ -119,7 +119,7 @@ https://growfirst.org/service/${listing.slug}
                       borderRadius: BorderRadius.circular(12),
                       child: CachedNetworkImage(
                         imageUrl:
-                            "https://growfirst.org/storage/${listing?.gallery.first.img}",
+                            "http://laravel.test/storage/${listing?.gallery.first.img}",
                         height: 220,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -139,7 +139,7 @@ https://growfirst.org/service/${listing.slug}
                               borderRadius: BorderRadius.circular(8),
                               child: CachedNetworkImage(
                                 imageUrl:
-                                    "https://growfirst.org/storage/${url}",
+                                    "http://laravel.test/storage/${url}",
                                 width: 70,
                                 height: 70,
                                 fit: BoxFit.cover,

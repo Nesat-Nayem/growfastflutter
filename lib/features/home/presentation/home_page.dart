@@ -106,7 +106,7 @@ class _HomePageContentState extends State<HomePageContent> {
                   return HomePageBanners(
                     height: context.height * 0.22,
                     images: List.generate(state.bannerImages.length, (index) {
-                      return "https://www.growfirst.org/uploads/${state.bannerImages[index]}";
+                      return "http://laravel.test/uploads/${state.bannerImages[index]}";
                     }),
                   );
                 }
@@ -233,7 +233,7 @@ class _HomePageContentState extends State<HomePageContent> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.network(
-                              "https://www.growfirst.org/uploads/1761633123_69006363e4e24.webp",
+                              "http://laravel.test/uploads/1761633123_69006363e4e24.webp",
                               fit: BoxFit.cover,
                               width: double.infinity,
                             ),
@@ -244,7 +244,7 @@ class _HomePageContentState extends State<HomePageContent> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.network(
-                              "https://www.growfirst.org/storage/services/v1fGDzbnv3BUgDs5nQfIN41yyCbzQyRI7aTZEb23.jpg",
+                              "http://laravel.test/storage/services/v1fGDzbnv3BUgDs5nQfIN41yyCbzQyRI7aTZEb23.jpg",
                               fit: BoxFit.cover,
                               width: double.infinity,
                               alignment: Alignment.bottomRight,
@@ -261,11 +261,11 @@ class _HomePageContentState extends State<HomePageContent> {
             HomePageBanners(
               height: context.height * 0.20,
               images: [
-                "https://www.growfirst.org/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
-                "https://www.growfirst.org/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
-                "https://www.growfirst.org/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
-                "https://www.growfirst.org/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
-                "https://www.growfirst.org/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
               ],
             ),
             verticalMargin8,

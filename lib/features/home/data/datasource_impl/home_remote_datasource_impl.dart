@@ -7,7 +7,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   HomeRemoteDataSourceImpl(this.dio);
 
-  static const String url = "https://growfirst.org/api/home-page";
+  static const String url = "http://laravel.test/api/home-page";
 
   @override
   Future<List<String>> getBannerImages() async {

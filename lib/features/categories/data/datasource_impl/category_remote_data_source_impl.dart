@@ -9,7 +9,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
 
   CategoryRemoteDataSourceImpl(this.dio);
 
-  static const String url = "https://growfirst.org/api/serviceCategory";
+  static const String url = "http://laravel.test/api/serviceCategory";
 
   @override
   Future<List<CategoryModel>> getCategories() async {
@@ -43,7 +43,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   Future<List<SubcategoryModel>> getSubcategories(int categoryId) async {
     try {
       final response = await dio.get(
-        'https://growfirst.org/api/serviceSubcategory/$categoryId',
+        'http://laravel.test/api/serviceSubcategory/$categoryId',
       );
 
       if (response.statusCode == 200) {

@@ -19,7 +19,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       dio,
       RequestType.get,
       headers: {'Authorization': 'Bearer $getToken'},
-      'https://growfirst.org/api/customer/service/booking/locations/$serviceId',
+      'http://laravel.test/api/customer/service/booking/locations/$serviceId',
     );
 
     return (res['staffLocations'] as List)
@@ -39,7 +39,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     final res = await NetworkHelper.sendRequest(
       dio,
       RequestType.post,
-      'https://growfirst.org/api/customer/service/booking/staffs',
+      'http://laravel.test/api/customer/service/booking/staffs',
       headers: {'Authorization': 'Bearer $getToken'},
       data: {
         'country': country,
@@ -62,7 +62,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     final res = await NetworkHelper.sendRequest(
       dio,
       RequestType.get,
-      'https://growfirst.org/api/customer/service/booking/service_details/$serviceId',
+      'http://laravel.test/api/customer/service/booking/service_details/$serviceId',
       headers: {'Authorization': 'Bearer $getToken'},
     );
 

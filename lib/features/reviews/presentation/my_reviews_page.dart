@@ -40,7 +40,7 @@ class MyReviewsPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       child: CachedNetworkImage(
                         imageUrl:
-                            "https://www.growfirst.org/storage/services/XizJH1aguhYRN9BQovGI9AwBTUGkpenPQuo8vRoZ.jpg",
+                            "http://laravel.test/storage/services/XizJH1aguhYRN9BQovGI9AwBTUGkpenPQuo8vRoZ.jpg",
                         width: 60,
                         height: 65,
                         fit: BoxFit.cover,
@@ -103,7 +103,7 @@ class MyReviewsPage extends StatelessWidget {
                     const CircleAvatar(
                       radius: 16,
                       backgroundImage: CachedNetworkImageProvider(
-                        "https://www.growfirst.org/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
+                        "http://laravel.test/storage/blogs/XWWB6kBSSDqCLp3oC5LKSOvGR2P903976KfwIR0A.jpg",
                       ),
                     ),
                     horizontalMargin12,

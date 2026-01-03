@@ -14,7 +14,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.post,
-      'https://growfirst.org/api/customer/send-otp',
+      'http://laravel.test/api/customer/send-otp',
       data: {'phone': phone},
     );
 
@@ -33,7 +33,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.post,
-      'https://growfirst.org/api/customer/verify-otp-login',
+      'http://laravel.test/api/customer/verify-otp-login',
       data: {'phone': phone, 'otp': otp},
     );
 
