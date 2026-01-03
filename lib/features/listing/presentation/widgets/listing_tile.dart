@@ -163,6 +163,8 @@ class _ServiceImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _resolveImageUrl();
+
     return ClipRRect(
       borderRadius: isGridView
           ? BorderRadius.only(
@@ -170,15 +172,46 @@ class _ServiceImage extends StatelessWidget {
               topRight: Radius.circular(15),
             )
           : BorderRadiusGeometry.circular(16),
-      child: CachedNetworkImage(
-        imageUrl:
-            "${sl<AppConfig>().imageBaseUrl}/storage/${listing?.gallery.first.img}" ??
-            "https://plus.unsplash.com/premium_photo-1664536392896-cd1743f9c02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBiZWluZ3N8ZW58MHx8MHx8fDA%3D",
-        height: isGridView ? 135 : 65,
-        width: isGridView ? double.infinity : 65,
-        fit: BoxFit.cover,
-      ),
+      child: imageUrl != null
+          ? CachedNetworkImage(
+              imageUrl: imageUrl,
+              height: isGridView ? 135 : 65,
+              width: isGridView ? double.infinity : 65,
+              fit: BoxFit.cover,
+            )
+          : Container(
+              height: isGridView ? 135 : 65,
+              width: isGridView ? double.infinity : 65,
+              color: lightGreySnowColor,
+              alignment: Alignment.center,
+              child: Icon(Icons.image_not_supported_outlined),
+            ),
     );
+  }
+
+  String? _resolveImageUrl() {
+    String? raw;
+
+    final gallery = listing?.gallery;
+    if (gallery != null && gallery.isNotEmpty) {
+      raw = gallery.first.img;
+    } else if ((listing?.image ?? '').isNotEmpty) {
+      raw = listing?.image;
+    }
+
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    if (raw.startsWith('http')) {
+      return raw;
+    }
+
+    final normalized = raw.startsWith('storage/')
+        ? raw.replaceFirst('storage/', '')
+        : raw;
+
+    return "${sl<AppConfig>().imageBaseUrl}/storage/$normalized";
   }
 }
 

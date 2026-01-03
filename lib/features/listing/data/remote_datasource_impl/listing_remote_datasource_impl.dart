@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
 import 'package:grow_first/core/errors/exceptions.dart';
 import 'package:grow_first/core/utils/network.dart';
@@ -15,6 +17,10 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
   Future<ListingResponseModel> getListingsBySubcategory(
     GetListingsParams params,
   ) async {
+    developer.log(
+      'ListingRemoteDataSourceImpl.getListingsBySubcategory => params: ${params.toQuery()}',
+      name: 'ListingRemoteDataSourceImpl',
+    );
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.get,
@@ -22,20 +28,36 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
       queryParams: params.toQuery(),
     );
 
-    if (response['status'] == true) {
-      final services = response['data']['services'];
-      final list = services['data'] as List?;
-
-      if (list == null) {
-        return const ListingResponseModel(listings: [], total: 0);
-      }
-
-      final listings = list.map((e) => ListingModel.fromJson(e)).toList();
-
-      return ListingResponseModel(listings: listings, total: services['total']);
-    } else {
+    if (response['status'] != true) {
       throw ServerException();
     }
+
+    final services = response['data']?['services'];
+    developer.log(
+      'ListingRemoteDataSourceImpl.getListingsBySubcategory => services null? ${services == null}',
+      name: 'ListingRemoteDataSourceImpl',
+    );
+    if (services == null) {
+      return const ListingResponseModel(listings: [], total: 0);
+    }
+
+    final rawList = (services['data'] as List?) ?? [];
+    developer.log(
+      'ListingRemoteDataSourceImpl.getListingsBySubcategory => rawList length: ${rawList.length}',
+      name: 'ListingRemoteDataSourceImpl',
+    );
+    final listings = rawList.map((e) => ListingModel.fromJson(e)).toList();
+
+    final totalValue = services['total'];
+    final total = totalValue is int
+        ? totalValue
+        : int.tryParse(totalValue?.toString() ?? '') ?? listings.length;
+
+    developer.log(
+      'ListingRemoteDataSourceImpl.getListingsBySubcategory => mapped listings: ${listings.length}, total: $total',
+      name: 'ListingRemoteDataSourceImpl',
+    );
+    return ListingResponseModel(listings: listings, total: total);
   }
 
   @override

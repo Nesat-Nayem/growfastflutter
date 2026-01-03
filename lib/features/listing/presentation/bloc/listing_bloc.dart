@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grow_first/core/utils/helpers.dart';
@@ -23,6 +25,10 @@ class ListingBloc extends Bloc<ListingEvent, ListingState> {
     LoadListings event,
     Emitter<ListingState> emit,
   ) async {
+    developer.log(
+      '_onLoadListings -> received params: ${event.params.toQuery()}',
+      name: 'ListingBloc',
+    );
     emit(
       state.copyWith(
         isLoading: true,
@@ -31,8 +37,17 @@ class ListingBloc extends Bloc<ListingEvent, ListingState> {
         totalNumberOfListings: 0,
       ),
     );
+    developer.log(
+      '_onLoadListings -> emitted loading state',
+      name: 'ListingBloc',
+    );
 
     final result = await getListingsUseCase(event.params);
+    
+    developer.log(
+      '_onLoadListings -> usecase completed',
+      name: 'ListingBloc',
+    );
 
     result.fold(
       (failure) => emit(
@@ -47,6 +62,18 @@ class ListingBloc extends Bloc<ListingEvent, ListingState> {
           listings: listings.listings,
           totalNumberOfListings: listings.total,
         ),
+      ),
+    );
+
+    result.fold(
+      (failure) => developer.log(
+        '_onLoadListings -> failure: ${Helpers.convertFailureToMessage(failure)}',
+        name: 'ListingBloc',
+        error: failure,
+      ),
+      (listings) => developer.log(
+        '_onLoadListings -> success: listings=${listings.listings.length}, total=${listings.total}',
+        name: 'ListingBloc',
       ),
     );
   }

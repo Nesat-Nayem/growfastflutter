@@ -1,5 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:grow_first/core/network/dio_client.dart';
 import 'package:grow_first/features/listing/data/remote_datasource_impl/listing_remote_datasource_impl.dart';
 import 'package:grow_first/features/listing/data/remote_datasources/listing_remote_datasource.dart';
 import 'package:grow_first/features/listing/data/repositories/listing_repository_impl.dart';
@@ -37,7 +37,7 @@ class ListingInjections {
     // Data sources
     // -----------------------------
     sl.registerLazySingleton<ListingRemoteDataSource>(
-      () => ListingRemoteDataSourceImpl(sl<Dio>()),
+      () => ListingRemoteDataSourceImpl(sl<DioClient>().dio),
     );
   }
 }

@@ -32,6 +32,15 @@ class ListingModel extends Listing {
   });
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {
+    final galleryList = (json['gallery'] as List?) ?? [];
+    final includesList = (json['includes'] as List?) ?? [];
+    final faqsList = (json['faqs'] as List?) ?? [];
+    int parseInt(dynamic value) =>
+        value is int ? value : int.tryParse(value?.toString() ?? '') ?? 0;
+    DateTime parseDate(dynamic value) =>
+        DateTime.tryParse(value?.toString() ?? '') ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+
     return ListingModel(
       id: json['id'],
       slug: json['slug'],
@@ -40,35 +49,25 @@ class ListingModel extends Listing {
       userId: json['user_id'],
       categoryId: json['category_id'],
       subcategoryId: json['subcategory_id'],
-      price: json['price'],
-      description: json['description'],
+      price: json['price']?.toString() ?? '0',
+      description: json['description'] ?? '',
       additionalServices: json['additional_services'],
       videoLink: json['video_link'],
-      address: json['address'],
-      country: json['country'],
-      state: json['state'],
-      city: json['city'],
-      pincode: json['pincode'],
-      status: json['status'],
-      view: json['view'],
-      trustSeal: json['trust_seal'],
+      address: json['address'] ?? '',
+      country: json['country']?.toString() ?? '',
+      state: json['state']?.toString() ?? '',
+      city: json['city']?.toString() ?? '',
+      pincode: json['pincode']?.toString() ?? '',
+      status: parseInt(json['status']),
+      view: parseInt(json['view']),
+      trustSeal: parseInt(json['trust_seal']),
       gstNumber: json['gst_number'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      gallery: (json['gallery'] as List)
-          .map((e) => Gallery.fromJson(e))
-          .toList(),
+      createdAt: parseDate(json['created_at']),
+      updatedAt: parseDate(json['updated_at']),
+      gallery: galleryList.map((e) => Gallery.fromJson(e)).toList(),
       user: User.fromJson(json['user']),
-      includes:
-          (json['includes'] as List<dynamic>?)
-              ?.map((e) => Include.fromJson(e))
-              .toList() ??
-          [],
-      faqs:
-          (json['faqs'] as List<dynamic>?)
-              ?.map((e) => Faq.fromJson(e))
-              .toList() ??
-          [],
+      includes: includesList.map((e) => Include.fromJson(e)).toList(),
+      faqs: faqsList.map((e) => Faq.fromJson(e)).toList(),
     );
   }
 }

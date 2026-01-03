@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -24,16 +26,23 @@ class ListingPage extends StatefulWidget {
 
 class _ListingPageState extends State<ListingPage> {
   bool isGridView = true;
+  late final ListingBloc _listingBloc;
 
   @override
   void initState() {
     super.initState();
-    sl.get<ListingBloc>().add(
+    developer.log(
+      'ListingPage.initState -> categoryId=${widget.categoryId}, subcategoryId=${widget.subcategoryId}',
+      name: 'ListingPage',
+    );
+    _listingBloc = sl<ListingBloc>();
+    developer.log('ListingPage.initState -> obtained ListingBloc hash=${_listingBloc.hashCode}', name: 'ListingPage');
+    _listingBloc.add(
       LoadListings(
         GetListingsParams(
           categories: widget.categoryId != null
               ? [int.tryParse(widget.categoryId ?? "") ?? 0]
-              : [],
+              : null,
           subcategory: widget.subcategoryId != null
               ? int.tryParse(widget.subcategoryId ?? "")
               : null,
@@ -41,26 +50,41 @@ class _ListingPageState extends State<ListingPage> {
         ),
       ),
     );
+    developer.log(
+      'ListingPage.initState -> LoadListings event dispatched',
+      name: 'ListingPage',
+    );
   }
 
   @override
   void dispose() {
+    _listingBloc.close();
     super.dispose();
   }
 
   Widget get _mainContent {
     return BlocBuilder<ListingBloc, ListingState>(
-      bloc: sl.get<ListingBloc>(),
+      bloc: _listingBloc,
       builder: (context, state) {
+        developer.log(
+          'ListingPage._mainContent -> builder invoked | isLoading=${state.isLoading} | total=${state.totalNumberOfListings} | listingsLen=${state.listings.length} | error=${state.error}',
+          name: 'ListingPage',
+        );
         if (state.isLoading) {
+          developer.log('ListingPage._mainContent -> showing loader', name: 'ListingPage');
           return Expanded(child: Center(child: CircularProgressIndicator()));
         } else if (state.listings.isEmpty) {
+          developer.log('ListingPage._mainContent -> listings empty, showing empty state', name: 'ListingPage');
           return Expanded(
             child: Center(
               child: Text("No listings found", style: context.labelLarge),
             ),
           );
         }
+        developer.log(
+          'ListingPage._mainContent -> rendering ${state.listings.length} items in ${isGridView ? "grid" : "list"} mode',
+          name: 'ListingPage',
+        );
         return Expanded(
           child: isGridView
               ? GridView.builder(
@@ -103,95 +127,99 @@ class _ListingPageState extends State<ListingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomerHomeAppBar(
-        singleTitle: "Listing",
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() => isGridView = true);
-            },
-            icon: Icon(
-              Icons.grid_view_outlined,
-              size: 28,
-              color: isGridView ? aquaBlueColor : null,
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              setState(() => isGridView = false);
-            },
-            icon: Icon(
-              Icons.list,
-              size: 35,
-              color: !isGridView ? aquaBlueColor : null,
-            ),
-          ),
-          horizontalMargin8,
-        ],
-      ),
-      body: Padding(
-        padding: horizontalPadding16 + verticalPadding16,
-        child: Column(
-          crossAxisAlignment: .start,
-          children: [
-            BlocBuilder<ListingBloc, ListingState>(
-              bloc: sl.get<ListingBloc>(),
-              builder: (context, state) {
-                return Text.rich(
-                  TextSpan(
-                    text: "Found | ",
-                    children: [
-                      TextSpan(
-                        text: "${state.totalNumberOfListings} Services",
-                        style: context.labelLarge.copyWith(
-                          fontWeight: FontWeight.w400,
-                          color: lightGreyTextColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  style: context.labelLarge.copyWith(
-                    fontWeight: FontWeight.w400,
-                  ),
-                );
+    return BlocProvider<ListingBloc>.value(
+      value: _listingBloc,
+      child: Scaffold(
+        appBar: CustomerHomeAppBar(
+          singleTitle: "Listing",
+          actions: [
+            IconButton(
+              onPressed: () {
+                setState(() => isGridView = true);
               },
+              icon: Icon(
+                Icons.grid_view_outlined,
+                size: 28,
+                color: isGridView ? aquaBlueColor : null,
+              ),
             ),
-            verticalMargin12,
-            _mainContent,
-            verticalMargin8,
-            Row(
-              children: [
-                Expanded(
-                  child: GradientButton(
-                    text: "Sort",
-                    onTap: () {
-                      context.pushNamed(AppRouterNames.listingsFilters);
-                    },
-                    hideGradient: true,
-                    iconWithTitle: Icon(Icons.swap_vert, size: 20),
-                    borderRadius: 6,
-                    backgroundColor: greyButttonColor,
-                    textStyle: context.labelMedium,
-                  ),
-                ),
-                horizontalMargin12,
-                Expanded(
-                  child: GradientButton(
-                    text: "Filter",
-                    onTap: () {},
-                    iconWithTitle: Icon(
-                      Icons.filter_alt_outlined,
-                      size: 20,
-                      color: whiteColor,
-                    ),
-                    borderRadius: 6,
-                    textStyle: context.labelMedium.copyWith(color: whiteColor),
-                  ),
-                ),
-              ],
+            IconButton(
+              onPressed: () {
+                setState(() => isGridView = false);
+              },
+              icon: Icon(
+                Icons.list,
+                size: 35,
+                color: !isGridView ? aquaBlueColor : null,
+              ),
             ),
+            horizontalMargin8,
           ],
+        ),
+        body: Padding(
+          padding: horizontalPadding16 + verticalPadding16,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              BlocBuilder<ListingBloc, ListingState>(
+                bloc: _listingBloc,
+                builder: (context, state) {
+                  return Text.rich(
+                    TextSpan(
+                      text: "Found | ",
+                      children: [
+                        TextSpan(
+                          text: "${state.totalNumberOfListings} Services",
+                          style: context.labelLarge.copyWith(
+                            fontWeight: FontWeight.w400,
+                            color: lightGreyTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    style: context.labelLarge.copyWith(
+                      fontWeight: FontWeight.w400,
+                    ),
+                  );
+                },
+              ),
+              verticalMargin12,
+              _mainContent,
+              verticalMargin8,
+              Row(
+                children: [
+                  Expanded(
+                    child: GradientButton(
+                      text: "Sort",
+                      onTap: () {
+                        context.pushNamed(AppRouterNames.listingsFilters);
+                      },
+                      hideGradient: true,
+                      iconWithTitle: Icon(Icons.swap_vert, size: 20),
+                      borderRadius: 6,
+                      backgroundColor: greyButttonColor,
+                      textStyle: context.labelMedium,
+                    ),
+                  ),
+                  horizontalMargin12,
+                  Expanded(
+                    child: GradientButton(
+                      text: "Filter",
+                      onTap: () {},
+                      iconWithTitle: Icon(
+                        Icons.filter_alt_outlined,
+                        size: 20,
+                        color: whiteColor,
+                      ),
+                      borderRadius: 6,
+                      textStyle:
+                          context.labelMedium.copyWith(color: whiteColor),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
