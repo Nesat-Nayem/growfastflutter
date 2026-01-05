@@ -40,7 +40,7 @@ class AuthInjections {
       () => AuthRemoteDataSourceImpl(sl<DioClient>().dio),
     );
 
-    sl.registerCachedFactory<AppStore>(() => AppStore(sl<ISecureStore>()));
+    sl.registerLazySingleton<AppStore>(() => AppStore(sl<ISecureStore>()));
 
     // Repository
     sl.registerLazySingleton<AuthRepository>(

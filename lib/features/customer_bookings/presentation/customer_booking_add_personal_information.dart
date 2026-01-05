@@ -65,7 +65,7 @@ class _CustomerBookingAddPersonalInformationState
       bloc: sl<BookingsBloc>(),
       listener: (context, state) {
         if (state.cartId != null && !state.isAddingToCart) {
-          context.pushNamed(AppRouterNames.customerPaymentMode);
+          context.pushNamed(AppRouterNames.customerCart);
         }
         if (state.errorAddingToCart != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -335,9 +335,9 @@ class _CustomerBookingAddPersonalInformationState
                       phone: _phoneController.text,
                       streetAddress: _addressController.text,
                       postalCode: _postalCodeController.text,
-                      country: "India", // Should be dynamic
-                      state: _stateController.text,
-                      city: selectedLocation?.name ?? "",
+                      country: selectedLocation?.country.toString() ?? "1",
+                      state: selectedLocation?.state.toString() ?? "1",
+                      city: selectedLocation?.city.toString() ?? "1",
                     )));
                   },
                 ),

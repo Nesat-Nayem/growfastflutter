@@ -1,3 +1,7 @@
+import 'package:grow_first/features/auth/presentation/bloc/auth/auth_event.dart';
+import 'package:grow_first/features/auth/presentation/bloc/auth/auth_state.dart';
+import 'package:grow_first/features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:grow_first/app/di/app_injections.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +18,8 @@ import 'package:grow_first/features/auth/presentation/widgets/mobile_number_file
 import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class SigninPage extends StatefulWidget {
-  const SigninPage({super.key});
+  final Map<String, dynamic>? redirectionData;
+  const SigninPage({super.key, this.redirectionData});
 
   @override
   State<SigninPage> createState() => _SigninPageState();
@@ -187,34 +192,55 @@ class _SigninPageState extends State<SigninPage> with TickerProviderStateMixin {
                             },
                           ),
                           verticalMargin32,
-                          GradientButton(
-                            text: "Get OTP",
-                            onTap:
-                                isOtpBtnEnabled ||
-                                    customerMobileNumberController.text
-                                        .trim()
-                                        .isEmpty
-                                ? () {
-                                    // if (customerMobileNumberController.text
-                                    //     .trim()
-                                    //     .isEmpty) {
-                                    // AppSnackBar.show(
-                                    //   context,
-                                    //   message:
-                                    //       "Please enter a mobile number to continue your journey",
-                                    // );
-                                    context.pushNamed(
-                                      AppRouterNames.verifyOtp,
-                                      pathParameters: {
-                                        "process_initiated_on":
-                                            "+91 7509300556",
+                          BlocConsumer<AuthBloc, AuthState>(
+                            bloc: sl<AuthBloc>(),
+                            listener: (context, state) {
+                              if (state.isOtpSent) {
+                                context.pushNamed(
+                                  AppRouterNames.verifyOtp,
+                                  pathParameters: {
+                                    "process_initiated_on":
+                                        customerMobileNumberController.text,
+                                  },
+                                  extra: widget.redirectionData,
+                                );
+                              }
+                              if (state.error != null) {
+                                AppSnackBar.show(context,
+                                    message: state.error!);
+                              }
+                            },
+                            builder: (context, state) {
+                              return GradientButton(
+                                text: "Get OTP",
+                                showLoadingIndicator: state.isLoading,
+                                onTap: state.isLoading ||
+                                        (!isOtpBtnEnabled &&
+                                            customerMobileNumberController
+                                                .text
+                                                .trim()
+                                                .isNotEmpty)
+                                    ? null
+                                    : () {
+                                        if (customerMobileNumberController.text
+                                            .trim()
+                                            .isEmpty) {
+                                          AppSnackBar.show(
+                                            context,
+                                            message:
+                                                "Please enter a mobile number to continue your journey",
+                                          );
+                                          return;
+                                        }
+                                        sl<AuthBloc>().add(
+                                          SendOtpEvent(
+                                              customerMobileNumberController
+                                                  .text),
+                                        );
                                       },
-                                    );
-                                    return;
-                                    // }
-                                  }
-                                : null,
-                            padding: verticalPadding16,
+                                padding: verticalPadding16,
+                              );
+                            },
                           ),
                           verticalMargin48,
                           Row(

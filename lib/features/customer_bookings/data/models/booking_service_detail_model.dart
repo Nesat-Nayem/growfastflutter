@@ -12,12 +12,12 @@ class BookingServiceDetailModel extends BookingServiceDetail {
 
   factory BookingServiceDetailModel.fromJson(Map<String, dynamic> json) {
     return BookingServiceDetailModel(
-      id: json['id'] as int,
-      title: json['name'] as String? ?? '',
-      description: json['details'] as String? ?? '',
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      duration: json['duration_value'] as int? ?? 0,
-      durationUnit: json['duration_unit'] as String? ?? '',
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      title: json['name']?.toString() ?? '',
+      description: json['details']?.toString() ?? '',
+      price: double.tryParse(json['price']?.toString() ?? '0.0') ?? 0.0,
+      duration: int.tryParse(json['duration_value']?.toString() ?? '0') ?? 0,
+      durationUnit: json['duration_unit']?.toString() ?? '',
     );
   }
 

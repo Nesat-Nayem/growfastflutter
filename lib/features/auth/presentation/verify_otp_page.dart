@@ -11,11 +11,14 @@ import 'package:grow_first/features/auth/presentation/bloc/auth/auth_event.dart'
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:grow_first/features/auth/presentation/widgets/otp_fields.dart';
 import 'package:grow_first/features/listing/di/listing_injections.dart';
-import 'package:grow_first/features/listing/presentation/bloc/listing_bloc.dart';
-import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class VerifyOtpPage extends StatefulWidget {
-  const VerifyOtpPage({super.key, required this.processInitaiedOn});
+  final Map<String, dynamic>? redirectionData;
+  const VerifyOtpPage({
+    super.key,
+    required this.processInitaiedOn,
+    this.redirectionData,
+  });
 
   final String processInitaiedOn;
 
@@ -121,17 +124,24 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                         bloc: sl<AuthBloc>(),
                         listener: (context, state) {
                           if (state.token?.isNotEmpty ?? false) {
-                            context.pop();
-                            context.pop();
-                            context.pushNamed(
-                              AppRouterNames.customerSelectBookingLocation,
-                              pathParameters: {
-                                "listingId":
-                                    sl<ListingBloc>().state.selectedListing?.id
-                                        .toString() ??
-                                    "",
-                              },
-                            );
+                            if (widget.redirectionData != null &&
+                                widget.redirectionData!["redirectTo"] != null) {
+                              final routeName =
+                                  widget.redirectionData!["redirectTo"]
+                                      as String;
+                              final listingId =
+                                  widget.redirectionData!["listingId"]
+                                      as String?;
+
+                              context.goNamed(
+                                routeName,
+                                pathParameters: {
+                                  if (listingId != null) "listingId": listingId,
+                                },
+                              );
+                            } else {
+                              context.goNamed(AppRouterNames.home);
+                            }
                           }
                         },
                         child: AnimatedOtpFields(
@@ -161,13 +171,6 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                     ],
                   ),
                 ),
-              ),
-
-              GradientButton(
-                text: "Verify OTP",
-                onTap: () {
-                  context.pushNamed(AppRouterNames.home);
-                },
               ),
             ],
           ),

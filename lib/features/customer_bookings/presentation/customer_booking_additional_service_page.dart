@@ -78,13 +78,53 @@ class _CustomerBookingAdditionalServicePageState
                     ),
                   );
                 } else if (state.errorAdditionalSerciceFetching != null) {
-                  return Center(
-                    child: Text(state.errorAdditionalSerciceFetching!),
+                  return Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 48, color: Colors.red),
+                          verticalMargin16,
+                          Text(
+                            'Failed to load services',
+                            style: context.titleMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          verticalMargin8,
+                          Text(
+                            state.errorAdditionalSerciceFetching!,
+                            textAlign: TextAlign.center,
+                            style: context.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 } else if (state.serviceDetail == null ||
                     state.serviceDetail!.isEmpty) {
                   return Expanded(
-                    child: Center(child: Text("No Additional Services Found")),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_business_outlined, size: 48, color: Colors.grey),
+                          verticalMargin16,
+                          Text(
+                            'No Additional Services',
+                            style: context.titleMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          verticalMargin8,
+                          Text(
+                            'This service has no additional services available.',
+                            textAlign: TextAlign.center,
+                            style: context.bodySmall.copyWith(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 } else {
                   return Expanded(

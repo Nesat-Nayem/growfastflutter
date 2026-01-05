@@ -20,7 +20,7 @@ class SecureStore implements ISecureStore {
     ),
   );
 
-  static const kAccessToken = 'access_token';
+  static const kAccessToken = 'token';
 
   @override
   Future<void> write(String k, String v) => _storage.write(key: k, value: v);

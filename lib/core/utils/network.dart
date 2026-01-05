@@ -74,21 +74,39 @@ class NetworkHelper {
       debugPrint("==================================\n");
 
       if (response.statusCode == 200) {
+        if (response.data is String) {
+          try {
+            final decoded = jsonDecode(response.data);
+            return decoded;
+          } catch (e) {
+            return response.data;
+          }
+        }
         logger.i(jsonEncode(response.data));
         return response.data;
       } else if (response.statusCode == 400 ||
           response.statusCode == 401 ||
           response.statusCode == 202) {
-        logger.i(
-          'Failed Response ${const JsonEncoder().convert(response.data as Map<String, dynamic>)}',
-        );
+        String message = "Something went wrong";
+        if (response.data is Map) {
+          message = response.data['message']?.toString() ?? message;
+          logger.i(
+            'Failed Response ${const JsonEncoder().convert(response.data as Map<String, dynamic>)}',
+          );
+        } else {
+          logger.e('Failed Response (not a map): ${response.data}');
+        }
         throw ServerException(
-          message: response.data['message'],
+          message: message,
           code: response.statusCode,
         );
       } else {
+        String message = "Server Error";
+        if (response.data is Map) {
+          message = response.data['message']?.toString() ?? message;
+        }
         throw ServerException(
-          message: response.data['message'],
+          message: message,
           code: response.statusCode,
         );
       }

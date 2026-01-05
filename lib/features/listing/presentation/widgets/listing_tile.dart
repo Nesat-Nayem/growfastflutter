@@ -1,3 +1,4 @@
+import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -65,12 +66,24 @@ class ListingTile extends StatelessWidget {
                         GradientButton(
                           text: "Buy Now",
                           onTap: () {
-                            context.pushNamed(
-                              AppRouterNames.customerSelectBookingLocation,
-                              pathParameters: {
-                                "listingId": listing?.id.toString() ?? ""
-                              },
-                            );
+                            final appStore = sl<AppStore>();
+                            if (appStore.isLoggedIn) {
+                              context.pushNamed(
+                                AppRouterNames.customerSelectBookingLocation,
+                                pathParameters: {
+                                  "listingId": listing?.id.toString() ?? ""
+                                },
+                              );
+                            } else {
+                              context.pushNamed(
+                                AppRouterNames.signIn,
+                                extra: {
+                                  "redirectTo": AppRouterNames
+                                      .customerSelectBookingLocation,
+                                  "listingId": listing?.id.toString() ?? "",
+                                },
+                              );
+                            }
                           },
                           padding: verticalPadding12,
                           borderRadius: 6,
@@ -138,12 +151,24 @@ class ListingTile extends StatelessWidget {
                         child: GradientButton(
                           text: "Buy Now",
                           onTap: () {
-                            context.pushNamed(
-                              AppRouterNames.customerSelectBookingLocation,
-                              pathParameters: {
-                                "listingId": listing?.id.toString() ?? ""
-                              },
-                            );
+                            final appStore = sl<AppStore>();
+                            if (appStore.isLoggedIn) {
+                              context.pushNamed(
+                                AppRouterNames.customerSelectBookingLocation,
+                                pathParameters: {
+                                  "listingId": listing?.id.toString() ?? ""
+                                },
+                              );
+                            } else {
+                              context.pushNamed(
+                                AppRouterNames.signIn,
+                                extra: {
+                                  "redirectTo": AppRouterNames
+                                      .customerSelectBookingLocation,
+                                  "listingId": listing?.id.toString() ?? "",
+                                },
+                              );
+                            }
                           },
                           padding: verticalPadding12,
                           borderRadius: 6,

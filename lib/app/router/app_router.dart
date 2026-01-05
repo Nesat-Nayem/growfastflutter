@@ -108,9 +108,11 @@ class AppRouter {
         GoRoute(
           name: AppRouterNames.signIn,
           path: AppRouterPaths.signInPath,
-          builder: (_, __) => BlocProvider.value(
+          builder: (_, state) => BlocProvider.value(
             value: sl<CountryCubit>(),
-            child: SigninPage(),
+            child: SigninPage(
+              redirectionData: state.extra as Map<String, dynamic>?,
+            ),
           ),
         ),
         GoRoute(
@@ -119,6 +121,7 @@ class AppRouter {
           builder: (_, state) => VerifyOtpPage(
             processInitaiedOn:
                 state.pathParameters['process_initiated_on'] ?? "",
+            redirectionData: state.extra as Map<String, dynamic>?,
           ),
         ),
         StatefulShellRoute.indexedStack(
@@ -302,7 +305,9 @@ class AppRouter {
         GoRoute(
           name: AppRouterNames.customerPaymentMode,
           path: AppRouterPaths.customerPaymentModePath,
-          builder: (_, state) => PaymentModePage(),
+          builder: (_, state) => PaymentModePage(
+            cartId: state.uri.queryParameters['cartId'],
+          ),
         ),
         GoRoute(
           name: AppRouterNames.customerBookingConfirmed,

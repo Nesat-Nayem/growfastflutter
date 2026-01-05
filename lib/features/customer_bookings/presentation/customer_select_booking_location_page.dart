@@ -68,7 +68,48 @@ class _CustomerSelectBookingLocationPageState
                   }
                   if (state.errorLocationsFetching != null) {
                     return Center(
-                      child: Text(state.errorLocationsFetching.toString()),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 48, color: Colors.red),
+                          verticalMargin16,
+                          Text(
+                            'Failed to load locations',
+                            style: context.titleMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          verticalMargin8,
+                          Text(
+                            state.errorLocationsFetching.toString(),
+                            textAlign: TextAlign.center,
+                            style: context.bodySmall,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  if (state.locations.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.location_off, size: 48, color: Colors.grey),
+                          verticalMargin16,
+                          Text(
+                            'No Locations Available',
+                            style: context.titleMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          verticalMargin8,
+                          Text(
+                            'This service has no available locations at the moment.',
+                            textAlign: TextAlign.center,
+                            style: context.bodySmall.copyWith(color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     );
                   }
                   return ListView.builder(

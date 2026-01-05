@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/config/app_config.dart';
+import 'package:grow_first/core/storage/secure_storage.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/app_assets.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
@@ -16,7 +18,9 @@ import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class PaymentModePage extends StatefulWidget {
-  const PaymentModePage({super.key});
+  final String? cartId;
+  
+  const PaymentModePage({super.key, this.cartId});
 
   @override
   _PaymentModePageState createState() => _PaymentModePageState();
@@ -25,6 +29,11 @@ class PaymentModePage extends StatefulWidget {
 class _PaymentModePageState extends State<PaymentModePage> {
   bool selectedRazorpay = true;
   late Razorpay _razorpay;
+  Map<String, dynamic>? cartData;
+  bool isLoading = true;
+  String? errorMessage;
+  String? razorpayOrderId;
+  String? razorpayKey;
 
   @override
   void initState() {
@@ -33,6 +42,81 @@ class _PaymentModePageState extends State<PaymentModePage> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    _fetchCartData();
+  }
+
+  Future<void> _fetchCartData() async {
+    if (widget.cartId == null) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'No cart ID provided';
+      });
+      return;
+    }
+
+    try {
+      final dio = sl<Dio>();
+      final getToken = await sl<ISecureStore>().read("token");
+      
+      // Fetch cart checkout data
+      final response = await dio.get(
+        'customer/cart-checkout/${widget.cartId}',
+        options: Options(headers: {'Authorization': 'Bearer $getToken'}),
+      );
+
+      if (response.data['success'] == true) {
+        setState(() {
+          cartData = response.data;
+        });
+        
+        // Create Razorpay order
+        await _createRazorpayOrder();
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage = response.data['message'] ?? 'Failed to load cart';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = e.toString();
+      });
+    }
+  }
+
+  Future<void> _createRazorpayOrder() async {
+    try {
+      final dio = sl<Dio>();
+      final getToken = await sl<ISecureStore>().read("token");
+      
+      final response = await dio.get(
+        'customer/cart_payment',
+        queryParameters: {
+          'gateway': 'razorpay',
+          'cart_id': widget.cartId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $getToken'}),
+      );
+
+      if (response.data['status'] == 'success') {
+        setState(() {
+          razorpayOrderId = response.data['order_id'];
+          razorpayKey = response.data['key'];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage = response.data['message'] ?? 'Failed to create payment order';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Failed to create payment order: ${e.toString()}';
+      });
+    }
   }
 
   @override
@@ -41,18 +125,43 @@ class _PaymentModePageState extends State<PaymentModePage> {
     super.dispose();
   }
 
-  void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    final state = sl<BookingsBloc>().state;
-    context.read<BookingsBloc>().add(ConfirmBooking(
-          cartId: state.cartId ?? 0,
-          paymentMethod: 'razorpay',
-          paymentGateway: 'razorpay',
-          response: {
-            'payment_id': response.paymentId,
-            'order_id': response.orderId,
-            'signature': response.signature,
-          },
-        ));
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    try {
+      final dio = sl<Dio>();
+      final getToken = await sl<ISecureStore>().read("token");
+      
+      // Verify payment with backend
+      final verifyResponse = await dio.post(
+        'razorpay/verify',
+        data: {
+          'razorpay_payment_id': response.paymentId,
+          'razorpay_order_id': response.orderId,
+          'razorpay_signature': response.signature,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $getToken'}),
+      );
+
+      if (verifyResponse.data['status'] == 'success') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Payment successful! Booking confirmed.')),
+          );
+          context.pushNamed(AppRouterNames.customerBookingConfirmed);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(verifyResponse.data['message'] ?? 'Payment verification failed')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment verification failed: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -68,15 +177,26 @@ class _PaymentModePageState extends State<PaymentModePage> {
   }
 
   void _startPayment(double totalAmount) {
+    if (razorpayKey == null || razorpayOrderId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment setup failed. Please try again.')),
+      );
+      return;
+    }
+
+    final cart = cartData!['carts'];
+    final service = cartData!['service'];
+    
     var options = {
-      'key': 'rzp_test_your_key', 
+      'key': razorpayKey,
       'amount': (totalAmount * 100).toInt(),
+      'order_id': razorpayOrderId,
       'name': 'Grow First',
-      'description': 'Service Booking',
-      'prefill': {'contact': '8888888888', 'email': 'test@gmail.com'},
-      'external': {
-        'wallets': ['paytm']
-      }
+      'description': service['title'] ?? 'Service Booking',
+      'prefill': {
+        'contact': cart['cart_adresses']?[0]?['phone'] ?? '',
+        'email': cart['cart_adresses']?[0]?['email'] ?? ''
+      },
     };
 
     try {
@@ -88,6 +208,47 @@ class _PaymentModePageState extends State<PaymentModePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        appBar: CustomerHomeAppBar(singleTitle: "Payment"),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (errorMessage != null || cartData == null) {
+      return Scaffold(
+        appBar: CustomerHomeAppBar(singleTitle: "Payment"),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.red),
+              verticalMargin16,
+              Text(
+                'Failed to load payment details',
+                style: context.titleMedium.copyWith(fontWeight: FontWeight.w600),
+              ),
+              verticalMargin8,
+              Text(
+                errorMessage ?? 'Unknown error',
+                textAlign: TextAlign.center,
+                style: context.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final cartSum = double.tryParse(cartData!['cart_sum']?.toString() ?? '0') ?? 0.0;
+    final tax = cartData!['tax'];
+    final taxAmount = tax != null ? (cartSum * double.parse(tax['tax_percentage']?.toString() ?? '0') / 100) : 0.0;
+    final totalAmount = cartSum + taxAmount;
+    
+    final service = cartData!['service'];
+    final cart = cartData!['carts'];
+    final cartItems = cart['cart_items'] ?? [];
+
     return BlocListener<BookingsBloc, BookingsState>(
       bloc: sl<BookingsBloc>(),
       listener: (context, state) {
@@ -103,14 +264,6 @@ class _PaymentModePageState extends State<PaymentModePage> {
       child: BlocBuilder<BookingsBloc, BookingsState>(
         bloc: sl<BookingsBloc>(),
         builder: (context, state) {
-          final listing = sl<ListingBloc>().state.selectedListing;
-          final additionalServices = state.selectedAdditionalServices;
-          
-          double basePrice = double.tryParse(listing?.price ?? '0') ?? 0;
-          double additionalTotal = additionalServices.fold(0, (sum, item) => sum + item.price);
-          double subTotal = basePrice + additionalTotal;
-          double tax = subTotal * 0.05; // 5% GST
-          double totalAmount = subTotal + tax;
 
           return Scaffold(
             appBar: CustomerHomeAppBar(singleTitle: "Payment"),
@@ -155,18 +308,19 @@ class _PaymentModePageState extends State<PaymentModePage> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildItemRow(listing?.title ?? "Service",
-                            "₹${basePrice.toStringAsFixed(2)}", ""),
-                        ...additionalServices.map((s) => _buildItemRow(
-                            s.title, "₹${s.price.toStringAsFixed(2)}", "")),
+                        _buildItemRow(service['title'] ?? "Service",
+                            "₹${cart['service_price']?.toString() ?? '0'}", ""),
+                        ...cartItems.map<Widget>((item) => _buildItemRow(
+                            item['additional_services']?['name'] ?? 'Additional Service',
+                            "₹${item['price']?.toString() ?? '0'}", "")),
                         const SizedBox(height: 20),
                         const Divider(),
                         const SizedBox(height: 12),
                         _buildSummaryRow(
-                            "Sub Total", "₹${subTotal.toStringAsFixed(2)}"),
+                            "Sub Total", "₹${cartSum.toStringAsFixed(2)}"),
                         const SizedBox(height: 8),
                         _buildSummaryRow(
-                            "Tax (GST 5%)", "₹${tax.toStringAsFixed(2)}"),
+                            "Tax (GST ${tax != null ? tax['tax_percentage'] : '0'}%)", "₹${taxAmount.toStringAsFixed(2)}"),
                         verticalMargin24,
                         _buildTotalRow(
                             "Total", "₹${totalAmount.toStringAsFixed(2)}"),

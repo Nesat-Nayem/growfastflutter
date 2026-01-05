@@ -12,6 +12,10 @@ class DioClient {
       BaseOptions(
         baseUrl: cfg.baseUrl,
         connectTimeout: const Duration(seconds: 20),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
       ),
     );
     dio.interceptors.addAll([AuthInterceptor(secure, sm)]);

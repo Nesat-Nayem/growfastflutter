@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
 import 'package:grow_first/core/config/app_config.dart';
@@ -21,6 +22,7 @@ Future<void> configureDependencies(AppConfig config) async {
   sl.registerLazySingleton<DioClient>(
     () => DioClient(sl<AppConfig>(), sl<ISecureStore>(), sl()),
   );
+  sl.registerLazySingleton<Dio>(() => sl<DioClient>().dio);
 
   //Bloc
   sl.registerFactory(() => AppBloc(secureStore: sl<ISecureStore>()));

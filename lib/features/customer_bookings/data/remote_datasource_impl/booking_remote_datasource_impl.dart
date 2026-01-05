@@ -22,9 +22,28 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       'customer/service/booking/locations/$serviceId',
     );
 
-    return (res['staffLocations'] as List)
-        .map((e) => BookingLocationModel.fromJson(e))
-        .toList();
+    if (res is! Map) {
+      throw Exception('Invalid response format: Expected a JSON object');
+    }
+
+    if (res['status'] != 'success') {
+      throw Exception(res['message'] ?? 'Failed to fetch locations');
+    }
+
+    final data = res['data'];
+    if (data == null) {
+      return [];
+    }
+
+    if (data is! List) {
+      throw Exception('Invalid response format: Expected data to be a list');
+    }
+
+    if (data.isEmpty) {
+      return [];
+    }
+
+    return data.map((e) => BookingLocationModel.fromJson(e)).toList();
   }
 
   @override
@@ -49,9 +68,24 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       },
     );
 
-    return (res['staffs'] as List)
-        .map((e) => BookingStaffModel.fromJson(e))
-        .toList();
+    if (res is! Map) {
+      throw Exception('Invalid response format: Expected a JSON object');
+    }
+
+    if (res['status'] != 'success') {
+      throw Exception(res['message'] ?? 'Failed to fetch staff');
+    }
+
+    final staffs = res['staffs'];
+    if (staffs == null || staffs is! List) {
+      return [];
+    }
+
+    if (staffs.isEmpty) {
+      return [];
+    }
+
+    return staffs.map((e) => BookingStaffModel.fromJson(e)).toList();
   }
 
   @override
@@ -66,12 +100,32 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       headers: {'Authorization': 'Bearer $getToken'},
     );
 
-    final List<BookingServiceDetailModel> services =
-        (res['service']['additional_services'] as List)
-            .map((e) => BookingServiceDetailModel.fromJson(e))
-            .toList();
+    if (res is! Map) {
+      throw Exception('Invalid response format: Expected a JSON object');
+    }
 
-    return services;
+    if (res['status'] != 'success') {
+      throw Exception(res['message'] ?? 'Failed to fetch service details');
+    }
+
+    final service = res['service'];
+    if (service == null || service is! Map) {
+      return [];
+    }
+
+    // Try both camelCase and snake_case for compatibility
+    final additionalServices = service['additional_services'] ?? service['additionalServices'];
+    if (additionalServices == null || additionalServices is! List) {
+      return [];
+    }
+
+    if (additionalServices.isEmpty) {
+      return [];
+    }
+
+    return additionalServices
+        .map((e) => BookingServiceDetailModel.fromJson(e))
+        .toList();
   }
 
   @override
@@ -96,6 +150,31 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     );
 
     return res['success'] == true;
+  }
+
+  Future<Map<String, dynamic>> getServiceSlots(int serviceId) async {
+    final getToken = await sl<ISecureStore>().read("token");
+    final res = await NetworkHelper.sendRequest(
+      dio,
+      RequestType.get,
+      'customer/service/booking/service_slots/$serviceId',
+      headers: {'Authorization': 'Bearer $getToken'},
+    );
+
+    if (res is! Map) {
+      throw Exception('Invalid response format: Expected a JSON object');
+    }
+
+    if (res['status'] != 'success') {
+      throw Exception(res['message'] ?? 'Failed to fetch service slots');
+    }
+
+    final data = res['data'];
+    if (data == null || data is! List) {
+      return {'slots': [], 'hasSlots': false};
+    }
+
+    return {'slots': data, 'hasSlots': data.isNotEmpty};
   }
 
   @override
@@ -141,8 +220,16 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       },
     );
 
+    if (res is! Map) {
+      throw Exception('Invalid response format: Expected a JSON object');
+    }
+
     if (res['success'] == true) {
-      return res['cart_id'];
+      final cartId = res['cart_id'];
+      if (cartId == null) {
+        throw Exception('Cart ID not found in response');
+      }
+      return int.tryParse(cartId.toString()) ?? 0;
     } else {
       throw Exception(res['message'] ?? 'Failed to add to cart');
     }

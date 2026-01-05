@@ -1,14 +1,17 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
+import 'package:grow_first/features/customer_bookings/data/remote_datasource_impl/booking_remote_datasource_impl.dart';
 import 'package:grow_first/features/widgets/custom_bottom_nav_next_back_btns.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:intl/intl.dart';
 
-class CustomerSelectDataAndTimeForBookingPage extends StatelessWidget {
+class CustomerSelectDataAndTimeForBookingPage extends StatefulWidget {
   const CustomerSelectDataAndTimeForBookingPage({
     super.key,
     required this.listingId,
@@ -21,40 +24,65 @@ class CustomerSelectDataAndTimeForBookingPage extends StatelessWidget {
   final String staffId;
 
   @override
+  State<CustomerSelectDataAndTimeForBookingPage> createState() =>
+      _CustomerSelectDataAndTimeForBookingPageState();
+}
+
+class _CustomerSelectDataAndTimeForBookingPageState
+    extends State<CustomerSelectDataAndTimeForBookingPage> {
+  List<String> availableSlots = [];
+  bool isLoading = true;
+  bool hasSlots = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchServiceSlots();
+  }
+
+  Future<void> _fetchServiceSlots() async {
+    try {
+      final dio = sl<Dio>();
+      final dataSource = BookingRemoteDataSourceImpl(dio);
+      final result = await dataSource.getServiceSlots(int.parse(widget.listingId));
+      
+      setState(() {
+        hasSlots = result['hasSlots'] as bool;
+        if (hasSlots) {
+          final slots = result['slots'] as List;
+          availableSlots = slots.map((slot) {
+            final from = slot['from']?.toString() ?? '';
+            return from;
+          }).where((s) => s.isNotEmpty).toList();
+        }
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        hasSlots = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        appBar: CustomerHomeAppBar(singleTitle: "Select Date & Time"),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return _CustomerSelectDataAndTimeForBookingPageContent(
-      listingId: listingId,
-      locationId: locationId,
-      staffId: staffId,
+      listingId: widget.listingId,
+      locationId: widget.locationId,
+      staffId: widget.staffId,
       startDate: DateTime.now(),
       daysToShow: 7,
-      bookedSlots: ["11:00 AM", "12:00 PM", "02:00 PM"],
-      availableSlots: [
-        "09:00 AM",
-        "09:30 AM",
-        "10:00 AM",
-        "10:30 AM",
-        "11:00 AM",
-        "11:30 AM",
-        "12:00 PM",
-        "12:30 PM",
-        "01:00 PM",
-        "01:30 PM",
-        "02:00 PM",
-        "02:30 PM",
-        "03:00 PM",
-        "03:30 PM",
-        "04:00 PM",
-        "04:30 PM",
-        "05:00 PM",
-        "05:30 PM",
-        "06:00 PM",
-        "06:30 PM",
-        "07:00 PM",
-        "07:30 PM",
-        "08:00 PM",
-        "08:30 PM",
-      ],
+      bookedSlots: [],
+      availableSlots: availableSlots,
+      hasTimeSlots: hasSlots,
       onNext: (date, time) {
         print("Selected Date: $date");
         print("Selected Time: $time");
@@ -71,6 +99,7 @@ class _CustomerSelectDataAndTimeForBookingPageContent extends StatefulWidget {
   final int daysToShow;
   final List<String> bookedSlots;
   final List<String> availableSlots;
+  final bool hasTimeSlots;
   final Function(DateTime date, String time) onNext;
 
   const _CustomerSelectDataAndTimeForBookingPageContent({
@@ -81,6 +110,7 @@ class _CustomerSelectDataAndTimeForBookingPageContent extends StatefulWidget {
     this.daysToShow = 7,
     required this.bookedSlots,
     required this.availableSlots,
+    required this.hasTimeSlots,
     required this.onNext,
   });
 
@@ -128,15 +158,41 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
             verticalMargin12,
             _buildDatePicker(),
             const SizedBox(height: 16),
-            Text("Select Time", style: context.labelLarge),
-            verticalMargin16,
-            Expanded(child: _buildTimeGrid()),
+            if (widget.hasTimeSlots) ...[
+              Text("Select Time", style: context.labelLarge),
+              verticalMargin16,
+              Expanded(child: _buildTimeGrid()),
+            ] else ...[
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.schedule_outlined, size: 48, color: Colors.grey),
+                      verticalMargin16,
+                      Text(
+                        'No Time Slots Available',
+                        style: context.titleMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      verticalMargin8,
+                      Text(
+                        'This service does not have time slots.\nSelect a date and continue.',
+                        textAlign: TextAlign.center,
+                        style: context.bodySmall.copyWith(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
       bottomNavigationBar: CustomBottomNavNextBackBtns(
         onPressedOne: () {
-          if (selectedTime == null) {
+          if (widget.hasTimeSlots && selectedTime == null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Please select a time slot")),
             );
@@ -151,7 +207,7 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
             },
             queryParameters: {
               "date": DateFormat('yyyy-MM-dd').format(selectedDate),
-              "time": selectedTime!,
+              "time": selectedTime ?? '',
             },
           );
         },

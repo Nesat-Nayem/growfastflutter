@@ -13,13 +13,15 @@ class BookingStaffModel extends BookingStaff {
 
   factory BookingStaffModel.fromJson(Map<String, dynamic> json) {
     return BookingStaffModel(
-      id: json['id'] as int,
-      name: json['user']['name'] as String? ?? '',
-      email: json['user']['email'] as String? ?? '',
-      image: json['user']['image'] as String? ?? '',
-      noOfServices: json['no_of_services'] as int? ?? 0,
-      overAllReview: json['overall_review'] as int? ?? 0,
-      totalNoOfRatings: json['total_no_of_ratings'] as int? ?? 0,
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      name: json['user']?['name']?.toString() ?? '',
+      email: json['user']?['email']?.toString() ?? '',
+      image: json['user']?['image']?.toString() ?? '',
+      noOfServices: int.tryParse(json['no_of_services']?.toString() ?? '0') ?? 0,
+      overAllReview:
+          int.tryParse(json['overall_review']?.toString() ?? '0') ?? 0,
+      totalNoOfRatings:
+          int.tryParse(json['total_no_of_ratings']?.toString() ?? '0') ?? 0,
     );
   }
 

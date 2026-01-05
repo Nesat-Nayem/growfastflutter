@@ -82,12 +82,52 @@ class _CustomerSelectBookingStaffPageState
                 if (state.errorStaffFetching != null) {
                   return Expanded(
                     child: Center(
-                      child: Text(state.errorStaffFetching.toString()),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 48, color: Colors.red),
+                          verticalMargin16,
+                          Text(
+                            'Failed to load staff',
+                            style: context.titleMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          verticalMargin8,
+                          Text(
+                            state.errorStaffFetching.toString(),
+                            textAlign: TextAlign.center,
+                            style: context.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
                 if (state.staffs.isEmpty) {
-                  return const Center(child: Text("No Staffs Available"));
+                  return Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person_off, size: 48, color: Colors.grey),
+                          verticalMargin16,
+                          Text(
+                            'No Staff Available',
+                            style: context.titleMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          verticalMargin8,
+                          Text(
+                            'No staff members are available for this location.',
+                            textAlign: TextAlign.center,
+                            style: context.bodySmall.copyWith(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 }
                 return Expanded(
                   child: ListView.builder(
