@@ -4,9 +4,14 @@ import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 
 class CustomTextfield extends StatelessWidget {
-  const CustomTextfield({super.key, required this.hintText});
+  const CustomTextfield({
+    super.key,
+    required this.hintText,
+    this.controller,
+  });
 
   final String hintText;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +22,7 @@ class CustomTextfield extends StatelessWidget {
       ),
       padding: verticalPadding8 + horizontalPadding12,
       child: TextFormField(
-        controller: TextEditingController(),
+        controller: controller,
         onTapOutside: (event) {
           return FocusManager.instance.primaryFocus?.unfocus();
         },

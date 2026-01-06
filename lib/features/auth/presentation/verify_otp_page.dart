@@ -10,7 +10,8 @@ import 'package:grow_first/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:grow_first/features/auth/presentation/widgets/otp_fields.dart';
-import 'package:grow_first/features/listing/di/listing_injections.dart';
+import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
+import 'package:grow_first/app/di/app_injections.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   final Map<String, dynamic>? redirectionData;
@@ -124,6 +125,9 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                         bloc: sl<AuthBloc>(),
                         listener: (context, state) {
                           if (state.token?.isNotEmpty ?? false) {
+                            // Trigger app-level authentication state
+                            sl<AppBloc>().add(AppLoggedIn());
+                            
                             if (widget.redirectionData != null &&
                                 widget.redirectionData!["redirectTo"] != null) {
                               final routeName =

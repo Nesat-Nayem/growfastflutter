@@ -71,77 +71,116 @@ class _SigninPageState extends State<SigninPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: horizontalPadding16 + verticalPadding12,
-          child: Column(
-            crossAxisAlignment: .start,
-            children: [
-              Center(
-                child: Text(
-                  "Login",
-                  style: context.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              verticalMargin32,
-              Text(
-                "Welcome",
-                style: context.titleMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              verticalMargin4,
-              Text(
-                "Enter your credentials to access your account",
-                style: context.labelLarge.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1,
-                ),
-              ),
-              verticalMargin32,
-              verticalMargin12,
-              TabBar(
-                key: const Key('user-types'),
-                labelPadding: rightPadding24,
-                tabAlignment: TabAlignment.start,
-                indicatorPadding: emptyPadding,
-                dividerColor: Colors.transparent,
-                isScrollable: true,
-                indicatorSize: TabBarIndicatorSize.label,
-                controller: _tabController,
-                labelStyle: context.bodyLarge.copyWith(
-                  letterSpacing: 1.4,
-                  color: aquaBlueColor,
-                ),
-                onTap: (value) => _tabController.animateTo(value),
-                indicatorColor: darkNavyBlueColor,
-                dividerHeight: 0.8,
-                overlayColor: WidgetStateProperty.all(Colors.transparent),
-                tabs: [
-                  Tab(text: "Customer"),
-                  Tab(text: "Vendor"),
+      body: Stack(
+        children: [
+          // Gradient background at top
+          Container(
+            height: MediaQuery.of(context).size.height * 0.4,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF4DD0E1),
+                  Color(0xFF26C6DA),
+                  Color(0xFF00BCD4),
                 ],
               ),
-              verticalMargin48,
-              Expanded(
-                flex: 1,
-                child: TabBarView(
-                  controller: _tabController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    SingleChildScrollView(
+            ),
+          ),
+          // White content area
+          SafeArea(
+            child: Column(
+              children: [
+                // Top section with gradient background
+                Container(
+                  padding: horizontalPadding16 + verticalPadding32,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Welcome To\nLogin",
+                        style: context.titleLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 32,
+                          height: 1.2,
+                        ),
+                      ),
+                      verticalMargin12,
+                      Text(
+                        "Enter your credentials to access\nyour account",
+                        style: context.labelLarge.copyWith(
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // White rounded container for content
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: horizontalPadding16 + verticalPadding24,
                       child: Column(
-                        crossAxisAlignment: .start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Mobile Number",
-                            style: context.labelLarge.copyWith(
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: 1,
+                          verticalMargin12,
+                          TabBar(
+                            key: const Key('user-types'),
+                            labelPadding: rightPadding24,
+                            tabAlignment: TabAlignment.start,
+                            indicatorPadding: emptyPadding,
+                            dividerColor: Colors.transparent,
+                            isScrollable: true,
+                            indicatorSize: TabBarIndicatorSize.label,
+                            controller: _tabController,
+                            labelStyle: context.bodyLarge.copyWith(
+                              letterSpacing: 1.4,
+                              color: aquaBlueColor,
+                              fontWeight: FontWeight.w600,
                             ),
+                            unselectedLabelStyle: context.bodyLarge.copyWith(
+                              letterSpacing: 1.4,
+                              color: Colors.grey,
+                            ),
+                            onTap: (value) => _tabController.animateTo(value),
+                            indicatorColor: aquaBlueColor,
+                            indicatorWeight: 3,
+                            dividerHeight: 0,
+                            overlayColor: WidgetStateProperty.all(Colors.transparent),
+                            tabs: [
+                              Tab(text: "Customer"),
+                              Tab(text: "Vendor"),
+                            ],
                           ),
+                          verticalMargin32,
+                          Expanded(
+                            flex: 1,
+                            child: TabBarView(
+                              controller: _tabController,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: [
+                                SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Mobile Number",
+                                        style: context.labelLarge.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
                           verticalMargin12,
                           BlocBuilder<CountryCubit, CountryState>(
                             builder: (context, state) {
@@ -282,10 +321,10 @@ class _SigninPageState extends State<SigninPage> with TickerProviderStateMixin {
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    SingleChildScrollView(
+                                    ],
+                                  ),
+                                ),
+                                SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: .start,
                         children: [
@@ -412,15 +451,21 @@ class _SigninPageState extends State<SigninPage> with TickerProviderStateMixin {
                               ),
                             ],
                           ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
       bottomNavigationBar: _tabController.index == 1
           ? SafeArea(

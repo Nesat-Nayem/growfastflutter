@@ -7,6 +7,7 @@ import 'package:sizer/sizer.dart';
 import 'app/di/app_injections.dart';
 import 'app/router/app_router.dart';
 import 'core/config/app_config.dart';
+import 'core/app_store/app_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,10 @@ Future<void> main() async {
   }
 
   // Initialize dependency injection with loaded config
-  configureDependencies(config);
+  await configureDependencies(config);
+  
+  // Load user data from secure storage
+  await sl<AppStore>().load();
 
   runApp(GrowFirstApp(config: config));
 }

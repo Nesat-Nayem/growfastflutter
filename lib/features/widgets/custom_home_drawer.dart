@@ -76,15 +76,19 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/features/customer_bookings/presentation/widgets/reschedule_pop_up.dart';
 import 'package:grow_first/features/listing/di/listing_injections.dart' hide sl;
-import 'package:grow_first/features/vendor_dashboard/di/vendors_injections.dart';
+import 'package:grow_first/features/vendor_dashboard/di/vendors_injections.dart' hide sl;
 import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_bloc.dart';
+import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
+import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_event.dart';
+import 'package:grow_first/app/di/app_injections.dart';
 
 class ModernCustomerDrawer extends StatelessWidget {
   const ModernCustomerDrawer({
@@ -138,32 +142,47 @@ class ModernCustomerDrawer extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text.rich(
-                          TextSpan(
-                            text: "Hey, ",
-                            style: context.bodyLarge.copyWith(
-                              fontWeight: FontWeight.w400,
-                              fontFamily: "Poppins",
-                            ),
-                            children: [
-                              TextSpan(
-                                text: "Lokesh Mali",
-                                style: context.bodyLarge.copyWith(
-                                  letterSpacing: 1.2,
-                                  color: aquaBlueColor,
-                                  fontWeight: FontWeight.w800,
-                                  fontFamily: "Poppins",
+                        BlocBuilder<AppBloc, AppState>(
+                          builder: (context, appState) {
+                            final appStore = sl<AppStore>();
+                            final user = appStore.user;
+                            final userName = user?.name ?? 'Guest';
+                            final userContact = user?.phone ?? user?.email ?? '';
+                            
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text.rich(
+                                  TextSpan(
+                                    text: "Hey, ",
+                                    style: context.bodyLarge.copyWith(
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: "Poppins",
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: userName,
+                                        style: context.bodyLarge.copyWith(
+                                          letterSpacing: 1.2,
+                                          color: aquaBlueColor,
+                                          fontWeight: FontWeight.w800,
+                                          fontFamily: "Poppins",
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          "mali.lokesh5050@gmail.com",
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 13,
-                          ),
+                                if (userContact.isNotEmpty)
+                                  Text(
+                                    userContact,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -187,34 +206,34 @@ class ModernCustomerDrawer extends StatelessWidget {
                 onTap: () => context.pushNamed(AppRouterNames.customerBookings),
                 color: Color(0XFF245F9E),
               ),
-              DrawerMenuItem(
-                icon: Icons.settings,
-                label: "Recent Boookings",
-                onTap: () {
-                  context.pushNamed(
-                    AppRouterNames.customerBookingDetail,
-                    pathParameters: {"bookingId": "22222"},
-                  );
-                },
-                color: Color(0XFF5ECFE0),
-              ),
-              DrawerMenuItem(
-                icon: Icons.settings,
-                label: "Reschedule Appointment [Pop Up Demo]",
-                onTap: () {
-                  showGeneralDialog(
-                    context: context,
-                    barrierDismissible: true,
-                    barrierLabel: "Dismiss",
-                    barrierColor: Colors.black54,
-                    transitionDuration: Duration(milliseconds: 300),
-                    pageBuilder: (context, animation1, animation2) {
-                      return ReschedulePopUp();
-                    },
-                  );
-                },
-                color: Color(0XFF78A5E1),
-              ),
+              // DrawerMenuItem(
+              //   icon: Icons.settings,
+              //   label: "Recent Boookings",
+              //   onTap: () {
+              //     context.pushNamed(
+              //       AppRouterNames.customerBookingDetail,
+              //       pathParameters: {"bookingId": "22222"},
+              //     );
+              //   },
+              //   color: Color(0XFF5ECFE0),
+              // ),
+              // DrawerMenuItem(
+              //   icon: Icons.settings,
+              //   label: "Reschedule Appointment [Pop Up Demo]",
+              //   onTap: () {
+              //     showGeneralDialog(
+              //       context: context,
+              //       barrierDismissible: true,
+              //       barrierLabel: "Dismiss",
+              //       barrierColor: Colors.black54,
+              //       transitionDuration: Duration(milliseconds: 300),
+              //       pageBuilder: (context, animation1, animation2) {
+              //         return ReschedulePopUp();
+              //       },
+              //     );
+              //   },
+              //   color: Color(0XFF78A5E1),
+              // ),
               DrawerMenuItem(
                 icon: Icons.account_balance_wallet_rounded,
                 label: "Wallet",
@@ -245,7 +264,17 @@ class ModernCustomerDrawer extends StatelessWidget {
               DrawerMenuItem(
                 icon: Icons.logout,
                 label: "Logout",
-                onTap: () {},
+                onTap: () async {
+                  // Clear auth data
+                  await sl<AppStore>().clear();
+                  // Trigger app logout
+                  sl<AppBloc>().add(AppLoggedOut());
+                  // Close drawer and navigate to home
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    context.goNamed(AppRouterNames.home);
+                  }
+                },
                 color: Color(0XFF78A5E1),
               ),
 

@@ -1,7 +1,7 @@
-import 'dart:math';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:grow_first/app/di/app_injections.dart';
+import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
@@ -9,7 +9,60 @@ import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:grow_first/features/widgets/status_button.dart';
 
 class CustomerBookingCard extends StatelessWidget {
-  const CustomerBookingCard({super.key});
+  const CustomerBookingCard({super.key, this.booking});
+  
+  final Map<String, dynamic>? booking;
+
+  String _getServiceImage() {
+    final config = sl<AppConfig>();
+    final baseUrl = config.imageBaseUrl;
+    
+    // Try to get the first gallery image from service
+    final service = booking?['service'];
+    if (service != null) {
+      // Check if gallery exists and has images
+      final gallery = service['gallery'];
+      if (gallery != null && gallery is List && gallery.isNotEmpty) {
+        final firstImage = gallery[0];
+        if (firstImage != null && firstImage['img'] != null) {
+          final imagePath = firstImage['img'].toString();
+          // If the path already contains http/https, return as is
+          if (imagePath.startsWith('http')) {
+            return imagePath;
+          }
+          // Otherwise, construct the full URL with Laravel storage URL
+          return '$baseUrl/storage/$imagePath';
+        }
+      }
+      
+      // Fallback to service image if available
+      if (service['image'] != null) {
+        final imagePath = service['image'].toString();
+        if (imagePath.startsWith('http')) {
+          return imagePath;
+        }
+        return '$baseUrl/storage/$imagePath';
+      }
+    }
+    
+    // Default placeholder image
+    return 'https://via.placeholder.com/400x300?text=No+Image';
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'confirmed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return lavaRedColor;
+      case 'completed':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +77,30 @@ class CustomerBookingCard extends StatelessWidget {
         crossAxisAlignment: .start,
         children: [
           SizedBox(
-            height: min(240, context.height * 0.25),
+            height: 180,
+            width: double.infinity,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: CachedNetworkImage(
-                imageUrl:
-                    "https://picsum.photos/seed/booking1/400/300",
-                fit: BoxFit.fitHeight,
+                imageUrl: _getServiceImage(),
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[200],
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text('No Image', style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -38,14 +108,14 @@ class CustomerBookingCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                "AC Services",
+                booking?['service']?['title'] ?? "Service",
                 style: context.bodySmall.copyWith(letterSpacing: 1.1),
               ),
               horizontalMargin12,
               StatusButton(
-                title: "Cancelled",
-                backgroundColor: lavaRedColor.withValues(alpha: 0.11),
-                titleColor: lavaRedColor,
+                title: booking?['status'] ?? "Pending",
+                backgroundColor: _getStatusColor(booking?['status']).withValues(alpha: 0.11),
+                titleColor: _getStatusColor(booking?['status']),
                 textStyle: context.labelSmall.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -53,7 +123,7 @@ class CustomerBookingCard extends StatelessWidget {
             ],
           ),
           verticalMargin16,
-          _BookingDetails(),
+          _BookingDetails(booking: booking),
         ],
       ),
     );
@@ -61,32 +131,50 @@ class CustomerBookingCard extends StatelessWidget {
 }
 
 class _BookingDetails extends StatelessWidget {
-  const _BookingDetails();
+  const _BookingDetails({this.booking});
+  
+  final Map<String, dynamic>? booking;
+
+  String _formatBookingDateTime() {
+    final date = booking?['booking_date'];
+    final slots = booking?['booking_slots'];
+    
+    if (date == null) return 'N/A';
+    
+    // If slots is null or empty, just return the date
+    if (slots == null || slots.toString().isEmpty || slots.toString() == 'null') {
+      return date.toString();
+    }
+    
+    // Return date with time slots
+    return '$date, $slots';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _BookingRowTile(
-          title: "Booking Date",
-          value: "02 Sep 2022, 17:00-18:00",
-        ),
+        if (booking?['booking_date'] != null)
+          _BookingRowTile(
+            title: "Booking Date",
+            value: _formatBookingDateTime(),
+          ),
         verticalMargin8,
         _BookingRowTile(
           title: "Amount",
-          value: "₹ 2500.00",
+          value: "₹ ${booking?['total_price'] ?? '0.00'}",
           extraValueContent: StatusButton(
-            title: "Paypal",
+            title: booking?['payment_method'] ?? "Cash",
             backgroundColor: Color(0XFF245F9E).withValues(alpha: 0.16),
             titleColor: Color(0XFF245F9E),
           ),
         ),
         verticalMargin8,
-        _BookingRowTile(title: "Location", value: "Pune"),
+        _BookingRowTile(title: "Status", value: booking?['payment_status'] ?? 'Pending'),
         verticalMargin8,
         _BookingRowTile(
           title: "Provider",
-          value: "HP Engineering",
+          value: booking?['service']?['user']?['name'] ?? 'N/A',
           keepExtraContentFirst: true,
           extraValueContent: Image.asset(
             "assets/images/g_logo.png",
@@ -99,7 +187,7 @@ class _BookingDetails extends StatelessWidget {
             Icon(Icons.email_outlined, size: 17),
             horizontalMargin4,
             Text(
-              "info@hp.com",
+              booking?['service']?['user']?['email'] ?? 'N/A',
               style: context.labelMedium.copyWith(
                 fontWeight: FontWeight.w500,
                 color: lightGreyTextColor,
@@ -109,7 +197,7 @@ class _BookingDetails extends StatelessWidget {
             Icon(Icons.local_phone_outlined, size: 17),
             horizontalMargin4,
             Text(
-              "+91 9989887767",
+              booking?['service']?['user']?['phone'] ?? 'N/A',
               style: context.labelMedium.copyWith(
                 fontWeight: FontWeight.w500,
                 color: lightGreyTextColor,
@@ -118,30 +206,30 @@ class _BookingDetails extends StatelessWidget {
           ],
         ),
         verticalMargin16,
-        Row(
-          children: [
-            GradientButton(
-              text: "Reschedule",
-              onTap: () {},
-              borderRadius: 5,
-              padding: verticalPadding12 + horizontalPadding24,
-              textStyle: context.labelMedium.copyWith(color: whiteColor),
-            ),
-            horizontalMargin8,
-            GradientButton(
-              text: "Cancel",
-              onTap: () {},
-              borderRadius: 5,
-              hideGradient: true,
-              backgroundColor: greyButttonColor,
-              padding: verticalPadding12 + horizontalPadding24,
-              textStyle: context.labelMedium.copyWith(
-                color: textBlackColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+        // Row(
+        //   children: [
+        //     GradientButton(
+        //       text: "Reschedule",
+        //       onTap: () {},
+        //       borderRadius: 5,
+        //       padding: verticalPadding12 + horizontalPadding24,
+        //       textStyle: context.labelMedium.copyWith(color: whiteColor),
+        //     ),
+        //     horizontalMargin8,
+        //     GradientButton(
+        //       text: "Cancel",
+        //       onTap: () {},
+        //       borderRadius: 5,
+        //       hideGradient: true,
+        //       backgroundColor: greyButttonColor,
+        //       padding: verticalPadding12 + horizontalPadding24,
+        //       textStyle: context.labelMedium.copyWith(
+        //         color: textBlackColor,
+        //         fontWeight: FontWeight.w500,
+        //       ),
+        //     ),
+        //   ],
+        // ),
       ],
     );
   }
@@ -163,10 +251,11 @@ class _BookingRowTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Row(
-            mainAxisAlignment: .spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
@@ -176,7 +265,7 @@ class _BookingRowTile extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(":"),
+              const Text(":"),
             ],
           ),
         ),
@@ -184,28 +273,37 @@ class _BookingRowTile extends StatelessWidget {
         Expanded(
           flex: 2,
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (keepExtraContentFirst) ...[
-                ?extraValueContent,
-                horizontalMargin8,
-                Text(
-                  value,
-                  style: context.labelLarge.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: lightGreyTextColor,
+                if (extraValueContent != null) extraValueContent!,
+                if (extraValueContent != null) horizontalMargin8,
+                Expanded(
+                  child: Text(
+                    value,
+                    style: context.labelLarge.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: lightGreyTextColor,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ] else ...[
-                Text(
-                  value,
-                  style: context.labelLarge.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: lightGreyTextColor,
+                Expanded(
+                  child: Text(
+                    value,
+                    style: context.labelLarge.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: lightGreyTextColor,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (extraValueContent != null) ...[
                   horizontalMargin12,
-                  ?extraValueContent,
+                  extraValueContent!,
                 ],
               ],
             ],
