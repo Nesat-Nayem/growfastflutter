@@ -4,15 +4,48 @@ import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/widgets/app_drop_down_filed.dart';
 
 class CountryStateSection extends StatefulWidget {
-  const CountryStateSection({super.key});
+  const CountryStateSection({
+    super.key,
+    this.initialCountry,
+    this.initialState,
+    this.onCountryChanged,
+    this.onStateChanged,
+  });
+
+  final String? initialCountry;
+  final String? initialState;
+  final ValueChanged<String?>? onCountryChanged;
+  final ValueChanged<String?>? onStateChanged;
 
   @override
   State<CountryStateSection> createState() => _CountryStateSectionState();
 }
 
 class _CountryStateSectionState extends State<CountryStateSection> {
-  String selectedCountry = "India";
-  String selectedState = "Maharashtra";
+  String? selectedCountry;
+  String? selectedState;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedCountry = widget.initialCountry;
+    selectedState = widget.initialState;
+  }
+
+  @override
+  void didUpdateWidget(CountryStateSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialCountry != oldWidget.initialCountry) {
+      setState(() {
+        selectedCountry = widget.initialCountry;
+      });
+    }
+    if (widget.initialState != oldWidget.initialState) {
+      setState(() {
+        selectedState = widget.initialState;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +68,8 @@ class _CountryStateSectionState extends State<CountryStateSection> {
                 items: const ["India", "USA", "UK", "Canada"],
                 value: selectedCountry,
                 onChanged: (value) {
-                  setState(() => selectedCountry = value!);
+                  setState(() => selectedCountry = value);
+                  widget.onCountryChanged?.call(value);
                 },
               ),
             ],
@@ -65,7 +99,8 @@ class _CountryStateSectionState extends State<CountryStateSection> {
                 ],
                 value: selectedState,
                 onChanged: (value) {
-                  setState(() => selectedState = value!);
+                  setState(() => selectedState = value);
+                  widget.onStateChanged?.call(value);
                 },
               ),
             ],

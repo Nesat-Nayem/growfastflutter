@@ -6,14 +6,14 @@ import 'package:grow_first/core/utils/sizing.dart';
 class AppDropdownField extends StatelessWidget {
   final String label;
   final List<String> items;
-  final String value;
+  final String? value;
   final ValueChanged<String?> onChanged;
 
   const AppDropdownField({
     super.key,
     required this.label,
     required this.items,
-    required this.value,
+    this.value,
     required this.onChanged,
   });
 

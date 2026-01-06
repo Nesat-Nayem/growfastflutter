@@ -39,6 +39,12 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
   final _cityController = TextEditingController();
   final _postalCodeController = TextEditingController();
   
+  // Dropdown and date values
+  String? _selectedGender;
+  DateTime? _selectedDateOfBirth;
+  String? _selectedCountry;
+  String? _selectedState;
+  
   late AccountCubit _accountCubit;
 
   @override
@@ -80,6 +86,22 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
     _addressController.text = user['address'] ?? '';
     _cityController.text = user['city'] ?? '';
     _postalCodeController.text = user['post_code'] ?? '';
+    
+    // Set dropdown and date values
+    setState(() {
+      _selectedGender = user['gender'];
+      _selectedCountry = user['country'];
+      _selectedState = user['state'];
+      
+      // Parse date of birth
+      if (user['date_of_birth'] != null && user['date_of_birth'].toString().isNotEmpty) {
+        try {
+          _selectedDateOfBirth = DateTime.parse(user['date_of_birth']);
+        } catch (e) {
+          _selectedDateOfBirth = null;
+        }
+      }
+    });
   }
 
   void _saveChanges() {
@@ -91,6 +113,10 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
       'address': _addressController.text,
       'city': _cityController.text,
       'post_code': _postalCodeController.text,
+      'gender': _selectedGender,
+      'country': _selectedCountry,
+      'state': _selectedState,
+      'date_of_birth': _selectedDateOfBirth?.toIso8601String().split('T')[0],
     };
     _accountCubit.updateProfile(data);
   }
@@ -272,7 +298,12 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                 ),
               ),
               verticalMargin8,
-              GenderDropdown(),
+              GenderDropdown(
+                initialValue: _selectedGender,
+                onChanged: (value) {
+                  _selectedGender = value;
+                },
+              ),
               verticalMargin16,
               Text(
                 "Date of Birth",
@@ -282,7 +313,12 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                 ),
               ),
               verticalMargin8,
-              DatePickerField(),
+              DatePickerField(
+                initialDate: _selectedDateOfBirth,
+                onChanged: (value) {
+                  _selectedDateOfBirth = value;
+                },
+              ),
               verticalMargin16,
               Text(
                 "Address",
@@ -305,7 +341,16 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                 hintText: "Enter address",
               ),
               verticalMargin16,
-              CountryStateSection(),
+              CountryStateSection(
+                initialCountry: _selectedCountry,
+                initialState: _selectedState,
+                onCountryChanged: (value) {
+                  _selectedCountry = value;
+                },
+                onStateChanged: (value) {
+                  _selectedState = value;
+                },
+              ),
               verticalMargin16,
               Text(
                 "City",

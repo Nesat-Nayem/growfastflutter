@@ -6,7 +6,16 @@ import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class RecentBookingTile extends StatelessWidget {
-  const RecentBookingTile({super.key});
+  const RecentBookingTile({
+    super.key,
+    required this.title,
+    required this.date,
+    this.imageUrl,
+  });
+
+  final String title;
+  final String date;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -18,41 +27,51 @@ class RecentBookingTile extends StatelessWidget {
         border: Border.all(color: Colors.black12),
       ),
       child: Row(
-        crossAxisAlignment: .start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(
-              "https://plus.unsplash.com/premium_photo-1664536392896-cd1743f9c02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBiZWluZ3N8ZW58MHx8MHx8fDA%3D",
-              cacheManager: CachedNetworkImageProvider.defaultCacheManager,
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: imageUrl != null && imageUrl!.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: imageUrl!,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image, color: Colors.grey),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                    ),
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image, color: Colors.grey),
+                  ),
           ),
-          horizontalMargin8,
+          horizontalMargin12,
           Expanded(
             child: Column(
-              crossAxisAlignment: .start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "John Smith",
+                  title,
                   style: context.labelLarge.copyWith(
                     letterSpacing: 1.1,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  "John@gmail.com",
-                  style: context.labelSmall.copyWith(
-                    letterSpacing: 1.1,
-                    color: lightGreyTextColor,
-                  ),
-                ),
-                verticalMargin12,
-                Text(
-                  "Computer Repair",
-                  style: context.labelMedium.copyWith(
-                    letterSpacing: 1.1,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                verticalMargin4,
                 Row(
                   children: [
                     Icon(
@@ -62,7 +81,7 @@ class RecentBookingTile extends StatelessWidget {
                     ),
                     horizontalMargin4,
                     Text(
-                      "22 Sep 2023",
+                      date,
                       style: context.labelMedium.copyWith(
                         letterSpacing: 1.1,
                         fontWeight: FontWeight.w400,
@@ -73,27 +92,6 @@ class RecentBookingTile extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          Column(
-            children: [
-              GradientButton(
-                text: "Accept",
-                padding: verticalPadding8 + horizontalPadding24,
-                onTap: () {},
-                borderRadius: 5,
-                textStyle: context.labelLarge.copyWith(color: whiteColor),
-              ),
-              verticalMargin8,
-              GradientButton(
-                text: "Cancel",
-                padding: verticalPadding8 + horizontalPadding24,
-                onTap: () {},
-                borderRadius: 5,
-                hideGradient: true,
-                textStyle: context.labelLarge.copyWith(color: textBlackColor),
-                backgroundColor: greyButttonColor,
-              ),
-            ],
           ),
         ],
       ),

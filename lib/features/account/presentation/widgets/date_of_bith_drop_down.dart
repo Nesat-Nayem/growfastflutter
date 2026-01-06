@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:grow_first/core/theme/colors.dart';
 
 class DatePickerField extends StatefulWidget {
-  const DatePickerField({super.key});
+  const DatePickerField({
+    super.key,
+    this.initialDate,
+    this.onChanged,
+  });
+
+  final DateTime? initialDate;
+  final ValueChanged<DateTime?>? onChanged;
 
   @override
   State<DatePickerField> createState() => _DatePickerFieldState();
@@ -10,6 +17,22 @@ class DatePickerField extends StatefulWidget {
 
 class _DatePickerFieldState extends State<DatePickerField> {
   DateTime? selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDate = widget.initialDate;
+  }
+
+  @override
+  void didUpdateWidget(DatePickerField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialDate != oldWidget.initialDate) {
+      setState(() {
+        selectedDate = widget.initialDate;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +79,7 @@ class _DatePickerFieldState extends State<DatePickerField> {
 
     if (picked != null) {
       setState(() => selectedDate = picked);
+      widget.onChanged?.call(picked);
     }
   }
 }
