@@ -312,7 +312,11 @@ class AppRouter {
         GoRoute(
           name: AppRouterNames.customerBookingConfirmed,
           path: AppRouterPaths.customerBookingConfirmedPath,
-          builder: (_, state) => CustomerBookingConfirmedPage(),
+          builder: (_, state) => CustomerBookingConfirmedPage(
+            bookingDate: state.uri.queryParameters['date'],
+            bookingTime: state.uri.queryParameters['time'],
+            bookingRef: state.uri.queryParameters['ref'],
+          ),
         ),
         GoRoute(
           name: 'vendorDashboard',

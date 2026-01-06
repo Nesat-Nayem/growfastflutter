@@ -5,6 +5,7 @@ class BookingServiceDetail {
   final double price;
   final int duration;
   final String durationUnit;
+  final String? image;
 
   BookingServiceDetail({
     required this.id,
@@ -13,5 +14,6 @@ class BookingServiceDetail {
     required this.price,
     required this.duration,
     required this.durationUnit,
+    this.image,
   });
 }

@@ -1,17 +1,30 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/app_assets.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
+import 'package:grow_first/features/customer_bookings/presentation/bloc/bookings_bloc.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
+import 'package:intl/intl.dart';
 
 class CustomerBookingConfirmedPage extends StatefulWidget {
-  const CustomerBookingConfirmedPage({super.key});
+  final String? bookingDate;
+  final String? bookingTime;
+  final String? bookingRef;
+
+  const CustomerBookingConfirmedPage({
+    super.key,
+    this.bookingDate,
+    this.bookingTime,
+    this.bookingRef,
+  });
 
   @override
   State<CustomerBookingConfirmedPage> createState() =>
@@ -20,137 +33,229 @@ class CustomerBookingConfirmedPage extends StatefulWidget {
 
 class _CustomerBookingConfirmedPageState
     extends State<CustomerBookingConfirmedPage> {
+  
+  String _formatDateTime(String? date, String? time) {
+    if (date == null) return 'Date not available';
+    
+    try {
+      final dateTime = DateTime.parse(date);
+      final formattedDate = DateFormat('EEE dd MMMM yyyy').format(dateTime);
+      
+      if (time != null && time.isNotEmpty) {
+        return '$formattedDate at $time';
+      }
+      return formattedDate;
+    } catch (e) {
+      return date;
+    }
+  }
+
+  double _calculateSubTotal(BookingsState state) {
+    double total = 0;
+    
+    // Add main service price if available from location
+    if (state.selectedLocation?.serviceTitle != null) {
+      // Main service price would come from service detail, using 0 as placeholder
+      total += 0;
+    }
+    
+    // Add additional services
+    for (var service in state.selectedAdditionalServices) {
+      total += service.price;
+    }
+    
+    return total;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomerHomeAppBar(singleTitle: "Confirmed"),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: verticalPadding12 + horizontalPadding16,
-          child: Center(
-            child: Column(
-              children: [
-                SvgPicture.asset(AppAssets.successCheckMarkSvg, height: 55),
-                verticalMargin16,
-                Text("Your Booking is Successfully", style: context.bodySmall),
-                verticalMargin12,
-                Text(
-                  "Sun 16 July 2025 at 5:00pm",
-                  style: context.labelMedium.copyWith(
-                    color: lightGreyTextColor,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                verticalMargin32,
-                Container(
-                  margin: bottomPadding16,
-                  padding: allPadding16,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade300),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadiusGeometry.circular(12),
-                        child: CachedNetworkImage(
-                          imageUrl:
-                              "https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      horizontalMargin12,
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: .start,
-                          children: [
-                            Text(
-                              "AC Services",
-                              style: context.labelMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              "Booking ref. #65742695",
-                              style: context.labelSmall.copyWith(
-                                color: lightGreyTextColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                verticalMargin24,
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return BlocBuilder<BookingsBloc, BookingsState>(
+      bloc: sl<BookingsBloc>(),
+      builder: (context, state) {
+        final selectedLocation = state.selectedLocation;
+        final additionalServices = state.selectedAdditionalServices;
+        final subTotal = _calculateSubTotal(state);
+        final tax = subTotal * 0.05; // 5% GST
+        final discount = 0.0; // No discount info available
+        final total = subTotal + tax - discount;
+
+        return Scaffold(
+          appBar: CustomerHomeAppBar(singleTitle: "Confirmed"),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: verticalPadding12 + horizontalPadding16,
+              child: Center(
+                child: Column(
                   children: [
-                    _buildItemRow("Ac Services", "₹2500", "30 Min"),
-                    const SizedBox(height: 16),
-                    _buildItemRow("AC Cleaning", "₹200", "30 Min"),
-                    const SizedBox(height: 16),
-                    _buildItemRow("Switches Changes", "₹100", "30 Min"),
-
-                    const SizedBox(height: 20),
-                    const Divider(),
-
-                    const SizedBox(height: 12),
-                    _buildSummaryRow("Sub Total", "₹3757"),
-                    const SizedBox(height: 8),
-                    _buildSummaryRow("Tax (GST 5%)", "₹60"),
-                    const SizedBox(height: 8),
-                    _buildSummaryRow("Discount (15%)", "₹757"),
-
+                    SvgPicture.asset(AppAssets.successCheckMarkSvg, height: 55),
+                    verticalMargin16,
+                    Text(
+                      "Your Booking is Successfully Confirmed",
+                      style: context.titleMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    verticalMargin12,
+                    Text(
+                      _formatDateTime(widget.bookingDate, widget.bookingTime),
+                      style: context.labelMedium.copyWith(
+                        color: lightGreyTextColor,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    verticalMargin32,
+                    Container(
+                      margin: bottomPadding16,
+                      padding: allPadding16,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade300),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: CachedNetworkImage(
+                              imageUrl: selectedLocation?.serviceImage ??
+                                  'https://via.placeholder.com/100x100?text=No+Image',
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                width: 50,
+                                height: 50,
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.image, color: Colors.grey),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                width: 50,
+                                height: 50,
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                          horizontalMargin12,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  selectedLocation?.serviceTitle ?? 'Service',
+                                  style: context.labelMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (widget.bookingRef != null) ...[
+                                  verticalMargin4,
+                                  Text(
+                                    'Booking ref. #${widget.bookingRef}',
+                                    style: context.labelSmall.copyWith(
+                                      color: lightGreyTextColor,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     verticalMargin24,
-                    _buildTotalRow("Total", "₹2757"),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Show additional services
+                        ...additionalServices.map((service) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _buildItemRow(
+                            service.title,
+                            '₹${service.price.toStringAsFixed(0)}',
+                            '${service.duration} ${service.durationUnit}',
+                          ),
+                        )),
 
-                    verticalMargin24,
+                        if (additionalServices.isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          const Divider(),
+                          const SizedBox(height: 12),
+                        ],
+
+                        if (subTotal > 0) ...[
+                          _buildSummaryRow('Sub Total', '₹${subTotal.toStringAsFixed(0)}'),
+                          const SizedBox(height: 8),
+                          _buildSummaryRow('Tax (GST 5%)', '₹${tax.toStringAsFixed(0)}'),
+                          const SizedBox(height: 8),
+                          if (discount > 0)
+                            _buildSummaryRow('Discount', '-₹${discount.toStringAsFixed(0)}'),
+                          
+                          verticalMargin24,
+                          _buildTotalRow('Total', '₹${total.toStringAsFixed(0)}'),
+                        ],
+
+                        if (additionalServices.isEmpty)
+                          Center(
+                            child: Padding(
+                              padding: verticalPadding24,
+                              child: Text(
+                                'No additional services selected',
+                                style: context.bodySmall.copyWith(
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        verticalMargin24,
+                      ],
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        bottom: true,
-        child: Padding(
-          padding: bottomPadding12 + horizontalPadding16,
-          child: Column(
-            mainAxisAlignment: .end,
-            mainAxisSize: .min,
-            children: [
-              GradientButton(
-                text: "Go to Home",
-                onTap: () {
-                  context.goNamed(AppRouterNames.home);
-                },
-                iconWithTitle: Padding(
-                  padding: horizontalPadding4 / 2,
-                  child: Icon(
-                    Icons.arrow_outward_rounded,
-                    color: whiteColor,
-                    size: 17,
+          bottomNavigationBar: SafeArea(
+            bottom: true,
+            child: Padding(
+              padding: bottomPadding12 + horizontalPadding16,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GradientButton(
+                    text: "Go to Home",
+                    onTap: () {
+                      context.goNamed(AppRouterNames.home);
+                    },
+                    iconWithTitle: Padding(
+                      padding: horizontalPadding4 / 2,
+                      child: Icon(
+                        Icons.arrow_outward_rounded,
+                        color: whiteColor,
+                        size: 17,
+                      ),
+                    ),
+                    textStyle: context.labelLarge.copyWith(color: whiteColor),
                   ),
-                ),
-                textStyle: context.labelLarge.copyWith(color: whiteColor),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

@@ -9,6 +9,9 @@ class BookingLocationModel extends BookingLocation {
     required super.country,
     required super.state,
     required super.city,
+    super.serviceImage,
+    super.serviceTitle,
+    super.serviceRating,
   });
 
   factory BookingLocationModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +47,9 @@ class BookingLocationModel extends BookingLocation {
       country: int.tryParse(json['country_id']?.toString() ?? '0') ?? 0,
       state: int.tryParse(json['state_id']?.toString() ?? '0') ?? 0,
       city: int.tryParse(json['city_id']?.toString() ?? '0') ?? 0,
+      serviceImage: json['service_image']?.toString(),
+      serviceTitle: json['service_title']?.toString(),
+      serviceRating: double.tryParse(json['service_rating']?.toString() ?? '0'),
     );
   }
 
@@ -56,6 +62,9 @@ class BookingLocationModel extends BookingLocation {
       'country': country,
       'state': state,
       'city': city,
+      'service_image': serviceImage,
+      'service_title': serviceTitle,
+      'service_rating': serviceRating,
     };
   }
 }

@@ -8,6 +8,7 @@ class BookingServiceDetailModel extends BookingServiceDetail {
     required super.price,
     required super.duration,
     required super.durationUnit,
+    super.image,
   });
 
   factory BookingServiceDetailModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +19,7 @@ class BookingServiceDetailModel extends BookingServiceDetail {
       price: double.tryParse(json['price']?.toString() ?? '0.0') ?? 0.0,
       duration: int.tryParse(json['duration_value']?.toString() ?? '0') ?? 0,
       durationUnit: json['duration_unit']?.toString() ?? '',
+      image: json['image']?.toString(),
     );
   }
 
@@ -29,6 +31,7 @@ class BookingServiceDetailModel extends BookingServiceDetail {
       'price': price,
       'duration': duration,
       'duration_unit': durationUnit,
+      'image': image,
     };
   }
 }

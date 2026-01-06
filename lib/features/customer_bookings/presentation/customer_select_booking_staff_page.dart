@@ -136,8 +136,7 @@ class _CustomerSelectBookingStaffPageState
                       final staff = state.staffs[index];
                       final isSelected = state.selectedStaff?.id == staff.id;
                       return CustomerBooking(
-                        statusButtonText: "{Pending From API} Services",
-                        showEmail: staff.email,
+                        bookingStaff: staff,
                         showLocation: false,
                         isSelected: isSelected,
                         onSelected: (val) {

@@ -82,8 +82,6 @@ import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/features/customer_bookings/presentation/widgets/reschedule_pop_up.dart';
-import 'package:grow_first/features/listing/di/listing_injections.dart' hide sl;
-import 'package:grow_first/features/vendor_dashboard/di/vendors_injections.dart' hide sl;
 import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_bloc.dart';
 import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
 import 'package:grow_first/core/app_store/app_store.dart';

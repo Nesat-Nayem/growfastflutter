@@ -30,7 +30,7 @@ class CustomerSelectDataAndTimeForBookingPage extends StatefulWidget {
 
 class _CustomerSelectDataAndTimeForBookingPageState
     extends State<CustomerSelectDataAndTimeForBookingPage> {
-  List<String> availableSlots = [];
+  List<Map<String, String>> availableSlots = [];
   bool isLoading = true;
   bool hasSlots = false;
 
@@ -52,8 +52,9 @@ class _CustomerSelectDataAndTimeForBookingPageState
           final slots = result['slots'] as List;
           availableSlots = slots.map((slot) {
             final from = slot['from']?.toString() ?? '';
-            return from;
-          }).where((s) => s.isNotEmpty).toList();
+            final to = slot['to']?.toString() ?? '';
+            return {'from': from, 'to': to, 'display': '$from - $to'};
+          }).where((s) => s['from']!.isNotEmpty).toList();
         }
         isLoading = false;
       });
@@ -78,8 +79,6 @@ class _CustomerSelectDataAndTimeForBookingPageState
       listingId: widget.listingId,
       locationId: widget.locationId,
       staffId: widget.staffId,
-      startDate: DateTime.now(),
-      daysToShow: 7,
       bookedSlots: [],
       availableSlots: availableSlots,
       hasTimeSlots: hasSlots,
@@ -95,10 +94,8 @@ class _CustomerSelectDataAndTimeForBookingPageContent extends StatefulWidget {
   final String listingId;
   final String locationId;
   final String staffId;
-  final DateTime startDate;
-  final int daysToShow;
   final List<String> bookedSlots;
-  final List<String> availableSlots;
+  final List<Map<String, String>> availableSlots;
   final bool hasTimeSlots;
   final Function(DateTime date, String time) onNext;
 
@@ -106,8 +103,6 @@ class _CustomerSelectDataAndTimeForBookingPageContent extends StatefulWidget {
     required this.listingId,
     required this.locationId,
     required this.staffId,
-    required this.startDate,
-    this.daysToShow = 7,
     required this.bookedSlots,
     required this.availableSlots,
     required this.hasTimeSlots,
@@ -123,11 +118,41 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
     extends State<_CustomerSelectDataAndTimeForBookingPageContent> {
   late DateTime selectedDate;
   String? selectedTime;
+  late DateTime currentMonth;
 
   @override
   void initState() {
     super.initState();
-    selectedDate = widget.startDate;
+    selectedDate = DateTime.now();
+    currentMonth = DateTime(selectedDate.year, selectedDate.month);
+  }
+
+  void _showDatePicker() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: violetBlueColor,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        currentMonth = DateTime(picked.year, picked.month);
+        selectedTime = null; // Reset time when date changes
+      });
+    }
   }
 
   LinearGradient get _selectedTileGradient {
@@ -219,14 +244,28 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
   // MONTH HEADER
   // -------------------------------------------------------------
   Widget _buildMonthHeader() {
-    return Row(
-      children: [
-        Text(
-          DateFormat("MMMM yyyy").format(selectedDate),
-          style: context.bodyLarge.copyWith(fontWeight: FontWeight.w700),
+    return GestureDetector(
+      onTap: _showDatePicker,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8),
         ),
-        const Icon(Icons.keyboard_arrow_down),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.calendar_today, size: 18, color: violetBlueColor),
+            const SizedBox(width: 8),
+            Text(
+              DateFormat("MMMM yyyy").format(currentMonth),
+              style: context.bodyLarge.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.keyboard_arrow_down),
+          ],
+        ),
+      ),
     );
   }
 
@@ -234,18 +273,30 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
   // DATE PICKER ROW
   // -------------------------------------------------------------
   Widget _buildDatePicker() {
+    // Get days in current month
+    final daysInMonth = DateTime(currentMonth.year, currentMonth.month + 1, 0).day;
+    final firstDayOfMonth = DateTime(currentMonth.year, currentMonth.month, 1);
+    
     return SizedBox(
       height: 80,
       child: ListView.builder(
         clipBehavior: Clip.none,
         scrollDirection: Axis.horizontal,
-        itemCount: widget.daysToShow,
+        itemCount: daysInMonth,
         itemBuilder: (context, index) {
-          DateTime date = widget.startDate.add(Duration(days: index));
-          bool isSelected = date.day == selectedDate.day;
+          DateTime date = firstDayOfMonth.add(Duration(days: index));
+          bool isSelected = date.year == selectedDate.year && 
+                           date.month == selectedDate.month && 
+                           date.day == selectedDate.day;
+          bool isPast = date.isBefore(DateTime.now().subtract(const Duration(days: 1)));
 
           return GestureDetector(
-            onTap: () => setState(() => selectedDate = date),
+            onTap: isPast ? null : () {
+              setState(() {
+                selectedDate = date;
+                selectedTime = null; // Reset time when date changes
+              });
+            },
             child: Container(
               margin: rightPadding4,
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -269,12 +320,13 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5),
                       gradient: isSelected ? _selectedTileGradient : null,
+                      color: isPast ? Colors.grey.shade200 : null,
                     ),
                     child: Center(
                       child: Text(
                         date.day.toString(),
                         style: context.labelLarge.copyWith(
-                          color: isSelected ? Colors.white : null,
+                          color: isSelected ? Colors.white : (isPast ? Colors.grey : null),
                         ),
                       ),
                     ),
@@ -295,36 +347,45 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
     return GridView.builder(
       padding: EdgeInsets.zero,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: 2.8,
+        childAspectRatio: 3.0,
       ),
       itemCount: widget.availableSlots.length,
       itemBuilder: (context, index) {
-        String time = widget.availableSlots[index];
-        bool isSelected = selectedTime == time;
-        final isBooked = widget.bookedSlots.contains(time);
+        final slot = widget.availableSlots[index];
+        final displayTime = slot['display'] ?? '';
+        final fromTime = slot['from'] ?? '';
+        bool isSelected = selectedTime == fromTime;
+        final isBooked = widget.bookedSlots.contains(fromTime);
         final selectedColor = isSelected ? Colors.white : null;
 
         return GestureDetector(
-          onTap: !isBooked ? () => setState(() => selectedTime = time) : null,
+          onTap: !isBooked ? () => setState(() => selectedTime = fromTime) : null,
           child: Container(
             decoration: BoxDecoration(
               color: isBooked && !isSelected ? greyButttonColor : null,
               gradient: isSelected && !isBooked ? _selectedTileGradient : null,
+              border: !isSelected && !isBooked ? Border.all(color: Colors.grey.shade300) : null,
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
             child: Row(
-              mainAxisAlignment: .center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.access_time, size: 15, color: selectedColor),
+                Icon(Icons.access_time, size: 14, color: selectedColor ?? Colors.grey),
                 horizontalMargin4,
-                horizontalMargin2,
-                Text(
-                  time,
-                  style: context.labelMedium.copyWith(color: selectedColor),
+                Flexible(
+                  child: Text(
+                    displayTime,
+                    style: context.labelSmall.copyWith(
+                      color: selectedColor,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),

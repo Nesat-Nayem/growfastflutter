@@ -1,8 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
-import 'package:grow_first/features/widgets/global_review_card.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class CustomerBookingAdditionalServiceCard extends StatelessWidget {
@@ -46,11 +46,23 @@ class CustomerBookingAdditionalServiceCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
                   height: 60,
                   width: 60,
                   fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    height: 60,
+                    width: 60,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image, color: Colors.grey),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 60,
+                    width: 60,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                  ),
                 ),
               ),
               horizontalMargin12,
@@ -111,20 +123,37 @@ class CustomerBookingAdditionalServiceCard extends StatelessWidget {
             Divider(color: greyButttonColor),
             Row(
               children: [
-                GlobalReviewCard(),
+                Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.amber, size: 18),
+                    SizedBox(width: 4),
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      '($reviews reviews)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
                 const Spacer(),
                 GradientButton(
-                  text: "Add",
-                  onTap: () {},
-                  hideGradient: true,
+                  text: isSelected ? "Remove" : "Add",
+                  onTap: onAdd,
+                  hideGradient: !isSelected,
                   showIconFirst: true,
                   iconWithTitle: Icon(
-                    Icons.add_circle_outline_rounded,
+                    isSelected ? Icons.remove_circle_outline : Icons.add_circle_outline_rounded,
                     size: 13,
+                    color: isSelected ? whiteColor : null,
                   ),
-                  backgroundColor: greyButttonColor,
+                  backgroundColor: isSelected ? null : greyButttonColor,
                   padding: verticalPadding8 + horizontalPadding12,
-                  textStyle: context.labelMedium,
+                  textStyle: context.labelMedium.copyWith(
+                    color: isSelected ? whiteColor : null,
+                  ),
                   borderRadius: 8,
                 ),
               ],

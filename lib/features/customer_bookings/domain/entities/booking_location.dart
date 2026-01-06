@@ -6,6 +6,9 @@ class BookingLocation {
   final int country;
   final int state;
   final int city;
+  final String? serviceImage;
+  final String? serviceTitle;
+  final double? serviceRating;
 
   BookingLocation({
     required this.id,
@@ -15,5 +18,8 @@ class BookingLocation {
     required this.country,
     required this.state,
     required this.city,
+    this.serviceImage,
+    this.serviceTitle,
+    this.serviceRating,
   });
 }

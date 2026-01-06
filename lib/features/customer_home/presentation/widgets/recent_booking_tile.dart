@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
-import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class RecentBookingTile extends StatelessWidget {
   const RecentBookingTile({

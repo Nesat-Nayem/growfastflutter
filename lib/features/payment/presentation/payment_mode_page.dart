@@ -146,7 +146,22 @@ class _PaymentModePageState extends State<PaymentModePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Payment successful! Booking confirmed.')),
           );
-          context.pushNamed(AppRouterNames.customerBookingConfirmed);
+          
+          // Get booking data from cart
+          final cart = cartData!['carts'];
+          final bookingData = verifyResponse.data['booking'];
+          final bookingDate = cart['booking_date']?.toString();
+          final bookingTime = cart['booking_time']?.toString();
+          final bookingRef = bookingData?['id']?.toString();
+          
+          context.pushNamed(
+            AppRouterNames.customerBookingConfirmed,
+            queryParameters: {
+              'date': bookingDate ?? DateTime.now().toString(),
+              'time': bookingTime ?? '',
+              'ref': bookingRef ?? '',
+            },
+          );
         }
       } else {
         if (mounted) {
