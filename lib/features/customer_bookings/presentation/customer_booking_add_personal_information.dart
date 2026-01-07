@@ -46,6 +46,17 @@ class _CustomerBookingAddPersonalInformationState
   final _postalCodeController = TextEditingController();
   final _notesController = TextEditingController();
 
+  void _fillTestData() {
+    _firstNameController.text = 'John';
+    _lastNameController.text = 'Doe';
+    _emailController.text = 'john.doe@test.com';
+    _phoneController.text = '+91 9876543210';
+    _addressController.text = '123 Test Street, Test Area';
+    _stateController.text = 'Maharashtra';
+    _postalCodeController.text = '411001';
+    _notesController.text = 'This is test booking data for development purposes.';
+  }
+
   @override
   void dispose() {
     _firstNameController.dispose();
@@ -174,6 +185,24 @@ class _CustomerBookingAddPersonalInformationState
                     ],
                   ),
                   verticalMargin24,
+                  // Test Data Button
+                  Container(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _fillTestData,
+                      icon: Icon(Icons.bug_report, size: 18),
+                      label: Text('Fill Test Data'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: verticalPadding12,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  verticalMargin16,
                   Text(
                     "First Name",
                     style: context.labelMedium.copyWith(
