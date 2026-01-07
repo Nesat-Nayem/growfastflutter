@@ -89,8 +89,8 @@ class _CustomerBookingAddPersonalInformationState
                   ...additionalServices.map(
                     (service) => CustomerBookingAdditionalServiceCard(
                       title: service.title,
-                      imageUrl:
-                          "https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                   imageUrl: state.selectedLocation?.serviceImage ?? service.image ?? 'https://via.placeholder.com/100x100?text=No+Image',
+                          
                       price: service.price,
                       duration: "${service.duration} ${service.durationUnit}",
                       rating: 4.9,
@@ -146,6 +146,7 @@ class _CustomerBookingAddPersonalInformationState
                     statusButtonText: "Selected Staff",
                     showEmail: selectedStaff?.email ?? "Staff Email",
                     showLocation: false,
+                    bookingStaff: selectedStaff,
                   ),
                   verticalMargin16,
                   Text("Date & Time", style: context.labelLarge),

@@ -136,7 +136,7 @@ class _CustomerBookingAdditionalServicePageState
                             .any((s) => s.id == service.id);
                         return CustomerBookingAdditionalServiceCard(
                           title: service.title,
-                          imageUrl: service.image ?? 'https://via.placeholder.com/100x100?text=No+Image',
+                          imageUrl: state.selectedLocation?.serviceImage ?? service.image ?? 'https://via.placeholder.com/100x100?text=No+Image',
                           price: service.price,
                           duration:
                               "${service.duration} ${service.durationUnit}",
