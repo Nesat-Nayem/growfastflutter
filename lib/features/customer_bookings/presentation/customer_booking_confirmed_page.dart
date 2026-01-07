@@ -65,7 +65,7 @@ class _CustomerBookingConfirmedPageState
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.pushNamed(AppRouterNames.customerBookings);
+                          context.goNamed(AppRouterNames.customerBookings);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: violetBlueColor,

@@ -19,6 +19,19 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+subprojects {
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.razorpay" && requested.name == "checkout") {
+                useVersion("1.6.40")
+            }
+            if (requested.group == "com.razorpay" && requested.name == "core") {
+                useVersion("1.0.4")
+            }
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

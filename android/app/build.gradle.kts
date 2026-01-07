@@ -58,6 +58,10 @@ android {
     }
 }
 
+dependencies {
+    implementation("com.razorpay:checkout:1.6.40")
+}
+
 flutter {
     source = "../.."
 }
