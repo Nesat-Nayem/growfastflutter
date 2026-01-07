@@ -232,12 +232,12 @@ class ModernCustomerDrawer extends StatelessWidget {
               //   },
               //   color: Color(0XFF78A5E1),
               // ),
-              DrawerMenuItem(
-                icon: Icons.account_balance_wallet_rounded,
-                label: "Wallet",
-                onTap: () => context.pushNamed(AppRouterNames.customerWallet),
-                color: Color(0XFF25AE7A),
-              ),
+              // DrawerMenuItem(
+              //   icon: Icons.account_balance_wallet_rounded,
+              //   label: "Wallet",
+              //   onTap: () => context.pushNamed(AppRouterNames.customerWallet),
+              //   color: Color(0XFF25AE7A),
+              // ),
               DrawerMenuItem(
                 icon: Icons.reviews_rounded,
                 label: "Reviews",
