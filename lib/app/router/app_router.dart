@@ -30,11 +30,8 @@ import 'package:grow_first/features/listing/presentation/listing_page.dart';
 import 'package:grow_first/features/payment/presentation/payment_mode_page.dart';
 import 'package:grow_first/features/reviews/presentation/my_reviews_page.dart';
 import 'package:grow_first/features/splash/splash_page.dart';
-import 'package:grow_first/features/vendor_dashboard/presentation/vender_dashboard_page.dart';
-import 'package:grow_first/features/vendor_dashboard/presentation/vendor_confirm_registration.dart';
-import 'package:grow_first/features/vendor_dashboard/presentation/vendor_registration_choose_plan.dart';
-import 'package:grow_first/features/vendor_dashboard/presentation/vendor_registration_kyc.dart';
 import 'package:grow_first/features/wallet/presentation/customer_wallet_page.dart';
+import 'package:grow_first/features/webview/vendor_webview_page.dart';
 import '../bloc/app_bloc/app_bloc.dart';
 
 class AppRouter {
@@ -319,24 +316,12 @@ class AppRouter {
           ),
         ),
         GoRoute(
-          name: 'vendorDashboard',
-          path: '/vendor-dashboard',
-          builder: (_, state) => VendorDashboardPage(),
-        ),
-        GoRoute(
-          name: 'vendorChoosePlanForm',
-          path: '/vendor-choose-plan',
-          builder: (_, state) => VendorRegistrationChoosePlan(),
-        ),
-        GoRoute(
-          name: 'vendorKycForm',
-          path: '/vendor-kyc-form',
-          builder: (_, state) => VendorUploadKycPage(),
-        ),
-        GoRoute(
-          name: 'vendorConfirmRegistration',
-          path: '/vendor-confirm-registration',
-          builder: (_, state) => VendorConfirmRegistration(),
+          name: AppRouterNames.vendorWebView,
+          path: AppRouterPaths.vendorWebViewPath,
+          builder: (_, state) => VendorWebViewPage(
+            url: state.uri.queryParameters['url'] ?? 'https://growfirst.org/become-vendor',
+            title: state.uri.queryParameters['title'] ?? 'Become a Vendor',
+          ),
         ),
       ],
     );

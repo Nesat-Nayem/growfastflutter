@@ -51,5 +51,7 @@ class AppRouterNames {
 
   static const accountSettings = 'account-settings';
 
+  static const vendorWebView = 'vendor-webview';
+
   static const dashboard = 'dashboard';
 }

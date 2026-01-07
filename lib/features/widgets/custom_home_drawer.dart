@@ -82,10 +82,8 @@ import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/features/customer_bookings/presentation/widgets/reschedule_pop_up.dart';
-import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_bloc.dart';
 import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
-import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_event.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 
 class ModernCustomerDrawer extends StatelessWidget {
@@ -251,11 +249,17 @@ class ModernCustomerDrawer extends StatelessWidget {
                 color: Color(0XFF5ECFE0),
               ),
               DrawerMenuItem(
-                icon: Icons.settings,
+                icon: Icons.business,
                 label: "Become a vendor",
                 onTap: () {
-                  sl<VendorBloc>().add(LoadCountries());
-                  context.pushNamed('vendorDashboard');
+                  Navigator.of(context).pop(); // Close drawer first
+                  context.pushNamed(
+                    AppRouterNames.vendorWebView,
+                    queryParameters: {
+                      'url': 'https://growfirst.org/become-vendor',
+                      'title': 'Become a Vendor',
+                    },
+                  );
                 },
                 color: Color(0XFF5ECFE0),
               ),

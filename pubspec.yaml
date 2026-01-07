@@ -60,6 +60,7 @@ dependencies:
   package_info_plus: ^8.3.1
   device_info_plus: ^11.5.0
   razorpay_flutter: 1.4.0
+  webview_flutter: ^4.9.0
 
   # File Handling
   file_picker: ^10.3.2

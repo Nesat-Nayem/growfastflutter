@@ -60,5 +60,7 @@ class AppRouterPaths {
 
   static String accountSettingsPath = '/${AppRouterNames.accountSettings}';
 
+  static String vendorWebViewPath = '/${AppRouterNames.vendorWebView}';
+
   static String dashboardPath = '/${AppRouterNames.dashboard}';
 }
