@@ -111,13 +111,53 @@ class NetworkHelper {
         );
       }
     } on ServerException catch (e) {
+      debugPrint("\n========== SERVER EXCEPTION ==========");
+      debugPrint("Message: ${e.message}");
+      debugPrint("Code: ${e.code}");
+      debugPrint("=======================================\n");
       throw ServerException(message: e.message, code: e.code);
     } on DioException catch (e) {
+      debugPrint("\n========== DIO EXCEPTION ==========");
+      debugPrint("Type: ${e.type}");
+      debugPrint("Message: ${e.message}");
+      debugPrint("Error: ${e.error}");
+      debugPrint("Response: ${e.response?.data}");
+      debugPrint("Status Code: ${e.response?.statusCode}");
+      debugPrint("====================================\n");
+      
+      String errorMessage;
+      if (e.error is SocketException) {
+        errorMessage = 'No Internet Connection';
+      } else if (e.type == DioExceptionType.connectionTimeout) {
+        errorMessage = 'Connection timeout';
+      } else if (e.type == DioExceptionType.receiveTimeout) {
+        errorMessage = 'Receive timeout';
+      } else if (e.type == DioExceptionType.badCertificate) {
+        errorMessage = 'SSL Certificate Error';
+      } else if (e.response?.data != null) {
+        // Try to get error message from response
+        final data = e.response?.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'].toString();
+        } else if (data is String) {
+          errorMessage = data.length > 200 ? '${data.substring(0, 200)}...' : data;
+        } else {
+          errorMessage = e.message ?? 'Unknown error';
+        }
+      } else {
+        errorMessage = e.message ?? e.error?.toString() ?? 'Unknown error';
+      }
+      
       throw ServerException(
-        message: e.error is SocketException
-            ? 'No Internet Connection'
-            : e.error.toString(),
+        message: errorMessage,
+        code: e.response?.statusCode,
       );
+    } catch (e) {
+      debugPrint("\n========== UNKNOWN EXCEPTION ==========");
+      debugPrint("Type: ${e.runtimeType}");
+      debugPrint("Error: $e");
+      debugPrint("========================================\n");
+      throw ServerException(message: e.toString());
     }
   }
 }

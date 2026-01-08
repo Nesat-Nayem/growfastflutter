@@ -19,14 +19,23 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
         dio,
         RequestType.get,
         url,
-      ) as Map<String, dynamic>;
+      );
+
+      if (response == null) {
+        throw ServerException(message: 'Empty response from server');
+      }
+      
+      if (response is! Map<String, dynamic>) {
+        throw ServerException(message: 'Invalid response format: ${response.runtimeType}');
+      }
 
       final dataList = response['categories'] as List?;
-      if (dataList == null) throw ServerException();
+      if (dataList == null) throw ServerException(message: 'No categories in response');
 
       return dataList.map((json) => CategoryModel.fromJson(json)).toList();
+    } on ServerException {
+      rethrow;
     } on DioException catch (e) {
-      // Optional: log DioError
       throw ServerException(message: e.message);
     } catch (e) {
       throw ServerException(message: e.toString());
