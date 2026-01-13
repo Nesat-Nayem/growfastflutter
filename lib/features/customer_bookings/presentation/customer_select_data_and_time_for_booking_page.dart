@@ -270,30 +270,30 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
   }
 
   // -------------------------------------------------------------
-  // DATE PICKER ROW
+  // DATE PICKER ROW - Shows 30 days starting from today
   // -------------------------------------------------------------
   Widget _buildDatePicker() {
-    // Get days in current month
-    final daysInMonth = DateTime(currentMonth.year, currentMonth.month + 1, 0).day;
-    final firstDayOfMonth = DateTime(currentMonth.year, currentMonth.month, 1);
+    final today = DateTime.now();
+    final startDate = DateTime(today.year, today.month, today.day);
+    const totalDays = 30; // Show 30 days from today
     
     return SizedBox(
       height: 80,
       child: ListView.builder(
         clipBehavior: Clip.none,
         scrollDirection: Axis.horizontal,
-        itemCount: daysInMonth,
+        itemCount: totalDays,
         itemBuilder: (context, index) {
-          DateTime date = firstDayOfMonth.add(Duration(days: index));
+          DateTime date = startDate.add(Duration(days: index));
           bool isSelected = date.year == selectedDate.year && 
                            date.month == selectedDate.month && 
                            date.day == selectedDate.day;
-          bool isPast = date.isBefore(DateTime.now().subtract(const Duration(days: 1)));
 
           return GestureDetector(
-            onTap: isPast ? null : () {
+            onTap: () {
               setState(() {
                 selectedDate = date;
+                currentMonth = DateTime(date.year, date.month);
                 selectedTime = null; // Reset time when date changes
               });
             },
@@ -320,13 +320,12 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5),
                       gradient: isSelected ? _selectedTileGradient : null,
-                      color: isPast ? Colors.grey.shade200 : null,
                     ),
                     child: Center(
                       child: Text(
                         date.day.toString(),
                         style: context.labelLarge.copyWith(
-                          color: isSelected ? Colors.white : (isPast ? Colors.grey : null),
+                          color: isSelected ? Colors.white : null,
                         ),
                       ),
                     ),
