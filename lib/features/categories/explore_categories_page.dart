@@ -86,7 +86,7 @@ class _ExploreCategoriesView extends StatelessWidget {
                               pageBuilder: (context, animation1, animation2) {
                                 return BlocProvider<CategoryBloc>.value(
                                   value: categoryBloc,
-                                  child: SubCategoriesPopUp(
+                                  child: SubCategoriesScreen(
                                     category: state.categories[index],
                                   ),
                                 );

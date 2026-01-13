@@ -113,7 +113,7 @@ class ModernCustomerDrawer extends StatelessWidget {
                 alignment: AlignmentGeometry.topRight,
                 child: IconButton.filled(
                   onPressed: () {
-                    Navigator.pop(context);
+                    context.goNamed(AppRouterNames.home);
                   },
                   style: ButtonStyle(
                     backgroundColor: WidgetStatePropertyAll(Colors.transparent),
@@ -123,67 +123,86 @@ class ModernCustomerDrawer extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // ──────────────────────────── PROFILE HEADER
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: CachedNetworkImageProvider(
-                      "https://plus.unsplash.com/premium_photo-1664536392896-cd1743f9c02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBiZWluZ3N8ZW58MHx8MHx8fDA%3D",
-                      cacheManager:
-                          CachedNetworkImageProvider.defaultCacheManager,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        BlocBuilder<AppBloc, AppState>(
-                          builder: (context, appState) {
-                            final appStore = sl<AppStore>();
-                            final user = appStore.user;
-                            final userName = user?.name ?? 'Guest';
-                            final userContact = user?.phone ?? user?.email ?? '';
-                            
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text.rich(
-                                  TextSpan(
-                                    text: "Hey, ",
-                                    style: context.bodyLarge.copyWith(
-                                      fontWeight: FontWeight.w400,
-                                      fontFamily: "Poppins",
-                                    ),
+              InkWell(
+                child: Row(
+                  children: [
+                    // CircleAvatar(
+                    //   backgroundImage: CachedNetworkImageProvider(
+                    //     "https://plus.unsplash.com/premium_photo-1664536392896-cd1743f9c02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBiZWluZ3N8ZW58MHx8MHx8fDA%3D",
+                    //     cacheManager:
+                    //         CachedNetworkImageProvider.defaultCacheManager,
+                    //   ),
+                    // ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          BlocBuilder<AppBloc, AppState>(
+                            builder: (context, appState) {
+                              final appStore = sl<AppStore>();
+                              final user = appStore.user;
+                              final userName = user?.name ?? 'Guest';
+                              final userContact =
+                                  user?.phone ?? user?.email ?? '';
+                              final userImage = user?.image;
+                              print("User Image is :$userImage");
+
+                              return Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundImage:
+                                        (userImage == null || userImage.isEmpty)
+                                        ? AssetImage("assets/images/g_logo.png")
+                                        : CachedNetworkImageProvider(
+                                            "https://growfirst.org/$userImage",
+                                          ),
+                                  ),
+                                  SizedBox(width: 15),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      TextSpan(
-                                        text: userName,
-                                        style: context.bodyLarge.copyWith(
-                                          letterSpacing: 1.2,
-                                          color: aquaBlueColor,
-                                          fontWeight: FontWeight.w800,
-                                          fontFamily: "Poppins",
+                                      Text.rich(
+                                        TextSpan(
+                                          text: "Hey, ",
+                                          style: context.bodyLarge.copyWith(
+                                            fontWeight: FontWeight.w400,
+                                            fontFamily: "Poppins",
+                                          ),
+                                          children: [
+                                            TextSpan(
+                                              text: userName,
+                                              style: context.bodyLarge.copyWith(
+                                                letterSpacing: 1.2,
+                                                color: aquaBlueColor,
+                                                fontWeight: FontWeight.w800,
+                                                fontFamily: "Poppins",
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
+                                      if (userContact.isNotEmpty)
+                                        Text(
+                                          userContact,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
                                     ],
                                   ),
-                                ),
-                                if (userContact.isNotEmpty)
-                                  Text(
-                                    userContact,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                onTap: () => context.goNamed(AppRouterNames.accountSettings),
               ),
 
               const SizedBox(height: 40),
@@ -198,7 +217,7 @@ class ModernCustomerDrawer extends StatelessWidget {
               DrawerMenuItem(
                 icon: Icons.event_note_rounded,
                 label: "Bookings",
-                selected: true,
+
                 onTap: () => context.pushNamed(AppRouterNames.customerBookings),
                 color: Color(0XFF245F9E),
               ),

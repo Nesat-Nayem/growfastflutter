@@ -10,6 +10,7 @@ import 'package:grow_first/features/categories/di/injections.dart';
 import 'package:grow_first/features/customer_bookings/di/booking_injections.dart';
 import 'package:grow_first/features/home/di/injections.dart';
 import 'package:grow_first/features/listing/di/listing_injections.dart';
+import 'package:grow_first/features/reviews/di/reviews_injections.dart';
 import 'package:grow_first/features/vendor_dashboard/di/vendors_injections.dart';
 
 final sl = GetIt.instance;
@@ -39,4 +40,7 @@ Future<void> configureDependencies(AppConfig config) async {
   BookingInjections.register();
 
   VendorInjections.register();
+
+  ReviewsInjections.register();
+
 }

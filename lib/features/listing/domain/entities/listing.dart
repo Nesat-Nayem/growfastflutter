@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:grow_first/features/listing/domain/entities/user.dart';
+import 'package:grow_first/features/reviews/domain/entities.dart/review.dart';
 
 class Listing extends Equatable {
   final int id;
@@ -28,6 +29,10 @@ class Listing extends Equatable {
   final User user;
   final List<Include> includes;
   final List<Faq> faqs;
+final List<Review> reviews;
+final double overAllRating;
+final int totalRatings;
+final String? website;
 
   const Listing({
     required this.id,
@@ -56,6 +61,10 @@ class Listing extends Equatable {
     required this.user,
     required this.includes,
     required this.faqs,
+    required this.reviews,
+    required this.overAllRating,
+    required this.totalRatings,
+    required this.website,
   });
 
   @override

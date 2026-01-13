@@ -19,7 +19,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class PaymentModePage extends StatefulWidget {
   final String? cartId;
-  
+
   const PaymentModePage({super.key, this.cartId});
 
   @override
@@ -57,7 +57,7 @@ class _PaymentModePageState extends State<PaymentModePage> {
     try {
       final dio = sl<Dio>();
       final getToken = await sl<ISecureStore>().read("token");
-      
+
       // Fetch cart checkout data
       final response = await dio.get(
         'customer/cart-checkout/${widget.cartId}',
@@ -68,7 +68,7 @@ class _PaymentModePageState extends State<PaymentModePage> {
         setState(() {
           cartData = response.data;
         });
-        
+
         // Create Razorpay order
         await _createRazorpayOrder();
       } else {
@@ -89,13 +89,10 @@ class _PaymentModePageState extends State<PaymentModePage> {
     try {
       final dio = sl<Dio>();
       final getToken = await sl<ISecureStore>().read("token");
-      
+
       final response = await dio.get(
         'customer/cart_payment',
-        queryParameters: {
-          'gateway': 'razorpay',
-          'cart_id': widget.cartId,
-        },
+        queryParameters: {'gateway': 'razorpay', 'cart_id': widget.cartId},
         options: Options(headers: {'Authorization': 'Bearer $getToken'}),
       );
 
@@ -108,7 +105,8 @@ class _PaymentModePageState extends State<PaymentModePage> {
       } else {
         setState(() {
           isLoading = false;
-          errorMessage = response.data['message'] ?? 'Failed to create payment order';
+          errorMessage =
+              response.data['message'] ?? 'Failed to create payment order';
         });
       }
     } catch (e) {
@@ -129,7 +127,7 @@ class _PaymentModePageState extends State<PaymentModePage> {
     try {
       final dio = sl<Dio>();
       final getToken = await sl<ISecureStore>().read("token");
-      
+
       // Verify payment with backend
       final verifyResponse = await dio.post(
         'razorpay/verify',
@@ -144,16 +142,18 @@ class _PaymentModePageState extends State<PaymentModePage> {
       if (verifyResponse.data['status'] == 'success') {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Payment successful! Booking confirmed.')),
+            const SnackBar(
+              content: Text('Payment successful! Booking confirmed.'),
+            ),
           );
-          
+
           // Get booking data from cart
           final cart = cartData!['carts'];
           final bookingData = verifyResponse.data['booking'];
           final bookingDate = cart['booking_date']?.toString();
           final bookingTime = cart['booking_time']?.toString();
           final bookingRef = bookingData?['id']?.toString();
-          
+
           context.pushNamed(
             AppRouterNames.customerBookingConfirmed,
             queryParameters: {
@@ -166,14 +166,20 @@ class _PaymentModePageState extends State<PaymentModePage> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(verifyResponse.data['message'] ?? 'Payment verification failed')),
+            SnackBar(
+              content: Text(
+                verifyResponse.data['message'] ?? 'Payment verification failed',
+              ),
+            ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment verification failed: ${e.toString()}')),
+          SnackBar(
+            content: Text('Payment verification failed: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -194,14 +200,16 @@ class _PaymentModePageState extends State<PaymentModePage> {
   void _startPayment(double totalAmount) {
     if (razorpayKey == null || razorpayOrderId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment setup failed. Please try again.')),
+        const SnackBar(
+          content: Text('Payment setup failed. Please try again.'),
+        ),
       );
       return;
     }
 
     final cart = cartData!['carts'];
     final service = cartData!['service'];
-    
+
     var options = {
       'key': razorpayKey,
       'amount': (totalAmount * 100).toInt(),
@@ -210,7 +218,7 @@ class _PaymentModePageState extends State<PaymentModePage> {
       'description': service['title'] ?? 'Service Booking',
       'prefill': {
         'contact': cart['cart_adresses']?[0]?['phone'] ?? '',
-        'email': cart['cart_adresses']?[0]?['email'] ?? ''
+        'email': cart['cart_adresses']?[0]?['email'] ?? '',
       },
     };
 
@@ -241,7 +249,9 @@ class _PaymentModePageState extends State<PaymentModePage> {
               verticalMargin16,
               Text(
                 'Failed to load payment details',
-                style: context.titleMedium.copyWith(fontWeight: FontWeight.w600),
+                style: context.titleMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               verticalMargin8,
               Text(
@@ -255,11 +265,16 @@ class _PaymentModePageState extends State<PaymentModePage> {
       );
     }
 
-    final cartSum = double.tryParse(cartData!['cart_sum']?.toString() ?? '0') ?? 0.0;
+    final cartSum =
+        double.tryParse(cartData!['cart_sum']?.toString() ?? '0') ?? 0.0;
     final tax = cartData!['tax'];
-    final taxAmount = tax != null ? (cartSum * double.parse(tax['tax_percentage']?.toString() ?? '0') / 100) : 0.0;
+    final taxAmount = tax != null
+        ? (cartSum *
+              double.parse(tax['tax_percentage']?.toString() ?? '0') /
+              100)
+        : 0.0;
     final totalAmount = cartSum + taxAmount;
-    
+
     final service = cartData!['service'];
     final cart = cartData!['carts'];
     final cartItems = cart['cart_items'] ?? [];
@@ -279,7 +294,6 @@ class _PaymentModePageState extends State<PaymentModePage> {
       child: BlocBuilder<BookingsBloc, BookingsState>(
         bloc: sl<BookingsBloc>(),
         builder: (context, state) {
-
           return Scaffold(
             appBar: CustomerHomeAppBar(singleTitle: "Payment"),
             body: Padding(
@@ -305,7 +319,8 @@ class _PaymentModePageState extends State<PaymentModePage> {
                           Icon(Icons.payment, color: Colors.blue),
                           horizontalMargin16,
                           Expanded(
-                              child: Text("Razorpay", style: context.labelLarge)),
+                            child: Text("Razorpay", style: context.labelLarge),
+                          ),
                           Radio<bool>(
                             value: true,
                             groupValue: selectedRazorpay,
@@ -323,22 +338,33 @@ class _PaymentModePageState extends State<PaymentModePage> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildItemRow(service['title'] ?? "Service",
-                            "₹${cart['service_price']?.toString() ?? '0'}", ""),
-                        ...cartItems.map<Widget>((item) => _buildItemRow(
-                            item['additional_services']?['name'] ?? 'Additional Service',
-                            "₹${item['price']?.toString() ?? '0'}", "")),
+                        Text(service['title'] ?? "Service"),
+                        Text("₹${cart['service_price']?.toString() ?? '0'}"),
+                        ...cartItems.map<Widget>(
+                          (item) => _buildItemRow(
+                            item['additional_services']?['name'] ??
+                                'Additional Service',
+                            "₹${item['price']?.toString() ?? '0'}",
+                            "",
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         const Divider(),
                         const SizedBox(height: 12),
                         _buildSummaryRow(
-                            "Sub Total", "₹${cartSum.toStringAsFixed(2)}"),
+                          "Sub Total",
+                          "₹${cartSum.toStringAsFixed(2)}",
+                        ),
                         const SizedBox(height: 8),
                         _buildSummaryRow(
-                            "Tax (GST ${tax != null ? tax['tax_percentage'] : '0'}%)", "₹${taxAmount.toStringAsFixed(2)}"),
+                          "Tax (GST ${tax != null ? tax['tax_percentage'] : '0'}%)",
+                          "₹${taxAmount.toStringAsFixed(2)}",
+                        ),
                         verticalMargin24,
                         _buildTotalRow(
-                            "Total", "₹${totalAmount.toStringAsFixed(2)}"),
+                          "Total",
+                          "₹${totalAmount.toStringAsFixed(2)}",
+                        ),
                         verticalMargin24,
                       ],
                     ),
@@ -346,14 +372,14 @@ class _PaymentModePageState extends State<PaymentModePage> {
                 ),
               ),
             ),
-            bottomNavigationBar: state.isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : CustomBottomNavNextBackBtns(
-                  title1: "Pay ₹${totalAmount.toStringAsFixed(2)}",
-                  title2: "Back to Cart",
-                  showIcon: false,
-                  onPressedOne: () => _startPayment(totalAmount),
-                ),
+            bottomNavigationBar: state.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : CustomBottomNavNextBackBtns(
+                    title1: "Pay ₹${totalAmount.toStringAsFixed(2)}",
+                    title2: "Back to Cart",
+                    showIcon: false,
+                    onPressedOne: () => _startPayment(totalAmount),
+                  ),
           );
         },
       ),

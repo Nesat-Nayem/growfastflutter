@@ -19,7 +19,7 @@ final verticalMargin32 = SizedBox(height: 32);
 final verticalMargin48 = SizedBox(height: 48);
 
 final emptyPadding = EdgeInsets.zero;
-
+final horizontalPadding3 = EdgeInsets.symmetric(horizontal: 3);
 final horizontalPadding4 = EdgeInsets.symmetric(horizontal: 4);
 final horizontalPadding8 = EdgeInsets.symmetric(horizontal: 8);
 final horizontalPadding12 = EdgeInsets.symmetric(horizontal: 12);

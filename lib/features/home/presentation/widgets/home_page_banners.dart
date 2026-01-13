@@ -58,14 +58,14 @@ class _HomePageBannersState extends State<HomePageBanners> {
             itemExtent: context.width,
             children: widget.images.map((img) {
               return ClipRRect(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(12),
                 child: CachedNetworkImage(imageUrl: img, fit: BoxFit.cover),
               );
             }).toList(),
           ),
         ),
         Padding(
-          padding: verticalPadding12,
+          padding: verticalPadding4,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(widget.images.length, (index) {

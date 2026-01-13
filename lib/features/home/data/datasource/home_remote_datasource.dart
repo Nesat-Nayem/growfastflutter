@@ -1,6 +1,7 @@
+
+
+import 'package:grow_first/features/home/data/model/home_page_response.dart';
+
 abstract class HomeRemoteDataSource {
-  /// Calls the home API endpoint
-  ///
-  /// Throws a [ServerException] for all error codes.
-  Future<List<String>> getBannerImages();
+  Future<HomePageResponse> getHomePageData();
 }

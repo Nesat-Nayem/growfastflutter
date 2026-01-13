@@ -29,7 +29,7 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
     _bookingsListCubit = BookingsListCubit(
       BookingsRemoteDataSourceImpl(sl<Dio>()),
     );
-    
+
     // Check if user is logged in
     final appStore = sl<AppStore>();
     if (!appStore.isLoggedIn) {
@@ -66,7 +66,11 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
                     verticalMargin16,
                     Text(
                       'Failed to load bookings',
@@ -94,7 +98,11 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.event_busy, size: 48, color: Colors.grey),
+                      const Icon(
+                        Icons.event_busy,
+                        size: 48,
+                        color: Colors.grey,
+                      ),
                       verticalMargin16,
                       Text(
                         'No Bookings Yet',
@@ -125,9 +133,7 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
                       //     },
                       //   );
                       // },
-                      child: CustomerBookingCard(
-                        booking: booking,
-                      ),
+                      child: CustomerBookingCard(booking: booking),
                     );
                   },
                   separatorBuilder: (context, index) => verticalMargin8,

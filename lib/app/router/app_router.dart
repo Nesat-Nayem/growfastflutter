@@ -32,6 +32,7 @@ import 'package:grow_first/features/reviews/presentation/my_reviews_page.dart';
 import 'package:grow_first/features/splash/splash_page.dart';
 import 'package:grow_first/features/wallet/presentation/customer_wallet_page.dart';
 import 'package:grow_first/features/webview/vendor_webview_page.dart';
+import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 import '../bloc/app_bloc/app_bloc.dart';
 
 class AppRouter {
@@ -60,6 +61,7 @@ class AppRouter {
     AppRouterPaths.myReviewPath,
     AppRouterPaths.accountSettingsPath,
     AppRouterPaths.accountSettingsPath,
+    AppRouterPaths.ModernCustomerDrawerPath,
     '/vendor-dashboard',
     '/vendor-choose-plan',
     '/vendor-kyc-form',
@@ -220,6 +222,11 @@ class AppRouter {
           builder: (_, state) => CustomerAccountSettings(),
         ),
         GoRoute(
+          name: AppRouterNames.ModernCustomerDrawer,
+          path: AppRouterPaths.ModernCustomerDrawerPath,
+          builder: (_, state) => ModernCustomerDrawer(),
+        ),
+        GoRoute(
           name: AppRouterNames.myReview,
           path: AppRouterPaths.myReviewPath,
           builder: (_, state) => MyReviewsPage(),
@@ -302,9 +309,8 @@ class AppRouter {
         GoRoute(
           name: AppRouterNames.customerPaymentMode,
           path: AppRouterPaths.customerPaymentModePath,
-          builder: (_, state) => PaymentModePage(
-            cartId: state.uri.queryParameters['cartId'],
-          ),
+          builder: (_, state) =>
+              PaymentModePage(cartId: state.uri.queryParameters['cartId']),
         ),
         GoRoute(
           name: AppRouterNames.customerBookingConfirmed,
@@ -319,7 +325,9 @@ class AppRouter {
           name: AppRouterNames.vendorWebView,
           path: AppRouterPaths.vendorWebViewPath,
           builder: (_, state) => VendorWebViewPage(
-            url: state.uri.queryParameters['url'] ?? 'https://growfirst.org/become-vendor',
+            url:
+                state.uri.queryParameters['url'] ??
+                'https://growfirst.org/become-vendor',
             title: state.uri.queryParameters['title'] ?? 'Become a Vendor',
           ),
         ),

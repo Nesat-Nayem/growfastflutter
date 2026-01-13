@@ -63,4 +63,6 @@ class AppRouterPaths {
   static String vendorWebViewPath = '/${AppRouterNames.vendorWebView}';
 
   static String dashboardPath = '/${AppRouterNames.dashboard}';
+
+  static String ModernCustomerDrawerPath= '/${AppRouterNames.ModernCustomerDrawer}';
 }

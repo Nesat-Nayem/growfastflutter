@@ -32,9 +32,9 @@ android {
     defaultConfig {
         applicationId = "com.grow_first.app.grow_first"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0.0"
     }
 
     signingConfigs {
@@ -49,12 +49,10 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
-        getByName("debug") {
-            signingConfig = signingConfigs.getByName("debug")
-        }
+       
     }
 }
 

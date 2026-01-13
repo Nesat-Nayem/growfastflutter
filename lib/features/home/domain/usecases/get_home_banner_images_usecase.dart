@@ -1,16 +1,18 @@
 import 'package:dartz/dartz.dart';
 import 'package:grow_first/core/errors/failure.dart';
 import 'package:grow_first/core/usecase.dart';
+import 'package:grow_first/features/home/data/model/home_page_response.dart';
 
 import '../repositories/home_repository.dart';
 
-class GetHomeBannerImagesUseCase implements UseCase<List<String>, NoParams> {
+class GetHomePageDataUseCase
+    implements UseCase<HomePageResponse, NoParams> {
   final HomeRepository repository;
 
-  GetHomeBannerImagesUseCase(this.repository);
+  GetHomePageDataUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<String>>> call(NoParams params) {
-    return repository.getBannerImages();
+  Future<Either<Failure, HomePageResponse>> call(NoParams params) {
+    return repository.getHomePageData();
   }
 }

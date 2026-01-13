@@ -54,4 +54,6 @@ class AppRouterNames {
   static const vendorWebView = 'vendor-webview';
 
   static const dashboard = 'dashboard';
+
+  static const ModernCustomerDrawer = 'ModernCustomerDrawer';
 }

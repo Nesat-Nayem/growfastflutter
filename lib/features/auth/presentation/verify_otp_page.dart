@@ -30,6 +30,7 @@ class VerifyOtpPage extends StatefulWidget {
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
   late Timer _timer;
   Duration _remaining = const Duration(minutes: 2); // <<< DEFAULT TIMER
+bool _navigated = false;
 
   @override
   void initState() {
@@ -124,8 +125,9 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       BlocListener<AuthBloc, AuthState>(
                         bloc: sl<AuthBloc>(),
                         listener: (context, state) {
-                          if (state.token?.isNotEmpty ?? false) {
+                          if (!_navigated && (state.token?.isNotEmpty ?? false)) {
                             // Trigger app-level authentication state
+                             _navigated = true;
                             sl<AppBloc>().add(AppLoggedIn());
                             
                             if (widget.redirectionData != null &&

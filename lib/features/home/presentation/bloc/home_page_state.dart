@@ -15,15 +15,6 @@ class HomePageLoading extends HomePageState {
   const HomePageLoading();
 }
 
-class HomePageLoaded extends HomePageState {
-  final List<String> bannerImages;
-
-  const HomePageLoaded({required this.bannerImages});
-
-  @override
-  List<Object?> get props => [bannerImages];
-}
-
 class HomePageError extends HomePageState {
   final String message;
 
@@ -32,3 +23,18 @@ class HomePageError extends HomePageState {
   @override
   List<Object?> get props => [message];
 }
+
+class HomePageLoaded extends HomePageState {
+  final List<String> bannerImages;
+  final List<HomeServiceModel> services;
+ final List<RecentSearchModel> recentSearches;
+  const HomePageLoaded({
+    required this.bannerImages,
+    required this.services,
+    required this.recentSearches,
+  });
+
+  @override
+  List<Object?> get props => [bannerImages,services ,recentSearches]; //,recentSearches mention karshel re ba
+}
+

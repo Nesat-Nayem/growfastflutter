@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/sizing.dart';
+import 'package:grow_first/features/account/presentation/customer_account_settings.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int index;
@@ -47,11 +48,17 @@ class CustomBottomNavBar extends StatelessWidget {
                 ),
               ),
             ),
-            _navItem(
-              context,
-              icon: Icons.favorite,
-              active: index == 3,
-              onTap: () => _go(context, "/favorites"),
+
+            GestureDetector(
+              onTap: () => context.goNamed(AppRouterNames.ModernCustomerDrawer),
+
+              child: const Center(
+                child: Icon(
+                  Icons.person,
+                  color: Color.fromARGB(255, 39, 139, 222),
+                  size: 32,
+                ),
+              ),
             ),
           ],
         ),
@@ -67,7 +74,11 @@ class CustomBottomNavBar extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Icon(icon, size: 28, color: active ? Colors.teal : Colors.grey),
+      child: Icon(
+        icon,
+        size: 28,
+        color: active ? Color.fromARGB(255, 39, 139, 222) : Colors.grey,
+      ),
     );
   }
 }

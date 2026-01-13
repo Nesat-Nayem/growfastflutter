@@ -64,14 +64,14 @@ class ListingTile extends StatelessWidget {
                       verticalMargin8,
                       if (showActionButtons) ...[
                         GradientButton(
-                          text: "Buy Now",
+                          text: "Book Now",
                           onTap: () {
                             final appStore = sl<AppStore>();
                             if (appStore.isLoggedIn) {
                               context.pushNamed(
                                 AppRouterNames.customerSelectBookingLocation,
                                 pathParameters: {
-                                  "listingId": listing?.id.toString() ?? ""
+                                  "listingId": listing?.id.toString() ?? "",
                                 },
                               );
                             } else {
@@ -133,8 +133,15 @@ class ListingTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: GradientButton(
-                          text: "Contact Supplier",
-                          onTap: () {},
+                          text: "Contact Supplier ",
+                          onTap: () {
+                            context.pushNamed(
+                              AppRouterNames.listingDetail,
+                              pathParameters: {
+                                "listingId": listing?.id.toString() ?? "",
+                              },
+                            );
+                          },
                           hideGradient: true,
                           padding: verticalPadding12,
                           borderRadius: 6,
@@ -149,14 +156,14 @@ class ListingTile extends StatelessWidget {
                       horizontalMargin8,
                       Expanded(
                         child: GradientButton(
-                          text: "Buy Now",
+                          text: "Book Now",
                           onTap: () {
                             final appStore = sl<AppStore>();
                             if (appStore.isLoggedIn) {
                               context.pushNamed(
                                 AppRouterNames.customerSelectBookingLocation,
                                 pathParameters: {
-                                  "listingId": listing?.id.toString() ?? ""
+                                  "listingId": listing?.id.toString() ?? "",
                                 },
                               );
                             } else {

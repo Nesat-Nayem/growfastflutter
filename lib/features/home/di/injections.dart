@@ -14,13 +14,13 @@ class HomeInjections {
     // -----------------------------
     // Bloc
     // -----------------------------
-    sl.registerFactory(() => HomePageBloc(sl<GetHomeBannerImagesUseCase>()));
+    sl.registerFactory(() => HomePageBloc(sl<GetHomePageDataUseCase>()));
 
     // -----------------------------
     // Use cases
     // -----------------------------
     sl.registerLazySingleton(
-      () => GetHomeBannerImagesUseCase(sl<HomeRepository>()),
+      () => GetHomePageDataUseCase(sl<HomeRepository>()),
     );
 
     // -----------------------------
@@ -34,7 +34,7 @@ class HomeInjections {
     // Data sources (if you had them)
     // -----------------------------
     sl.registerLazySingleton<HomeRemoteDataSource>(
-      () => HomeRemoteDataSourceImpl(Dio()),
+      () => HomeRemoteDataSourceImpl((sl<Dio>())),
     );
   }
 }

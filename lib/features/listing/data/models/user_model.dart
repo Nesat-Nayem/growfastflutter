@@ -44,6 +44,7 @@ class UserModel extends User {
     super.serviceId,
     required super.createdAt,
     required super.updatedAt,
+    
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {

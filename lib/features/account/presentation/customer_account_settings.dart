@@ -27,7 +27,8 @@ class CustomerAccountSettings extends StatefulWidget {
   const CustomerAccountSettings({super.key});
 
   @override
-  State<CustomerAccountSettings> createState() => _CustomerAccountSettingsState();
+  State<CustomerAccountSettings> createState() =>
+      _CustomerAccountSettingsState();
 }
 
 class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
@@ -38,13 +39,13 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _postalCodeController = TextEditingController();
-  
+
   // Dropdown and date values
   String? _selectedGender;
   DateTime? _selectedDateOfBirth;
   String? _selectedCountry;
   String? _selectedState;
-  
+
   late AccountCubit _accountCubit;
 
   @override
@@ -86,15 +87,16 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
     _addressController.text = user['address'] ?? '';
     _cityController.text = user['city'] ?? '';
     _postalCodeController.text = user['post_code'] ?? '';
-    
+
     // Set dropdown and date values
     setState(() {
       _selectedGender = user['gender'];
       _selectedCountry = user['country'];
       _selectedState = user['state'];
-      
+
       // Parse date of birth
-      if (user['date_of_birth'] != null && user['date_of_birth'].toString().isNotEmpty) {
+      if (user['date_of_birth'] != null &&
+          user['date_of_birth'].toString().isNotEmpty) {
         try {
           _selectedDateOfBirth = DateTime.parse(user['date_of_birth']);
         } catch (e) {
@@ -140,9 +142,9 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
               _populateFields(state.user);
             }
             if (state is AccountError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
           builder: (context, state) {
@@ -159,229 +161,232 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                  CircleAvatar(
-                    child: ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl:
-                            "https://picsum.photos/seed/avatar2/100/100",
-                        fit: BoxFit.cover,
-                        width: 40,
-                        height: 40,
-                      ),
-                    ),
-                  ),
-                  horizontalMargin16,
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: .start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding:
-                                  allPadding8 +
-                                  horizontalPadding12 +
-                                  verticalPadding4 / 2,
-                              decoration: BoxDecoration(
-                                color: textBlackColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
+                        CircleAvatar(
+                          child: ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl:
+                                  "https://picsum.photos/seed/avatar2/100/100",
+                              fit: BoxFit.cover,
+                              width: 40,
+                              height: 40,
+                            ),
+                          ),
+                        ),
+                        horizontalMargin16,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: .start,
+                            children: [
+                              Row(
                                 children: [
-                                  SvgPicture.asset(
-                                    AppAssets.iconUploadCloudSvg,
-                                    height: 18,
+                                  Container(
+                                    padding:
+                                        allPadding8 +
+                                        horizontalPadding12 +
+                                        verticalPadding4 / 2,
+                                    decoration: BoxDecoration(
+                                      color: textBlackColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        SvgPicture.asset(
+                                          AppAssets.iconUploadCloudSvg,
+                                          height: 18,
+                                        ),
+                                        horizontalMargin8,
+                                        Text(
+                                          "Upload",
+                                          style: context.labelSmall.copyWith(
+                                            color: whiteColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  horizontalMargin8,
-                                  Text(
-                                    "Upload",
-                                    style: context.labelSmall.copyWith(
-                                      color: whiteColor,
+                                  horizontalMargin12,
+                                  Container(
+                                    padding:
+                                        allPadding8 +
+                                        horizontalPadding24 +
+                                        verticalPadding4 / 2,
+                                    decoration: BoxDecoration(
+                                      color: greyButttonColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      "Remove",
+                                      style: context.labelSmall,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            horizontalMargin12,
-                            Container(
-                              padding:
-                                  allPadding8 +
-                                  horizontalPadding24 +
-                                  verticalPadding4 / 2,
-                              decoration: BoxDecoration(
-                                color: greyButttonColor,
-                                borderRadius: BorderRadius.circular(8),
+                              verticalMargin8,
+                              Text(
+                                "*Image size should be at least 320px big and less that 500kb. Allowed files .png and .jpg",
+                                style: context.labelSmall.copyWith(
+                                  color: lavaRedColor.withValues(alpha: 0.4),
+                                  fontSize: 12.5.sp,
+                                ),
                               ),
-                              child: Text("Remove", style: context.labelSmall),
-                            ),
-                          ],
-                        ),
-                        verticalMargin8,
-                        Text(
-                          "*Image size should be at least 320px big and less that 500kb. Allowed files .png and .jpg",
-                          style: context.labelSmall.copyWith(
-                            color: lavaRedColor.withValues(alpha: 0.4),
-                            fontSize: 12.5.sp,
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              verticalMargin16,
-              Text(
-                "General Information",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin16,
-              Text(
-                "Name",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin8,
-              CustomTextfield(
-                controller: _nameController,
-                hintText: "Enter your name",
-              ),
-              verticalMargin16,
-              Text(
-                "User Name",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin8,
-              CustomTextfield(
-                controller: _userNameController,
-                hintText: "Enter username",
-              ),
-              verticalMargin16,
-              Text(
-                "Email",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin8,
-              CustomTextfield(
-                controller: _emailController,
-                hintText: "Enter email",
-              ),
-              verticalMargin16,
-              Text(
-                "Mobile Number",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin8,
-              CustomTextfield(
-                controller: _phoneController,
-                hintText: "Enter phone number",
-              ),
-              verticalMargin16,
-              Text(
-                "Gender",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin8,
-              GenderDropdown(
-                initialValue: _selectedGender,
-                onChanged: (value) {
-                  _selectedGender = value;
-                },
-              ),
-              verticalMargin16,
-              Text(
-                "Date of Birth",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin8,
-              DatePickerField(
-                initialDate: _selectedDateOfBirth,
-                onChanged: (value) {
-                  _selectedDateOfBirth = value;
-                },
-              ),
-              verticalMargin16,
-              Text(
-                "Address",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin16,
-              Text(
-                "Address",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin8,
-              CustomTextfield(
-                controller: _addressController,
-                hintText: "Enter address",
-              ),
-              verticalMargin16,
-              CountryStateSection(
-                initialCountry: _selectedCountry,
-                initialState: _selectedState,
-                onCountryChanged: (value) {
-                  _selectedCountry = value;
-                },
-                onStateChanged: (value) {
-                  _selectedState = value;
-                },
-              ),
-              verticalMargin16,
-              Text(
-                "City",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin16,
-              CustomTextfield(
-                controller: _cityController,
-                hintText: "Enter city",
-              ),
-              verticalMargin16,
-              Text(
-                "Postal Code",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              verticalMargin16,
-              CustomTextfield(
-                controller: _postalCodeController,
-                hintText: "Enter postal code",
-              ),
-              verticalMargin48,
-              verticalMargin48,
-              verticalMargin48,
-              verticalMargin48,
-              verticalMargin48,
+                    verticalMargin16,
+                    Text(
+                      "General Information",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "Name",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    CustomTextfield(
+                      controller: _nameController,
+                      hintText: "Enter your name",
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "User Name",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    CustomTextfield(
+                      controller: _userNameController,
+                      hintText: "Enter username",
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "Email",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    CustomTextfield(
+                      controller: _emailController,
+                      hintText: "Enter email",
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "Mobile Number",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    CustomTextfield(
+                      controller: _phoneController,
+                      hintText: "Enter phone number",
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "Gender",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    GenderDropdown(
+                      initialValue: _selectedGender,
+                      onChanged: (value) {
+                        _selectedGender = value;
+                      },
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "Date of Birth",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    DatePickerField(
+                      initialDate: _selectedDateOfBirth,
+                      onChanged: (value) {
+                        _selectedDateOfBirth = value;
+                      },
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "Address",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "Address",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    CustomTextfield(
+                      controller: _addressController,
+                      hintText: "Enter address",
+                    ),
+                    verticalMargin16,
+                    CountryStateSection(
+                      initialCountry: _selectedCountry,
+                      initialState: _selectedState,
+                      onCountryChanged: (value) {
+                        _selectedCountry = value;
+                      },
+                      onStateChanged: (value) {
+                        _selectedState = value;
+                      },
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "City",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin16,
+                    CustomTextfield(
+                      controller: _cityController,
+                      hintText: "Enter city",
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "Postal Code",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin16,
+                    CustomTextfield(
+                      controller: _postalCodeController,
+                      hintText: "Enter postal code",
+                    ),
+                    verticalMargin48,
+                    verticalMargin48,
+                    verticalMargin48,
+                    verticalMargin48,
+                    verticalMargin48,
                   ],
                 ),
               ],
@@ -398,7 +403,9 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GradientButton(
-                    text: state is AccountUpdating ? "Saving..." : "Save Changes",
+                    text: state is AccountUpdating
+                        ? "Saving..."
+                        : "Save Changes",
                     onTap: state is AccountUpdating ? null : _saveChanges,
                   ),
                   verticalMargin24,

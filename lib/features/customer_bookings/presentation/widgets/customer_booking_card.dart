@@ -10,13 +10,13 @@ import 'package:grow_first/features/widgets/status_button.dart';
 
 class CustomerBookingCard extends StatelessWidget {
   const CustomerBookingCard({super.key, this.booking});
-  
+
   final Map<String, dynamic>? booking;
 
   String _getServiceImage() {
     final config = sl<AppConfig>();
     final baseUrl = config.imageBaseUrl;
-    
+
     // Try to get the first gallery image from service
     final service = booking?['service'];
     if (service != null) {
@@ -34,7 +34,7 @@ class CustomerBookingCard extends StatelessWidget {
           return '$baseUrl/storage/$imagePath';
         }
       }
-      
+
       // Fallback to service image if available
       if (service['image'] != null) {
         final imagePath = service['image'].toString();
@@ -44,7 +44,7 @@ class CustomerBookingCard extends StatelessWidget {
         return '$baseUrl/storage/$imagePath';
       }
     }
-    
+
     // Default placeholder image
     return 'https://via.placeholder.com/400x300?text=No+Image';
   }
@@ -86,16 +86,18 @@ class CustomerBookingCard extends StatelessWidget {
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
                   color: Colors.grey[200],
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: const Center(child: CircularProgressIndicator()),
                 ),
                 errorWidget: (context, url, error) => Container(
                   color: Colors.grey[200],
                   child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                      Icon(
+                        Icons.image_not_supported,
+                        size: 48,
+                        color: Colors.grey,
+                      ),
                       SizedBox(height: 8),
                       Text('No Image', style: TextStyle(color: Colors.grey)),
                     ],
@@ -107,14 +109,21 @@ class CustomerBookingCard extends StatelessWidget {
           verticalMargin24,
           Row(
             children: [
-              Text(
-                booking?['service']?['title'] ?? "Service",
-                style: context.bodySmall.copyWith(letterSpacing: 1.1),
+              Container(
+                height: 100,
+                width: 250,
+                child: Text(
+                  booking?['service']?['title'] ?? "Service",
+                  style: context.bodySmall.copyWith(letterSpacing: 1.1),
+                ),
               ),
+
               horizontalMargin12,
               StatusButton(
                 title: booking?['status'] ?? "Pending",
-                backgroundColor: _getStatusColor(booking?['status']).withValues(alpha: 0.11),
+                backgroundColor: _getStatusColor(
+                  booking?['status'],
+                ).withValues(alpha: 0.11),
                 titleColor: _getStatusColor(booking?['status']),
                 textStyle: context.labelSmall.copyWith(
                   fontWeight: FontWeight.w800,
@@ -132,20 +141,22 @@ class CustomerBookingCard extends StatelessWidget {
 
 class _BookingDetails extends StatelessWidget {
   const _BookingDetails({this.booking});
-  
+
   final Map<String, dynamic>? booking;
 
   String _formatBookingDateTime() {
     final date = booking?['booking_date'];
     final slots = booking?['booking_slots'];
-    
+
     if (date == null) return 'N/A';
-    
+
     // If slots is null or empty, just return the date
-    if (slots == null || slots.toString().isEmpty || slots.toString() == 'null') {
+    if (slots == null ||
+        slots.toString().isEmpty ||
+        slots.toString() == 'null') {
       return date.toString();
     }
-    
+
     // Return date with time slots
     return '$date, $slots';
   }
@@ -170,7 +181,10 @@ class _BookingDetails extends StatelessWidget {
           ),
         ),
         verticalMargin8,
-        _BookingRowTile(title: "Status", value: booking?['payment_status'] ?? 'Pending'),
+        _BookingRowTile(
+          title: "Status",
+          value: booking?['payment_status'] ?? 'Pending',
+        ),
         verticalMargin8,
         _BookingRowTile(
           title: "Provider",
@@ -193,7 +207,11 @@ class _BookingDetails extends StatelessWidget {
                 color: lightGreyTextColor,
               ),
             ),
-            horizontalMargin16,
+          ],
+        ),
+        verticalMargin16,
+        Row(
+          children: [
             Icon(Icons.local_phone_outlined, size: 17),
             horizontalMargin4,
             Text(
@@ -205,7 +223,6 @@ class _BookingDetails extends StatelessWidget {
             ),
           ],
         ),
-        verticalMargin16,
         // Row(
         //   children: [
         //     GradientButton(

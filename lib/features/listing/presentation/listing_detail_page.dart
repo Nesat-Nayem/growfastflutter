@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dartz/dartz.dart' as listing;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -15,11 +16,14 @@ import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/listing/domain/entities/listing.dart';
 import 'package:grow_first/features/listing/presentation/bloc/listing_bloc.dart';
 import 'package:grow_first/features/listing/presentation/widgets/send_enquiry_pop_up.dart';
+import 'package:grow_first/features/reviews/presentation/add_review_popup.dart';
+import 'package:grow_first/features/reviews/presentation/bloc/reviews_cubit.dart';
 import 'package:grow_first/features/reviews/presentation/widgets/review_card_listing.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:grow_first/features/widgets/status_button.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class ListingDetailPage extends StatefulWidget {
@@ -82,6 +86,35 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
 
   @override
   Widget build(BuildContext context) {
+    Future<void> _callPhone(String phone) async {
+      final Uri uri = Uri(scheme: 'tel', path: phone);
+      await launchUrl(uri);
+    }
+
+    Future<void> _openWebsite(String website) async {
+      final Uri uri = Uri.parse(
+        website.startsWith("http") ? website : "https://$website",
+      );
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        print("Cannot open: $uri");
+      }
+    }
+
+    Future<void> _openEmail(String email) async {
+      final Uri uri = Uri(scheme: 'mailto', path: email);
+      await launchUrl(uri);
+    }
+
+    Future<void> _openMap(String address) async {
+      final Uri uri = Uri.parse(
+        "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}",
+      );
+      await launchUrl(uri);
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomerHomeAppBar(singleTitle: "Detail"),
@@ -258,18 +291,44 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   verticalMargin16,
                   if (user != null) ...[
                     _detailRow("Member Since", formatDate(user.createdAt)),
-                    _detailRow(
-                      "Address",
-                      user.address.isNotEmpty ? user.address : "N/A",
+                    InkWell(
+                      onTap: user.address.isNotEmpty
+                          ? () => _openMap(user.address)
+                          : null,
+                      child: _detailRow(
+                        "Address",
+                        user.address.isNotEmpty ? user.address : "N/A",
+                      ),
                     ),
-                    _detailRow(
-                      "Email",
-                      user.email.isNotEmpty ? user.email : "N/A",
+                    InkWell(
+                      onTap: user.email.isNotEmpty
+                          ? () => _openEmail(user.email)
+                          : null,
+                      child: _detailRow(
+                        "Email",
+                        user.email.isNotEmpty ? user.email : "N/A",
+                      ),
                     ),
-                    _detailRow(
-                      "Phone",
-                      user.phone.isNotEmpty ? user.phone : "N/A",
+
+                    InkWell(
+                      onTap: user.phone.isNotEmpty
+                          ? () => _callPhone(user.phone)
+                          : null,
+                      child: _detailRow(
+                        "Phone",
+                        user.phone.isNotEmpty ? user.phone : "N/A",
+                      ),
                     ),
+
+                    InkWell(
+                      onTap:
+                          listing!.website!.isNotEmpty &&
+                              listing.website != null
+                          ? () => _openWebsite(listing!.website!)
+                          : null,
+                      child: _detailRow("website", listing?.website ?? "N/A"),
+                    ),
+
                     _detailRow("GST", listing?.gstNumber ?? "N/A"),
                     _detailRow(
                       "No of Listings",
@@ -278,7 +337,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   ],
 
                   verticalMargin16,
-                  verticalMargin2,
+
                   InkWell(
                     onTap: () {
                       shareService(listing: listing!);
@@ -355,7 +414,8 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   videoChild,
                   FaqSection(faqs: listing?.faqs),
                   verticalMargin24,
-                  ReviewsWidget(),
+                  ReviewsWidget(listing: listing!),
+
                   verticalMargin24,
                 ],
               ),
@@ -401,7 +461,8 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   GradientButton(
                     text: "Book Service",
                     onTap: () async {
-                      final isLoggedIn = await sl<ISecureStore>().read("isLoggedIn") == "true";
+                      final isLoggedIn =
+                          await sl<ISecureStore>().read("isLoggedIn") == "true";
                       if (isLoggedIn) {
                         context.pushNamed(
                           AppRouterNames.customerSelectBookingLocation,
@@ -758,7 +819,9 @@ class ReviewBuilder extends StatelessWidget {
 }
 
 class ReviewsWidget extends StatefulWidget {
-  const ReviewsWidget({super.key});
+  final Listing listing;
+
+  const ReviewsWidget({super.key, required this.listing});
 
   @override
   State<ReviewsWidget> createState() => _ReviewsWidgetState();
@@ -769,6 +832,8 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final reviews = widget.listing.reviews;
+    final visibleReviews = loadMore ? reviews : reviews.take(1).toList();
     return Container(
       padding: allPadding16,
       decoration: BoxDecoration(
@@ -784,10 +849,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Reviews (45)",
-                style: context.bodySmall.copyWith(fontWeight: FontWeight.w700),
-              ),
+              Text("Reviews (${widget.listing.totalRatings})"),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -796,7 +858,21 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () async {
+                  final result = await showDialog(
+                    context: context,
+                    builder: (_) => BlocProvider.value(
+                      value: sl<ReviewsCubit>(),
+                      child: AddReviewPopup(serviceId: 61),
+                    ),
+                  );
+                  //listing.id
+                  if (result == true) {
+                    sl<ListingBloc>().add(
+                      LoadListingDetail(listing.id.toString()),
+                    );
+                  }
+                },
                 child: Text(
                   "Write a Review",
                   style: context.labelSmall.copyWith(color: whiteColor),
@@ -832,15 +908,16 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                 ),
                 verticalMargin8,
                 Text(
-                  "(4.9 out of 5.0)",
+                  "(${widget.listing.overAllRating} out of 5.0)",
                   style: context.labelSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     color: lightGreyTextColor,
                   ),
                 ),
+
                 verticalMargin12,
                 Text(
-                  "Based On 2,459 Reviews",
+                  "Based On ${widget.listing.totalRatings} Reviews",
                   style: context.labelLarge.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -855,30 +932,40 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
           _ratingRow(context, "2 Star Ratings", 0.45, "560"),
           _ratingRow(context, "1 Star Ratings", 0.3, "400"),
           verticalMargin8,
-          if (loadMore) ...[
-            ...List.generate(7, (index) => ReviewCardListing()),
+
+          verticalMargin8,
+
+          if (reviews.isEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.all(12),
+              child: Text("No reviews yet"),
+            ),
           ] else ...[
-            ReviewCardListing(),
+            ...visibleReviews.map(
+              (review) => ReviewCardListing(review: review),
+            ),
+
             verticalMargin12,
+
             Center(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: greyButttonColor,
-                  minimumSize: Size(0, 0),
                   padding: verticalPadding8 + horizontalPadding12,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(3),
-                  ),
                 ),
                 onPressed: () {
                   setState(() {
                     loadMore = !loadMore;
                   });
                 },
-                child: Text("Load More", style: context.labelSmall),
+                child: Text(
+                  loadMore ? "Show Less" : "Load More",
+                  style: context.labelSmall,
+                ),
               ),
             ),
           ],
+
           verticalMargin8,
           if (loadMore) ...[
             Center(

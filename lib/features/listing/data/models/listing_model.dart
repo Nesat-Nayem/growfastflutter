@@ -1,5 +1,6 @@
 import 'package:grow_first/features/listing/domain/entities/listing.dart';
 import 'package:grow_first/features/listing/domain/entities/user.dart';
+import 'package:grow_first/features/reviews/data/models/review_model.dart';
 
 class ListingModel extends Listing {
   const ListingModel({
@@ -29,17 +30,16 @@ class ListingModel extends Listing {
     required super.user,
     required super.includes,
     required super.faqs,
+    required super.reviews,
+    required super.overAllRating,
+    required super.totalRatings,
+    required super.website,
   });
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {
-    final galleryList = (json['gallery'] as List?) ?? [];
-    final includesList = (json['includes'] as List?) ?? [];
-    final faqsList = (json['faqs'] as List?) ?? [];
-    int parseInt(dynamic value) =>
-        value is int ? value : int.tryParse(value?.toString() ?? '') ?? 0;
-    DateTime parseDate(dynamic value) =>
-        DateTime.tryParse(value?.toString() ?? '') ??
-        DateTime.fromMillisecondsSinceEpoch(0);
+    final reviewsJson = json['reviews'] is List
+        ? json['reviews'] as List
+        : const [];
 
     return ListingModel(
       id: json['id'],
@@ -58,16 +58,27 @@ class ListingModel extends Listing {
       state: json['state']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
       pincode: json['pincode']?.toString() ?? '',
-      status: parseInt(json['status']),
-      view: parseInt(json['view']),
-      trustSeal: parseInt(json['trust_seal']),
+      status: int.tryParse(json['status'].toString()) ?? 0,
+      view: int.tryParse(json['view'].toString()) ?? 0,
+      trustSeal: int.tryParse(json['trust_seal'].toString()) ?? 0,
       gstNumber: json['gst_number'],
-      createdAt: parseDate(json['created_at']),
-      updatedAt: parseDate(json['updated_at']),
-      gallery: galleryList.map((e) => Gallery.fromJson(e)).toList(),
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
+      gallery: (json['gallery'] as List? ?? [])
+          .map((e) => Gallery.fromJson(e))
+          .toList(),
       user: User.fromJson(json['user']),
-      includes: includesList.map((e) => Include.fromJson(e)).toList(),
-      faqs: faqsList.map((e) => Faq.fromJson(e)).toList(),
+      includes: (json['includes'] as List? ?? [])
+          .map((e) => Include.fromJson(e))
+          .toList(),
+      faqs: (json['faqs'] as List? ?? []).map((e) => Faq.fromJson(e)).toList(),
+
+      // ✅ SAFE DEFAULTS FOR LIST API
+      reviews: reviewsJson.map((e) => ReviewModel.fromJson(e)).toList(),
+      overAllRating:
+          double.tryParse(json['over_all_rating']?.toString() ?? '0') ?? 0,
+      totalRatings: int.tryParse(json['total_ratings']?.toString() ?? '0') ?? 0,
+      website: json['website_url']
     );
   }
 }

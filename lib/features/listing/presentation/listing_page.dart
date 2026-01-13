@@ -36,7 +36,10 @@ class _ListingPageState extends State<ListingPage> {
       name: 'ListingPage',
     );
     _listingBloc = sl<ListingBloc>();
-    developer.log('ListingPage.initState -> obtained ListingBloc hash=${_listingBloc.hashCode}', name: 'ListingPage');
+    developer.log(
+      'ListingPage.initState -> obtained ListingBloc hash=${_listingBloc.hashCode}',
+      name: 'ListingPage',
+    );
     _listingBloc.add(
       LoadListings(
         GetListingsParams(
@@ -71,10 +74,16 @@ class _ListingPageState extends State<ListingPage> {
           name: 'ListingPage',
         );
         if (state.isLoading) {
-          developer.log('ListingPage._mainContent -> showing loader', name: 'ListingPage');
+          developer.log(
+            'ListingPage._mainContent -> showing loader',
+            name: 'ListingPage',
+          );
           return Expanded(child: Center(child: CircularProgressIndicator()));
         } else if (state.listings.isEmpty) {
-          developer.log('ListingPage._mainContent -> listings empty, showing empty state', name: 'ListingPage');
+          developer.log(
+            'ListingPage._mainContent -> listings empty, showing empty state',
+            name: 'ListingPage',
+          );
           return Expanded(
             child: Center(
               child: Text("No listings found", style: context.labelLarge),
@@ -90,9 +99,9 @@ class _ListingPageState extends State<ListingPage> {
               ? GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.54,
-                    crossAxisSpacing: 21,
-                    mainAxisSpacing: 21,
+                    childAspectRatio: 0.62,
+                    crossAxisSpacing: 5,
+                    mainAxisSpacing: 5,
                   ),
                   itemCount: state.listings.length,
                   itemBuilder: (context, index) => InkWell(
@@ -157,7 +166,7 @@ class _ListingPageState extends State<ListingPage> {
           ],
         ),
         body: Padding(
-          padding: horizontalPadding16 + verticalPadding16,
+          padding: horizontalPadding3 + horizontalPadding3,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -212,8 +221,9 @@ class _ListingPageState extends State<ListingPage> {
                         color: whiteColor,
                       ),
                       borderRadius: 6,
-                      textStyle:
-                          context.labelMedium.copyWith(color: whiteColor),
+                      textStyle: context.labelMedium.copyWith(
+                        color: whiteColor,
+                      ),
                     ),
                   ),
                 ],

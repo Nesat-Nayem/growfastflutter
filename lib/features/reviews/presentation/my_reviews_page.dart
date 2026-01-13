@@ -24,22 +24,22 @@ class _MyReviewsPageState extends State<MyReviewsPage> {
   late ReviewsCubit _reviewsCubit;
 
   @override
-  void initState() {
-    super.initState();
-    _reviewsCubit = ReviewsCubit(
-      ReviewsRemoteDataSourceImpl(sl<Dio>()),
-    );
-    
-    // Check if user is logged in
-    final appStore = sl<AppStore>();
-    if (!appStore.isLoggedIn) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.goNamed(AppRouterNames.signIn);
-      });
-    } else {
-      _reviewsCubit.loadReviews();
-    }
+@override
+void initState() {
+  super.initState();
+
+  _reviewsCubit = sl<ReviewsCubit>();
+
+  final appStore = sl<AppStore>();
+  if (!appStore.isLoggedIn) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.goNamed(AppRouterNames.signIn);
+    });
+  } else {
+    _reviewsCubit.loadReviews();
   }
+}
+
 
   @override
   void dispose() {
