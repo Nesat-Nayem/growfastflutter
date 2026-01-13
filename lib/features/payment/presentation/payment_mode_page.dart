@@ -125,6 +125,10 @@ class _PaymentModePageState extends State<PaymentModePage> {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    setState(() {
+      isProcessingPayment = true;
+    });
+
     try {
       final dio = sl<Dio>();
       final getToken = await sl<ISecureStore>().read("token");
@@ -137,10 +141,30 @@ class _PaymentModePageState extends State<PaymentModePage> {
           'razorpay_order_id': response.orderId,
           'razorpay_signature': response.signature,
         },
-        options: Options(headers: {'Authorization': 'Bearer $getToken'}),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $getToken',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
       );
 
-      if (verifyResponse.data['status'] == 'success') {
+      final responseData = verifyResponse.data;
+      
+      // Check if response is a Map (JSON) or String (HTML redirect)
+      if (responseData is! Map<String, dynamic>) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Payment verification failed. Please contact support.'),
+            ),
+          );
+        }
+        return;
+      }
+
+      if (responseData['status'] == 'success') {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -149,18 +173,16 @@ class _PaymentModePageState extends State<PaymentModePage> {
           );
 
           // Get booking data from cart
-          final cart = cartData!['carts'];
-          final bookingData = verifyResponse.data['booking'];
-          final bookingDate = cart['booking_date']?.toString();
-          final bookingTime = cart['booking_time']?.toString();
-          final bookingRef = bookingData?['id']?.toString();
+          final cart = cartData?['carts'];
+          final bookingDate = cart?['booking_date']?.toString();
+          final bookingTime = cart?['booking_time']?.toString();
 
           context.pushNamed(
             AppRouterNames.customerBookingConfirmed,
             queryParameters: {
               'date': bookingDate ?? DateTime.now().toString(),
               'time': bookingTime ?? '',
-              'ref': bookingRef ?? '',
+              'ref': response.paymentId ?? '',
             },
           );
         }
@@ -169,7 +191,7 @@ class _PaymentModePageState extends State<PaymentModePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                verifyResponse.data['message'] ?? 'Payment verification failed',
+                responseData['message']?.toString() ?? 'Payment verification failed',
               ),
             ),
           );
@@ -182,6 +204,12 @@ class _PaymentModePageState extends State<PaymentModePage> {
             content: Text('Payment verification failed: ${e.toString()}'),
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isProcessingPayment = false;
+        });
       }
     }
   }
