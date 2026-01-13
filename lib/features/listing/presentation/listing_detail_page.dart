@@ -15,7 +15,7 @@ import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/listing/domain/entities/listing.dart';
 import 'package:grow_first/features/listing/presentation/bloc/listing_bloc.dart';
-import 'package:grow_first/features/listing/presentation/widgets/send_enquiry_pop_up.dart';
+import 'package:grow_first/features/listing/presentation/widgets/contact_supplier_popup.dart';
 import 'package:grow_first/features/reviews/presentation/add_review_popup.dart';
 import 'package:grow_first/features/reviews/presentation/bloc/reviews_cubit.dart';
 import 'package:grow_first/features/reviews/presentation/widgets/review_card_listing.dart';
@@ -440,16 +440,15 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   GradientButton(
                     text: "Send Enquiry",
                     onTap: () {
-                      showGeneralDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierLabel: "Dismiss",
-                        barrierColor: Colors.black54,
-                        transitionDuration: Duration(milliseconds: 300),
-                        pageBuilder: (context, animation1, animation2) {
-                          return SendEnquiryPopUp(onSubmit: () {});
-                        },
-                      );
+                      if (state.selectedListing != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ContactSupplierPopup(
+                              listing: state.selectedListing!,
+                            ),
+                          ),
+                        );
+                      }
                     },
                     iconWithTitle: Icon(
                       Icons.email_outlined,

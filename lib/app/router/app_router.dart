@@ -27,6 +27,7 @@ import 'package:grow_first/features/listing/presentation/contact_supplier_page.d
 import 'package:grow_first/features/listing/presentation/listing_detail_page.dart';
 import 'package:grow_first/features/listing/presentation/listing_filters_page.dart';
 import 'package:grow_first/features/listing/presentation/listing_page.dart';
+import 'package:grow_first/features/listing/domain/entities/listing_filter_params.dart';
 import 'package:grow_first/features/payment/presentation/payment_mode_page.dart';
 import 'package:grow_first/features/reviews/presentation/my_reviews_page.dart';
 import 'package:grow_first/features/splash/splash_page.dart';
@@ -245,7 +246,9 @@ class AppRouter {
         GoRoute(
           name: AppRouterNames.listingsFilters,
           path: AppRouterPaths.listingsFiltersPath,
-          builder: (_, state) => ListingFiltersPage(),
+          builder: (_, state) => ListingFiltersPage(
+            initialFilters: state.extra as ListingFilterParams?,
+          ),
         ),
         GoRoute(
           name: AppRouterNames.listingDetail,

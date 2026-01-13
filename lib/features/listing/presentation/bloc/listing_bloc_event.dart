@@ -16,6 +16,15 @@ class LoadListings extends ListingEvent {
   List<Object?> get props => [params];
 }
 
+class LoadMoreListings extends ListingEvent {
+  final GetListingsParams params;
+
+  const LoadMoreListings(this.params);
+
+  @override
+  List<Object?> get props => [params];
+}
+
 class LoadListingDetail extends ListingEvent {
   final String id;
 

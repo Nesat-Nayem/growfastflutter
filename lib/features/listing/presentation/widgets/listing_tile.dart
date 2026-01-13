@@ -9,7 +9,7 @@ import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/listing/domain/entities/listing.dart';
-import 'package:grow_first/features/listing/presentation/widgets/send_enquiry_pop_up.dart';
+import 'package:grow_first/features/listing/presentation/widgets/contact_supplier_popup.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class ListingTile extends StatelessWidget {
@@ -95,16 +95,15 @@ class ListingTile extends StatelessWidget {
                         GradientButton(
                           text: "Contact Supplier",
                           onTap: () {
-                            showGeneralDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              barrierLabel: "Dismiss",
-                              barrierColor: Colors.black54,
-                              transitionDuration: Duration(milliseconds: 300),
-                              pageBuilder: (context, animation1, animation2) {
-                                return SendEnquiryPopUp(onSubmit: () {});
-                              },
-                            );
+                            if (listing != null) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ContactSupplierPopup(
+                                    listing: listing!,
+                                  ),
+                                ),
+                              );
+                            }
                           },
                           hideGradient: true,
                           padding: verticalPadding12,
@@ -135,12 +134,15 @@ class ListingTile extends StatelessWidget {
                         child: GradientButton(
                           text: "Contact Supplier ",
                           onTap: () {
-                            context.pushNamed(
-                              AppRouterNames.listingDetail,
-                              pathParameters: {
-                                "listingId": listing?.id.toString() ?? "",
-                              },
-                            );
+                            if (listing != null) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ContactSupplierPopup(
+                                    listing: listing!,
+                                  ),
+                                ),
+                              );
+                            }
                           },
                           hideGradient: true,
                           padding: verticalPadding12,
