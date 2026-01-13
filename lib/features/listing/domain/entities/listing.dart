@@ -64,7 +64,7 @@ final String? website;
     required this.reviews,
     required this.overAllRating,
     required this.totalRatings,
-    required this.website,
+    this.website,
   });
 
   @override

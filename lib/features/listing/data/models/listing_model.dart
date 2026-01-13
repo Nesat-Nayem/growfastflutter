@@ -33,7 +33,7 @@ class ListingModel extends Listing {
     required super.reviews,
     required super.overAllRating,
     required super.totalRatings,
-    required super.website,
+    super.website,
   });
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {

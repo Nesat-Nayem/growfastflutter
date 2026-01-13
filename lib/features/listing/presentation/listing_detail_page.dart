@@ -320,14 +320,14 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                       ),
                     ),
 
-                    InkWell(
-                      onTap:
-                          listing!.website!.isNotEmpty &&
-                              listing.website != null
-                          ? () => _openWebsite(listing!.website!)
-                          : null,
-                      child: _detailRow("website", listing?.website ?? "N/A"),
-                    ),
+                    if (listing != null)
+                      InkWell(
+                        onTap: listing.website != null &&
+                                listing.website!.isNotEmpty
+                            ? () => _openWebsite(listing.website!)
+                            : null,
+                        child: _detailRow("website", listing.website ?? "N/A"),
+                      ),
 
                     _detailRow("GST", listing?.gstNumber ?? "N/A"),
                     _detailRow(

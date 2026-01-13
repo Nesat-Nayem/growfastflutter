@@ -10,6 +10,7 @@ import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/home/data/model/service_section_model.dart';
+import 'package:grow_first/features/listing/presentation/widgets/send_enquiry_pop_up.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:grow_first/features/widgets/shimmer.dart';
 
@@ -119,178 +120,192 @@ class _ServiceSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = _resolveImageUrl();
 
-    return Container(
-      width: 200,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black12),
-        color: Colors.white,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Image with location badge
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(15),
+    return InkWell(
+      onTap: () {
+        context.pushNamed(
+          AppRouterNames.listingDetail,
+          pathParameters: {"listingId": service.id.toString()},
+        );
+      },
+      child: Container(
+        width: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black12),
+          color: Colors.white,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image with location badge
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(15),
+                  ),
+                  child: imageUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          height: 135,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => Container(
+                            height: 135,
+                            color: Colors.grey.shade200,
+                          ),
+                          errorWidget: (_, __, ___) => Container(
+                            height: 135,
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.image_not_supported),
+                          ),
+                        )
+                      : Container(
+                          height: 135,
+                          color: lightGreySnowColor,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.image_not_supported_outlined),
+                        ),
                 ),
-                child: imageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        height: 135,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(
-                          height: 135,
-                          color: Colors.grey.shade200,
-                        ),
-                        errorWidget: (_, __, ___) => Container(
-                          height: 135,
-                          color: Colors.grey.shade300,
-                          child: const Icon(Icons.image_not_supported),
-                        ),
-                      )
-                    : Container(
-                        height: 135,
-                        color: lightGreySnowColor,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported_outlined),
+                // Location badge
+                if (service.city != null && service.city!.isNotEmpty)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-              ),
-              // Location badge
-              if (service.city != null && service.city!.isNotEmpty)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      decoration: BoxDecoration(
+                        color: lightGreySnowColor.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 16),
+                          const SizedBox(width: 2),
+                          Text(
+                            service.city!,
+                            style: context.labelSmall.copyWith(
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: lightGreySnowColor.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(20),
+                  ),
+              ],
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Rating row
+                  Row(
+                    children: [
+                      const Spacer(),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 16,
+                        color: selectiveYellowColor,
+                      ),
+                      Text(
+                        "(4.5)",
+                        style: context.labelSmall.copyWith(
+                          color: lightGreyTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  verticalMargin4,
+                  // Title
+                  Text(
+                    service.title,
+                    style: context.labelMedium.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  verticalMargin8,
+                  // Price
+                  Text.rich(
+                    TextSpan(
+                      text: "₹",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                       children: [
-                        const Icon(Icons.location_on_outlined, size: 16),
-                        const SizedBox(width: 2),
-                        Text(
-                          service.city!,
-                          style: context.labelSmall.copyWith(
-                            fontWeight: FontWeight.w400,
+                        TextSpan(
+                          text: service.price,
+                          style: context.bodySmall.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-            ],
-          ),
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Rating row
-                Row(
-                  children: [
-                    const Spacer(),
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 16,
-                      color: selectiveYellowColor,
+                  verticalMargin8,
+                  // Book Now Button
+                  GradientButton(
+                    text: "Book Now",
+                    onTap: () {
+                      final appStore = sl<AppStore>();
+                      if (appStore.isLoggedIn) {
+                        context.pushNamed(
+                          AppRouterNames.customerSelectBookingLocation,
+                          pathParameters: {
+                            "listingId": service.id.toString(),
+                          },
+                        );
+                      } else {
+                        context.pushNamed(
+                          AppRouterNames.signIn,
+                          extra: {
+                            "redirectTo":
+                                AppRouterNames.customerSelectBookingLocation,
+                            "listingId": service.id.toString(),
+                          },
+                        );
+                      }
+                    },
+                    padding: verticalPadding12,
+                    borderRadius: 6,
+                    textStyle: context.labelMedium.copyWith(
+                      color: whiteColor,
                     ),
-                    Text(
-                      "(4.5)",
-                      style: context.labelSmall.copyWith(
-                        color: lightGreyTextColor,
-                      ),
-                    ),
-                  ],
-                ),
-                verticalMargin4,
-                // Title
-                Text(
-                  service.title,
-                  style: context.labelMedium.copyWith(
-                    fontWeight: FontWeight.w600,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                verticalMargin8,
-                // Price
-                Text.rich(
-                  TextSpan(
-                    text: "₹",
-                    style: context.labelMedium.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: service.price,
-                        style: context.bodySmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                verticalMargin8,
-                // Book Now Button
-                GradientButton(
-                  text: "Book Now",
-                  onTap: () {
-                    final appStore = sl<AppStore>();
-                    if (appStore.isLoggedIn) {
-                      context.pushNamed(
-                        AppRouterNames.customerSelectBookingLocation,
-                        pathParameters: {
-                          "listingId": service.id.toString(),
+                  verticalMargin8,
+                  // Contact Supplier Button
+                  GradientButton(
+                    text: "Contact Supplier",
+                    onTap: () {
+                      showGeneralDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        barrierLabel: "Dismiss",
+                        barrierColor: Colors.black54,
+                        transitionDuration: const Duration(milliseconds: 300),
+                        pageBuilder: (context, animation1, animation2) {
+                          return SendEnquiryPopUp(onSubmit: () {});
                         },
                       );
-                    } else {
-                      context.pushNamed(
-                        AppRouterNames.signIn,
-                        extra: {
-                          "redirectTo":
-                              AppRouterNames.customerSelectBookingLocation,
-                          "listingId": service.id.toString(),
-                        },
-                      );
-                    }
-                  },
-                  padding: verticalPadding12,
-                  borderRadius: 6,
-                  textStyle: context.labelMedium.copyWith(
-                    color: whiteColor,
+                    },
+                    hideGradient: true,
+                    padding: verticalPadding12,
+                    borderRadius: 6,
+                    backgroundColor: greyButttonColor,
+                    textStyle: context.labelMedium,
                   ),
-                ),
-                verticalMargin8,
-                // Contact Supplier Button
-                GradientButton(
-                  text: "Contact Supplier",
-                  onTap: () {
-                    context.pushNamed(
-                      AppRouterNames.listingDetail,
-                      pathParameters: {"listingId": service.id.toString()},
-                    );
-                  },
-                  hideGradient: true,
-                  padding: verticalPadding12,
-                  borderRadius: 6,
-                  backgroundColor: greyButttonColor,
-                  textStyle: context.labelMedium,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
