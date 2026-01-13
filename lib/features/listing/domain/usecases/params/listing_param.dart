@@ -10,6 +10,7 @@ class GetListingsParams extends Equatable {
   final List<int>? ratings;
   final int? subcategory;
   final int? page;
+  final String? serviceType;
 
   const GetListingsParams({
     this.categories,
@@ -21,6 +22,7 @@ class GetListingsParams extends Equatable {
     this.ratings,
     this.subcategory,
     this.page,
+    this.serviceType,
   });
 
   Map<String, dynamic> toQuery() {
@@ -35,6 +37,7 @@ class GetListingsParams extends Equatable {
     if (sort != null) query['sort'] = sort;
     if (subcategory != null) query['subcategory'] = subcategory;
     if (page != null) query['page'] = page;
+    if (serviceType != null) query['service_type'] = serviceType;
 
     return query;
   }
@@ -50,5 +53,6 @@ class GetListingsParams extends Equatable {
     ratings,
     subcategory,
     page,
+    serviceType,
   ];
 }

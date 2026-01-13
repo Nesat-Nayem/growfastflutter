@@ -7,17 +7,17 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
-import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/categories/presentation/bloc/category_bloc.dart';
 import 'package:grow_first/features/categories/presentation/widgets/category_tile.dart';
 import 'package:grow_first/features/categories/presentation/widgets/sub_categories_pop_up.dart';
-import 'package:grow_first/features/home/data/model/home_service_model.dart';
 import 'package:grow_first/features/home/presentation/bloc/home_page_bloc.dart';
+import 'package:grow_first/features/home/presentation/bloc/service_sections_bloc.dart';
 import 'package:grow_first/features/home/presentation/static_design.dart';
 import 'package:grow_first/features/home/presentation/widgets/home_page_banners.dart';
+import 'package:grow_first/features/home/presentation/widgets/home_service_section.dart';
 import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 import 'package:grow_first/features/widgets/shimmer.dart';
 
@@ -36,6 +36,11 @@ class HomePage extends StatelessWidget {
         // CategoryBloc
         BlocProvider<CategoryBloc>(
           create: (_) => sl<CategoryBloc>()..add(LoadCategories()),
+        ),
+
+        // ServiceSectionsBloc
+        BlocProvider<ServiceSectionsBloc>(
+          create: (_) => sl<ServiceSectionsBloc>()..add(LoadAllServiceSections()),
         ),
       ],
       child: const HomePageContent(),
@@ -355,7 +360,7 @@ class _HomePageContentState extends State<HomePageContent> {
                             child: Align(
                               alignment: Alignment.bottomCenter,
                               child: Text(
-                                item!.title!,
+                                item.title ?? '',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: context.bodySmall.copyWith(
@@ -374,60 +379,60 @@ class _HomePageContentState extends State<HomePageContent> {
               ),
             ),
             verticalMargin16,
-            Column(
-              children: [
-                Text(
-                  "Our Featured Services",
-                  style: context.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                verticalMargin8,
-                Text(
-                  "Highlighted services that bring you the best value and convenience.",
-                  style: context.bodySmall.copyWith(color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-            verticalMargin12,
-            BlocBuilder<HomePageBloc, HomePageState>(
+            // 6 Service Sections
+            BlocBuilder<ServiceSectionsBloc, ServiceSectionsState>(
               builder: (context, state) {
-                if (state is HomePageLoading) {
-                  return SizedBox(
-                    height: 170,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (_, __) =>
-                          AppShimmer(width: 240, height: 160),
-                      separatorBuilder: (_, __) => horizontalMargin12,
-                      itemCount: 3,
+                return Column(
+                  children: [
+                    // Featured Services
+                    HomeServiceSection(
+                      title: "Our Featured Services",
+                      serviceType: "featured",
+                      services: state.featuredServices,
+                      isLoading: state.isLoading,
                     ),
-                  );
-                }
 
-                if (state is HomePageLoaded && state.services.isNotEmpty) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        height: 170,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: min(10, state.services.length),
-                          separatorBuilder: (_, __) => horizontalMargin12,
-                          itemBuilder: (context, index) {
-                            final service = state.services[index];
+                    // Popular Services
+                    HomeServiceSection(
+                      title: "Popular Services",
+                      serviceType: "popular",
+                      services: state.popularServices,
+                      isLoading: state.isLoading,
+                    ),
 
-                            return _ServiceCard(service: service);
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                }
+                    // Emergency Services
+                    HomeServiceSection(
+                      title: "Emergency Services",
+                      serviceType: "emergency",
+                      services: state.emergencyServices,
+                      isLoading: state.isLoading,
+                    ),
 
-                return emptyBox;
+                    // Newly Onboarded
+                    HomeServiceSection(
+                      title: "Newly Onboarded",
+                      serviceType: "newly_onboarded",
+                      services: state.newlyOnboardedServices,
+                      isLoading: state.isLoading,
+                    ),
+
+                    // Recommended for You
+                    HomeServiceSection(
+                      title: "Recommended for You",
+                      serviceType: "recommended",
+                      services: state.recommendedServices,
+                      isLoading: state.isLoading,
+                    ),
+
+                    // Seasonal / Festive Services
+                    HomeServiceSection(
+                      title: "Seasonal / Festive Services",
+                      serviceType: "seasonal",
+                      services: state.seasonalServices,
+                      isLoading: state.isLoading,
+                    ),
+                  ],
+                );
               },
             ),
 
@@ -436,78 +441,6 @@ class _HomePageContentState extends State<HomePageContent> {
             verticalMargin32,
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ServiceCard extends StatelessWidget {
-  final HomeServiceModel service;
-
-  const _ServiceCard({required this.service});
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl =
-        "${sl<AppConfig>().imageBaseUrl}/storage/${service.latestServiceImage}";
-
-    print("image url is :$imageUrl");
-    return Container(
-      width: 260,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // IMAGE
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: CachedNetworkImage(
-              imageUrl: imageUrl,
-              height: 115,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              placeholder: (_, __) =>
-                  Container(height: 115, color: Colors.grey.shade200),
-              errorWidget: (_, __, ___) => Container(
-                height: 115,
-                color: Colors.grey.shade300,
-                child: const Icon(Icons.image_not_supported),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    service.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Text(
-                  "${service.serviceCount} Services",
-                  style: context.labelSmall.copyWith(color: shipGreyColor1),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

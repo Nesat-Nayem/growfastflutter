@@ -15,10 +15,16 @@ import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class ListingPage extends StatefulWidget {
-  const ListingPage({super.key, this.categoryId, this.subcategoryId});
+  const ListingPage({
+    super.key,
+    this.categoryId,
+    this.subcategoryId,
+    this.serviceType,
+  });
 
   final String? categoryId;
   final String? subcategoryId;
+  final String? serviceType;
 
   @override
   State<ListingPage> createState() => _ListingPageState();
@@ -32,7 +38,7 @@ class _ListingPageState extends State<ListingPage> {
   void initState() {
     super.initState();
     developer.log(
-      'ListingPage.initState -> categoryId=${widget.categoryId}, subcategoryId=${widget.subcategoryId}',
+      'ListingPage.initState -> categoryId=${widget.categoryId}, subcategoryId=${widget.subcategoryId}, serviceType=${widget.serviceType}',
       name: 'ListingPage',
     );
     _listingBloc = sl<ListingBloc>();
@@ -49,6 +55,7 @@ class _ListingPageState extends State<ListingPage> {
           subcategory: widget.subcategoryId != null
               ? int.tryParse(widget.subcategoryId ?? "")
               : null,
+          serviceType: widget.serviceType,
           page: 1,
         ),
       ),

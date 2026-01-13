@@ -178,6 +178,10 @@ class AppRouter {
                         )
                         ? state.uri.queryParameters["subcategoryId"].toString()
                         : null,
+                    serviceType:
+                        state.uri.queryParametersAll.containsKey("service_type")
+                        ? state.uri.queryParameters["service_type"].toString()
+                        : null,
                   ),
                 ),
               ],
