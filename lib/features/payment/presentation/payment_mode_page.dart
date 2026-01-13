@@ -27,10 +27,11 @@ class PaymentModePage extends StatefulWidget {
 }
 
 class _PaymentModePageState extends State<PaymentModePage> {
-  bool selectedRazorpay = true;
+  String selectedPaymentMethod = 'razorpay'; // 'razorpay' or 'cash_on_delivery'
   late Razorpay _razorpay;
   Map<String, dynamic>? cartData;
   bool isLoading = true;
+  bool isProcessingPayment = false;
   String? errorMessage;
   String? razorpayOrderId;
   String? razorpayKey;
@@ -198,6 +199,14 @@ class _PaymentModePageState extends State<PaymentModePage> {
   }
 
   void _startPayment(double totalAmount) {
+    if (selectedPaymentMethod == 'razorpay') {
+      _processRazorpayPayment(totalAmount);
+    } else if (selectedPaymentMethod == 'cash_on_delivery') {
+      _processCashOnDelivery();
+    }
+  }
+
+  void _processRazorpayPayment(double totalAmount) {
     if (razorpayKey == null || razorpayOrderId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -226,6 +235,73 @@ class _PaymentModePageState extends State<PaymentModePage> {
       _razorpay.open(options);
     } catch (e) {
       debugPrint('Error: $e');
+    }
+  }
+
+  Future<void> _processCashOnDelivery() async {
+    setState(() {
+      isProcessingPayment = true;
+    });
+
+    try {
+      final dio = sl<Dio>();
+      final getToken = await sl<ISecureStore>().read("token");
+
+      final response = await dio.get(
+        'customer/cart_payment',
+        queryParameters: {
+          'gateway': 'cash_on_delivery',
+          'cart_id': widget.cartId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $getToken'}),
+      );
+
+      if (response.data['status'] == 'success') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Booking confirmed! Pay on delivery.'),
+            ),
+          );
+
+          final cart = cartData!['carts'];
+          final bookingDate = cart['booking_date']?.toString();
+          final bookingTime = cart['booking_time']?.toString();
+
+          context.pushNamed(
+            AppRouterNames.customerBookingConfirmed,
+            queryParameters: {
+              'date': bookingDate ?? DateTime.now().toString(),
+              'time': bookingTime ?? '',
+              'ref': '',
+            },
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                response.data['message'] ?? 'Booking failed. Please try again.',
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Booking failed: ${e.toString()}'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isProcessingPayment = false;
+        });
+      }
     }
   }
 
@@ -304,33 +380,111 @@ class _PaymentModePageState extends State<PaymentModePage> {
                   children: [
                     Text("Payment Types", style: context.labelLarge),
                     verticalMargin16,
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: selectedRazorpay
-                              ? Color(0XFFFE8C00)
-                              : Colors.transparent,
+                    // Razorpay Option
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedPaymentMethod = 'razorpay';
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: selectedPaymentMethod == 'razorpay'
+                                ? Color(0XFFFE8C00)
+                                : Colors.grey.shade300,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        borderRadius: BorderRadius.circular(16),
+                        padding: verticalPadding12 + horizontalPadding12,
+                        child: Row(
+                          children: [
+                            Icon(Icons.payment, color: Colors.blue),
+                            horizontalMargin16,
+                            Expanded(
+                              child: Text("Razorpay", style: context.labelLarge),
+                            ),
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: selectedPaymentMethod == 'razorpay'
+                                      ? Color(0XFFFE8C00)
+                                      : Colors.grey,
+                                  width: 2,
+                                ),
+                              ),
+                              child: selectedPaymentMethod == 'razorpay'
+                                  ? Center(
+                                      child: Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0XFFFE8C00),
+                                        ),
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                          ],
+                        ),
                       ),
-                      padding: verticalPadding12 + horizontalPadding12,
-                      child: Row(
-                        children: [
-                          Icon(Icons.payment, color: Colors.blue),
-                          horizontalMargin16,
-                          Expanded(
-                            child: Text("Razorpay", style: context.labelLarge),
+                    ),
+                    verticalMargin12,
+                    // Cash on Delivery Option
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedPaymentMethod = 'cash_on_delivery';
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: selectedPaymentMethod == 'cash_on_delivery'
+                                ? Color(0XFFFE8C00)
+                                : Colors.grey.shade300,
                           ),
-                          Radio<bool>(
-                            value: true,
-                            groupValue: selectedRazorpay,
-                            onChanged: (val) {
-                              setState(() {
-                                selectedRazorpay = val!;
-                              });
-                            },
-                          ),
-                        ],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        padding: verticalPadding12 + horizontalPadding12,
+                        child: Row(
+                          children: [
+                            Icon(Icons.money, color: Colors.green),
+                            horizontalMargin16,
+                            Expanded(
+                              child: Text("Cash on Delivery", style: context.labelLarge),
+                            ),
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: selectedPaymentMethod == 'cash_on_delivery'
+                                      ? Color(0XFFFE8C00)
+                                      : Colors.grey,
+                                  width: 2,
+                                ),
+                              ),
+                              child: selectedPaymentMethod == 'cash_on_delivery'
+                                  ? Center(
+                                      child: Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0XFFFE8C00),
+                                        ),
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     verticalMargin24,
@@ -372,10 +526,12 @@ class _PaymentModePageState extends State<PaymentModePage> {
                 ),
               ),
             ),
-            bottomNavigationBar: state.isLoading
+            bottomNavigationBar: state.isLoading || isProcessingPayment
                 ? const Center(child: CircularProgressIndicator())
                 : CustomBottomNavNextBackBtns(
-                    title1: "Pay ₹${totalAmount.toStringAsFixed(2)}",
+                    title1: selectedPaymentMethod == 'razorpay'
+                        ? "Pay ₹${totalAmount.toStringAsFixed(2)}"
+                        : "Confirm Booking",
                     title2: "Back to Cart",
                     showIcon: false,
                     onPressedOne: () => _startPayment(totalAmount),
