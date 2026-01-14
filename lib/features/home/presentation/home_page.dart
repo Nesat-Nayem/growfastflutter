@@ -306,78 +306,79 @@ class _HomePageContentState extends State<HomePageContent> {
               ],
             ),
             verticalMargin8,
-            Row(
-              mainAxisAlignment: .spaceBetween,
-              children: [
-                Text(
-                  "Recent Searches",
-                  style: context.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.keyboard_arrow_right_sharp,
-                    color: Color(0XFF7D8FAB),
-                    size: 32,
-                  ),
-                ),
-              ],
-            ),
-            verticalMargin12,
-            SizedBox(
-              height: min(115, MediaQuery.sizeOf(context).height * 0.18),
-              child: BlocBuilder<HomePageBloc, HomePageState>(
-                builder: (context, state) {
-                  if (state is HomePageLoaded &&
-                      state.recentSearches.isNotEmpty) {
-                    return SizedBox(
-                      height: min(
-                        115,
-                        MediaQuery.sizeOf(context).height * 0.18,
-                      ),
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: state.recentSearches.length,
-                        separatorBuilder: (_, __) => horizontalMargin12,
-                        itemBuilder: (context, index) {
-                          final item = state.recentSearches[index];
-                          final imageUrl = item.image != null
-                              ? "https://growfirst.org/${item.image}"
-                              : "https://via.placeholder.com/300";
-
-                          return Container(
-                            width: MediaQuery.sizeOf(context).width / 3.5,
-                            padding: verticalPadding8,
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: CachedNetworkImageProvider(imageUrl),
-                                fit: BoxFit.cover,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Text(
-                                item.title ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: context.bodySmall.copyWith(
-                                  color: whiteColor,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  }
-                  return emptyBox;
-                },
-              ),
-            ),
+            // Recent Searches Section - Hidden for now
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //   children: [
+            //     Text(
+            //       "Recent Searches",
+            //       style: context.bodyMedium.copyWith(
+            //         fontWeight: FontWeight.w500,
+            //       ),
+            //     ),
+            //     IconButton(
+            //       onPressed: () {},
+            //       icon: Icon(
+            //         Icons.keyboard_arrow_right_sharp,
+            //         color: Color(0XFF7D8FAB),
+            //         size: 32,
+            //       ),
+            //     ),
+            //   ],
+            // ),
+            // verticalMargin12,
+            // SizedBox(
+            //   height: min(115, MediaQuery.sizeOf(context).height * 0.18),
+            //   child: BlocBuilder<HomePageBloc, HomePageState>(
+            //     builder: (context, state) {
+            //       if (state is HomePageLoaded &&
+            //           state.recentSearches.isNotEmpty) {
+            //         return SizedBox(
+            //           height: min(
+            //             115,
+            //             MediaQuery.sizeOf(context).height * 0.18,
+            //           ),
+            //           child: ListView.separated(
+            //             scrollDirection: Axis.horizontal,
+            //             itemCount: state.recentSearches.length,
+            //             separatorBuilder: (_, __) => horizontalMargin12,
+            //             itemBuilder: (context, index) {
+            //               final item = state.recentSearches[index];
+            //               final imageUrl = item.image != null
+            //                   ? "https://growfirst.org/${item.image}"
+            //                   : "https://via.placeholder.com/300";
+            //
+            //               return Container(
+            //                 width: MediaQuery.sizeOf(context).width / 3.5,
+            //                 padding: verticalPadding8,
+            //                 decoration: BoxDecoration(
+            //                   image: DecorationImage(
+            //                     image: CachedNetworkImageProvider(imageUrl),
+            //                     fit: BoxFit.cover,
+            //                   ),
+            //                   borderRadius: BorderRadius.circular(8),
+            //                 ),
+            //                 child: Align(
+            //                   alignment: Alignment.bottomCenter,
+            //                   child: Text(
+            //                     item.title ?? '',
+            //                     maxLines: 1,
+            //                     overflow: TextOverflow.ellipsis,
+            //                     style: context.bodySmall.copyWith(
+            //                       color: whiteColor,
+            //                       fontWeight: FontWeight.w400,
+            //                     ),
+            //                   ),
+            //                 ),
+            //               );
+            //             },
+            //           ),
+            //         );
+            //       }
+            //       return emptyBox;
+            //     },
+            //   ),
+            // ),
             verticalMargin16,
             // 6 Service Sections
             BlocBuilder<ServiceSectionsBloc, ServiceSectionsState>(

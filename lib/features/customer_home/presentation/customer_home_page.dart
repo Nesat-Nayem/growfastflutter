@@ -136,33 +136,27 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                           if (state is DashboardLoading)
                             const Center(child: CircularProgressIndicator())
                           else
-                            Row(
-                              spacing: 15,
-                              children: [
-                                Expanded(
-                                  child: DashboardStatCrump(
-                                    title: "Total\nOrders",
-                                    icon: AppAssets.iconCartSvg,
-                                    percent: "",
-                                    isProfit: true,
-                                    statValue: totalBookings,
-                                    displayCurrency: false,
-                                    backgroundIconColor: lightPastelPinkColor,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: DashboardStatCrump(
-                                    title: "Wallet\nBalance",
-                                    icon: AppAssets.iconWalletSvg,
-                                    percent: "",
-                                    isProfit: true,
-                                    statValue: walletBalance,
-                                    displayCurrency: true,
-                                    backgroundIconColor: lightPastelGreenColor,
-                                  ),
-                                ),
-                              ],
+                            DashboardStatCrump(
+                              title: "Total Orders",
+                              icon: AppAssets.iconCartSvg,
+                              percent: "",
+                              isProfit: true,
+                              statValue: totalBookings,
+                              displayCurrency: false,
+                              backgroundIconColor: lightPastelPinkColor,
                             ),
+                            // Wallet Balance - Hidden for now
+                            // Expanded(
+                            //   child: DashboardStatCrump(
+                            //     title: "Wallet\nBalance",
+                            //     icon: AppAssets.iconWalletSvg,
+                            //     percent: "",
+                            //     isProfit: true,
+                            //     statValue: walletBalance,
+                            //     displayCurrency: true,
+                            //     backgroundIconColor: lightPastelGreenColor,
+                            //   ),
+                            // ),
                         ],
                       ),
                       verticalMargin24,
