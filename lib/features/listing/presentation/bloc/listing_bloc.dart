@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grow_first/core/utils/helpers.dart';
 import 'package:grow_first/features/listing/domain/entities/listing.dart';
+import 'package:grow_first/features/listing/domain/usecases/get_about_us_banners_usecase.dart';
 import 'package:grow_first/features/listing/domain/usecases/get_listing_detail_usecase.dart';
 import 'package:grow_first/features/listing/domain/usecases/get_listings_usecase.dart';
 import 'package:grow_first/features/listing/domain/usecases/params/listing_param.dart';
@@ -14,12 +15,17 @@ part 'listing_bloc_state.dart';
 class ListingBloc extends Bloc<ListingEvent, ListingState> {
   final GetListingsUseCase getListingsUseCase;
   final GetListingDetailUseCase getListingDetailUseCase;
+  final GetAboutUsBannersUseCase getAboutUsBannersUseCase;
 
-  ListingBloc(this.getListingsUseCase, this.getListingDetailUseCase)
-      : super(const ListingState()) {
+  ListingBloc(
+    this.getListingsUseCase,
+    this.getListingDetailUseCase,
+    this.getAboutUsBannersUseCase,
+  ) : super(const ListingState()) {
     on<LoadListings>(_onLoadListings);
     on<LoadMoreListings>(_onLoadMoreListings);
     on<LoadListingDetail>(_onLoadListingDetail);
+    on<LoadAboutUsBanners>(_onLoadAboutUsBanners);
   }
 
   Future<void> _onLoadListings(
@@ -186,6 +192,18 @@ class ListingBloc extends Bloc<ListingEvent, ListingState> {
           selectedListing: listing,
         ),
       ),
+    );
+  }
+
+  Future<void> _onLoadAboutUsBanners(
+    LoadAboutUsBanners event,
+    Emitter<ListingState> emit,
+  ) async {
+    final result = await getAboutUsBannersUseCase();
+
+    result.fold(
+      (failure) => emit(state.copyWith(error: failure.toString())),
+      (banners) => emit(state.copyWith(banners: banners)),
     );
   }
 }

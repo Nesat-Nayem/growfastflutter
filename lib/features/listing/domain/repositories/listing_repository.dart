@@ -10,4 +10,6 @@ abstract class ListingRepository {
   );
 
   Future<Either<Failure, Listing>> getListingDetailById(String id);
+
+  Future<Either<Failure, List<String>>> getAboutUsBanners();
 }

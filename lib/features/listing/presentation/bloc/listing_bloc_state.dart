@@ -11,6 +11,7 @@ class ListingState extends Equatable {
   final int lastPage;
   final bool hasMorePages;
   final String? error;
+  final List<String> banners;
 
   const ListingState({
     this.isLoading = false,
@@ -23,6 +24,7 @@ class ListingState extends Equatable {
     this.lastPage = 1,
     this.hasMorePages = false,
     this.error,
+    this.banners = const [],
   });
 
   ListingState copyWith({
@@ -37,6 +39,7 @@ class ListingState extends Equatable {
     bool? hasMorePages,
     String? error,
     bool clearError = false,
+    List<String>? banners,
   }) {
     return ListingState(
       isLoading: isLoading ?? this.isLoading,
@@ -51,6 +54,7 @@ class ListingState extends Equatable {
       lastPage: lastPage ?? this.lastPage,
       hasMorePages: hasMorePages ?? this.hasMorePages,
       error: clearError ? null : (error ?? this.error),
+      banners: banners ?? this.banners,
     );
   }
 
@@ -66,5 +70,6 @@ class ListingState extends Equatable {
         lastPage,
         hasMorePages,
         error,
+        banners,
       ];
 }

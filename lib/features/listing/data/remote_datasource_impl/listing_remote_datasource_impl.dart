@@ -135,4 +135,24 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
       throw ServerException();
     }
   }
+
+  @override
+  Future<List<String>> getAboutUsBanners() async {
+    final response = await NetworkHelper.sendRequest(
+      dio,
+      RequestType.get,
+      'page-banner/about-us',
+    );
+
+    if (response['status'] != true) {
+      throw ServerException();
+    }
+
+    final list = (response['data']?['image_urls'] as List?) ?? [];
+
+    return list
+        .map((e) => e['url']?.toString() ?? '')
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
 }

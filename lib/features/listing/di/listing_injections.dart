@@ -4,6 +4,7 @@ import 'package:grow_first/features/listing/data/remote_datasource_impl/listing_
 import 'package:grow_first/features/listing/data/remote_datasources/listing_remote_datasource.dart';
 import 'package:grow_first/features/listing/data/repositories/listing_repository_impl.dart';
 import 'package:grow_first/features/listing/domain/repositories/listing_repository.dart';
+import 'package:grow_first/features/listing/domain/usecases/get_about_us_banners_usecase.dart';
 import 'package:grow_first/features/listing/domain/usecases/get_listing_detail_usecase.dart';
 import 'package:grow_first/features/listing/domain/usecases/get_listings_usecase.dart';
 import 'package:grow_first/features/listing/presentation/bloc/listing_bloc.dart';
@@ -16,8 +17,11 @@ class ListingInjections {
     // Bloc
     // -----------------------------
     sl.registerCachedFactory(
-      () =>
-          ListingBloc(sl<GetListingsUseCase>(), sl<GetListingDetailUseCase>()),
+      () => ListingBloc(
+        sl<GetListingsUseCase>(),
+        sl<GetListingDetailUseCase>(),
+        sl<GetAboutUsBannersUseCase>(),
+      ),
     );
 
     // -----------------------------
@@ -25,6 +29,7 @@ class ListingInjections {
     // -----------------------------
     sl.registerLazySingleton(() => GetListingsUseCase(sl<ListingRepository>()));
     sl.registerLazySingleton(() => GetListingDetailUseCase(sl<ListingRepository>()));
+    sl.registerLazySingleton(() => GetAboutUsBannersUseCase(sl<ListingRepository>()));
 
     // -----------------------------
     // Repository

@@ -33,3 +33,7 @@ class LoadListingDetail extends ListingEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class LoadAboutUsBanners extends ListingEvent {
+  const LoadAboutUsBanners();
+}

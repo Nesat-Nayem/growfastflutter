@@ -8,4 +8,6 @@ abstract class ListingRemoteDataSource {
   );
 
   Future<ListingModel> getListingDetailById(String id);
+
+  Future<List<String>> getAboutUsBanners();
 }

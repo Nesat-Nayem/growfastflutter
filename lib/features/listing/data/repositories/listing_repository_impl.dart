@@ -32,4 +32,14 @@ class ListingRepositoryImpl implements ListingRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<String>>> getAboutUsBanners() async {
+    try {
+      final banners = await remoteDataSource.getAboutUsBanners();
+      return Right(banners);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }

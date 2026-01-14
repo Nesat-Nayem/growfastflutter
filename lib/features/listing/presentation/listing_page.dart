@@ -58,6 +58,7 @@ class _ListingPageState extends State<ListingPage> {
       selectedSubcategories: subcategoryId != null ? [subcategoryId] : [],
     );
 
+    _listingBloc.add(const LoadAboutUsBanners());
     _loadListings();
   }
 
@@ -345,6 +346,34 @@ class _ListingPageState extends State<ListingPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              BlocBuilder<ListingBloc, ListingState>(
+                bloc: _listingBloc,
+                builder: (context, state) {
+                  if (state.banners.isEmpty) return const SizedBox();
+                  return SizedBox(
+                    height: 140,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: state.banners.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 3),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              state.banners[index],
+                              width: 397,
+                              height: 140,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
               BlocBuilder<ListingBloc, ListingState>(
                 bloc: _listingBloc,
                 builder: (context, state) {
