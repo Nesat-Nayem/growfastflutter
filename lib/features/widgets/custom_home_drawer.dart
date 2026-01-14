@@ -75,6 +75,7 @@
 // }
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -97,6 +98,87 @@ class ModernCustomerDrawer extends StatelessWidget {
   final String? name;
   final String? email;
   final String? profileImage;
+
+  Future<void> _showDeleteAccountDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text(
+          'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await _deleteAccount(context);
+    }
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final dio = sl<Dio>();
+      final response = await dio.delete('/customer/delete-account');
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading
+      }
+
+      if (response.data['status'] == 'success') {
+        // Clear local data
+        await sl<AppStore>().clear();
+        sl<AppBloc>().add(AppLoggedOut());
+
+        if (context.mounted) {
+          Navigator.of(context).pop(); // Close drawer
+          context.goNamed(AppRouterNames.home);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.data['message'] ?? 'Failed to delete account'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete account. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -297,6 +379,12 @@ class ModernCustomerDrawer extends StatelessWidget {
                   }
                 },
                 color: Color(0XFF78A5E1),
+              ),
+              DrawerMenuItem(
+                icon: Icons.delete_forever,
+                label: "Delete Account",
+                onTap: () => _showDeleteAccountDialog(context),
+                color: Colors.red,
               ),
 
               const Spacer(),
