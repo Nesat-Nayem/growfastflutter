@@ -43,7 +43,8 @@ class ListingTile extends StatelessWidget {
               ? emptyPadding
               : verticalPadding12 + horizontalPadding12,
           child: Column(
-            crossAxisAlignment: .stretch,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (isGridView) ...[
                 Stack(
@@ -52,74 +53,58 @@ class ListingTile extends StatelessWidget {
                     _ListingLocation(location: listing?.city ?? ""),
                   ],
                 ),
-                verticalMargin8,
-                Padding(
-                  padding: horizontalPadding12,
-                  child: Column(
-                    crossAxisAlignment: .start,
-                    children: [
-                      _ListingOrganizationAndRating(listing: listing),
-                      verticalMargin4,
-                      _ListingNameWithPrice(isGridView: true, listing: listing),
-                      verticalMargin8,
-                      if (showActionButtons) ...[
-                        GradientButton(
-                          text: "Book Now",
-                          onTap: () {
-                            final appStore = sl<AppStore>();
-                            if (appStore.isLoggedIn) {
-                              context.pushNamed(
-                                AppRouterNames.customerSelectBookingLocation,
-                                pathParameters: {
-                                  "listingId": listing?.id.toString() ?? "",
-                                },
-                              );
-                            } else {
-                              context.pushNamed(
-                                AppRouterNames.signIn,
-                                extra: {
-                                  "redirectTo": AppRouterNames
-                                      .customerSelectBookingLocation,
-                                  "listingId": listing?.id.toString() ?? "",
-                                },
-                              );
-                            }
-                          },
-                          padding: verticalPadding12,
-                          borderRadius: 6,
-                          textStyle: context.labelMedium.copyWith(
-                            color: whiteColor,
+                const SizedBox(height: 6),
+                Flexible(
+                  child: Padding(
+                    padding: horizontalPadding12,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _ListingOrganizationAndRating(listing: listing),
+                        const SizedBox(height: 2),
+                        _ListingNameWithPrice(isGridView: true, listing: listing),
+                        const SizedBox(height: 6),
+                        if (showActionButtons) ...[
+                          GradientButton(
+                            text: "Book Now",
+                            onTap: () {
+                              final appStore = sl<AppStore>();
+                              if (appStore.isLoggedIn) {
+                                context.pushNamed(
+                                  AppRouterNames.customerSelectBookingLocation,
+                                  pathParameters: {
+                                    "listingId": listing?.id.toString() ?? "",
+                                  },
+                                );
+                              } else {
+                                context.pushNamed(
+                                  AppRouterNames.signIn,
+                                  extra: {
+                                    "redirectTo": AppRouterNames
+                                        .customerSelectBookingLocation,
+                                    "listingId": listing?.id.toString() ?? "",
+                                  },
+                                );
+                              }
+                            },
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            borderRadius: 6,
+                            textStyle: context.labelMedium.copyWith(
+                              color: whiteColor,
+                            ),
                           ),
-                        ),
-                        verticalMargin8,
-                        GradientButton(
-                          text: "Contact Supplier",
-                          onTap: () {
-                            if (listing != null) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ContactSupplierPopup(
-                                    listing: listing!,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          hideGradient: true,
-                          padding: verticalPadding12,
-                          borderRadius: 6,
-                          backgroundColor: greyButttonColor,
-                          textStyle: context.labelMedium,
-                        ),
+                          const SizedBox(height: 6),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ] else ...[
                 _ListingOrganizationAndRating(listing: listing),
                 verticalMargin8,
                 Row(
-                  mainAxisAlignment: .start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     _ServiceImage(isGridView: false, listing: listing),
                     horizontalMargin16,
@@ -210,24 +195,24 @@ class _ServiceImage extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: isGridView
-          ? BorderRadius.only(
+          ? const BorderRadius.only(
               topLeft: Radius.circular(15),
               topRight: Radius.circular(15),
             )
-          : BorderRadiusGeometry.circular(16),
+          : BorderRadius.circular(16),
       child: imageUrl != null
           ? CachedNetworkImage(
               imageUrl: imageUrl,
-              height: isGridView ? 135 : 65,
+              height: isGridView ? 130 : 65,
               width: isGridView ? double.infinity : 65,
               fit: BoxFit.cover,
             )
           : Container(
-              height: isGridView ? 135 : 65,
+              height: isGridView ? 130 : 65,
               width: isGridView ? double.infinity : 65,
               color: lightGreySnowColor,
               alignment: Alignment.center,
-              child: Icon(Icons.image_not_supported_outlined),
+              child: const Icon(Icons.image_not_supported_outlined),
             ),
     );
   }
@@ -274,7 +259,7 @@ class _ListingLocation extends StatelessWidget {
           borderRadius: BorderRadius.circular(25),
         ),
         child: Row(
-          mainAxisSize: .min,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.location_on_outlined, size: 18),
             horizontalMargin2,
@@ -297,7 +282,7 @@ class _ListingOrganizationAndRating extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: .min,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Expanded(
           child: Text(
@@ -330,16 +315,17 @@ class _ListingNameWithPrice extends StatelessWidget {
     TextStyle style = isGridView ? context.labelMedium : context.labelLarge;
 
     Widget child = Column(
-      crossAxisAlignment: .start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (!isGridView) ...[verticalMargin8],
         Text(
           listing?.title ?? "Split AC Repair Service, in On Site",
           style: style.copyWith(fontWeight: FontWeight.w600),
-          maxLines: isGridView ? 2 : 1,
+          maxLines: isGridView ? 1 : 1,
           overflow: TextOverflow.ellipsis,
         ),
-        verticalMargin4,
+        const SizedBox(height: 2),
         Text.rich(
           TextSpan(
             text: "₹",
