@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:grow_first/app/di/app_injections.dart' as app_di;
 import 'package:grow_first/app/router/app_router_name.dart';
+import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
@@ -79,7 +82,7 @@ class _SearchPageState extends State<SearchPage> {
       }
     });
     
-    // Navigate to listing page with keyword using go (replaces current route)
+    // Navigate to listing page with keyword filter using go() for shell routes
     context.go('/listings?keyword=${Uri.encodeComponent(query.trim())}');
   }
 
@@ -382,9 +385,7 @@ class _SearchPageState extends State<SearchPage> {
         }
 
         final listing = state.listings[index];
-        final imageUrl = listing.gallery.isNotEmpty 
-            ? listing.gallery.first.img 
-            : null;
+        final imageUrl = _resolveImageUrl(listing);
         
         return ListTile(
           leading: Container(
@@ -397,12 +398,14 @@ class _SearchPageState extends State<SearchPage> {
             child: imageUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      imageUrl.startsWith('http') 
-                          ? imageUrl 
-                          : 'https://www.growfirst.org/$imageUrl',
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      placeholder: (_, __) => const Icon(
+                        Icons.image,
+                        color: Colors.grey,
+                      ),
+                      errorWidget: (_, __, ___) => const Icon(
                         Icons.image,
                         color: Colors.grey,
                       ),
@@ -432,5 +435,29 @@ class _SearchPageState extends State<SearchPage> {
         );
       },
     );
+  }
+
+  String? _resolveImageUrl(dynamic listing) {
+    String? raw;
+
+    if (listing.gallery != null && listing.gallery.isNotEmpty) {
+      raw = listing.gallery.first.img;
+    } else if ((listing.image ?? '').isNotEmpty) {
+      raw = listing.image;
+    }
+
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    if (raw.startsWith('http')) {
+      return raw;
+    }
+
+    final normalized = raw.startsWith('storage/')
+        ? raw.replaceFirst('storage/', '')
+        : raw;
+
+    return "${app_di.sl<AppConfig>().imageBaseUrl}/storage/$normalized";
   }
 }
