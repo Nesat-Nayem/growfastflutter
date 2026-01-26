@@ -55,5 +55,7 @@ class AppRouterNames {
 
   static const dashboard = 'dashboard';
 
+  static const search = 'search';
+
   static const ModernCustomerDrawer = 'ModernCustomerDrawer';
 }

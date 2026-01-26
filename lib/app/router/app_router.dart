@@ -27,6 +27,7 @@ import 'package:grow_first/features/listing/presentation/contact_supplier_page.d
 import 'package:grow_first/features/listing/presentation/listing_detail_page.dart';
 import 'package:grow_first/features/listing/presentation/listing_filters_page.dart';
 import 'package:grow_first/features/listing/presentation/listing_page.dart';
+import 'package:grow_first/features/listing/presentation/search_page.dart';
 import 'package:grow_first/features/listing/domain/entities/listing_filter_params.dart';
 import 'package:grow_first/features/payment/presentation/payment_mode_page.dart';
 import 'package:grow_first/features/reviews/presentation/my_reviews_page.dart';
@@ -59,6 +60,7 @@ class AppRouter {
     AppRouterPaths.customerBookingConfirmedPath,
     AppRouterPaths.customerBookingDetailPath,
     AppRouterPaths.customerWalletPath,
+    AppRouterPaths.searchPath,
     AppRouterPaths.myReviewPath,
     AppRouterPaths.accountSettingsPath,
     AppRouterPaths.accountSettingsPath,
@@ -182,6 +184,10 @@ class AppRouter {
                     serviceType:
                         state.uri.queryParametersAll.containsKey("service_type")
                         ? state.uri.queryParameters["service_type"].toString()
+                        : null,
+                    keyword:
+                        state.uri.queryParametersAll.containsKey("keyword")
+                        ? state.uri.queryParameters["keyword"].toString()
                         : null,
                   ),
                 ),
@@ -337,6 +343,11 @@ class AppRouter {
                 'https://growfirst.org/become-vendor',
             title: state.uri.queryParameters['title'] ?? 'Become a Vendor',
           ),
+        ),
+        GoRoute(
+          name: AppRouterNames.search,
+          path: AppRouterPaths.searchPath,
+          builder: (_, state) => const SearchPage(),
         ),
       ],
     );

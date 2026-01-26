@@ -21,11 +21,13 @@ class ListingPage extends StatefulWidget {
     this.categoryId,
     this.subcategoryId,
     this.serviceType,
+    this.keyword,
   });
 
   final String? categoryId;
   final String? subcategoryId;
   final String? serviceType;
+  final String? keyword;
 
   @override
   State<ListingPage> createState() => _ListingPageState();
@@ -42,7 +44,7 @@ class _ListingPageState extends State<ListingPage> {
   void initState() {
     super.initState();
     developer.log(
-      'ListingPage.initState -> categoryId=${widget.categoryId}, subcategoryId=${widget.subcategoryId}, serviceType=${widget.serviceType}',
+      'ListingPage.initState -> categoryId=${widget.categoryId}, subcategoryId=${widget.subcategoryId}, serviceType=${widget.serviceType}, keyword=${widget.keyword}',
       name: 'ListingPage',
     );
     _listingBloc = sl<ListingBloc>();
@@ -56,6 +58,7 @@ class _ListingPageState extends State<ListingPage> {
     _currentFilters = ListingFilterParams(
       selectedCategories: categoryId != null ? [categoryId] : [],
       selectedSubcategories: subcategoryId != null ? [subcategoryId] : [],
+      keyword: widget.keyword,
     );
 
     _listingBloc.add(const LoadAboutUsBanners());
@@ -318,6 +321,12 @@ class _ListingPageState extends State<ListingPage> {
         appBar: CustomerHomeAppBar(
           singleTitle: "Listing",
           actions: [
+            IconButton(
+              onPressed: () {
+                context.push('/search');
+              },
+              icon: const Icon(Icons.search, size: 26),
+            ),
             IconButton(
               onPressed: () {
                 setState(() => isGridView = true);

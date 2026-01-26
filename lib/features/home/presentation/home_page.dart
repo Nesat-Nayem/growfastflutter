@@ -116,7 +116,9 @@ class _HomePageContentState extends State<HomePageContent> {
             style: ButtonStyle(
               backgroundColor: WidgetStatePropertyAll(lightGreyColor),
             ),
-            onPressed: () {},
+            onPressed: () {
+              context.push('/search');
+            },
           ),
           horizontalMargin16,
         ],

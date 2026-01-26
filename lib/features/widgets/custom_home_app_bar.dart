@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
@@ -53,7 +54,9 @@ class CustomerHomeAppBar extends StatelessWidget
                 style: ButtonStyle(
                   backgroundColor: WidgetStatePropertyAll(lightGreyColor),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  context.push('/search');
+                },
               ),
               horizontalMargin16,
             ],

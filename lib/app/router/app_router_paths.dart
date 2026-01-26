@@ -64,5 +64,7 @@ class AppRouterPaths {
 
   static String dashboardPath = '/${AppRouterNames.dashboard}';
 
+  static String searchPath = '/${AppRouterNames.search}';
+
   static String ModernCustomerDrawerPath= '/${AppRouterNames.ModernCustomerDrawer}';
 }
