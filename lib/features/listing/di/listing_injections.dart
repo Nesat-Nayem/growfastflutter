@@ -16,7 +16,7 @@ class ListingInjections {
     // -----------------------------
     // Bloc
     // -----------------------------
-    sl.registerCachedFactory(
+    sl.registerFactory(
       () => ListingBloc(
         sl<GetListingsUseCase>(),
         sl<GetListingDetailUseCase>(),

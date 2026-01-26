@@ -36,10 +36,19 @@ class ListingDetailPage extends StatefulWidget {
 }
 
 class _ListingDetailPageState extends State<ListingDetailPage> {
+  late final ListingBloc _listingBloc;
+
   @override
   void initState() {
     super.initState();
-    sl.get<ListingBloc>().add(LoadListingDetail(widget.listingId));
+    _listingBloc = sl.get<ListingBloc>();
+    _listingBloc.add(LoadListingDetail(widget.listingId));
+  }
+
+  @override
+  void dispose() {
+    _listingBloc.close();
+    super.dispose();
   }
 
   String formatDate(DateTime date) {
@@ -119,7 +128,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
       backgroundColor: Colors.white,
       appBar: CustomerHomeAppBar(singleTitle: "Detail"),
       body: BlocBuilder<ListingBloc, ListingState>(
-        bloc: sl.get<ListingBloc>(),
+        bloc: _listingBloc,
         builder: (context, state) {
           if (state.isSelectedListingLoading) {
             return Center(child: CircularProgressIndicator());
@@ -414,7 +423,12 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   videoChild,
                   FaqSection(faqs: listing?.faqs),
                   verticalMargin24,
-                  ReviewsWidget(listing: listing!),
+                  ReviewsWidget(
+                    listing: listing!,
+                    onReviewAdded: () {
+                      _listingBloc.add(LoadListingDetail(listing.id.toString()));
+                    },
+                  ),
 
                   verticalMargin24,
                 ],
@@ -424,7 +438,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
         },
       ),
       bottomNavigationBar: BlocBuilder<ListingBloc, ListingState>(
-        bloc: sl.get<ListingBloc>(),
+        bloc: _listingBloc,
         builder: (context, state) {
           if (state.selectedListing == null) {
             return SizedBox.shrink();
@@ -819,8 +833,9 @@ class ReviewBuilder extends StatelessWidget {
 
 class ReviewsWidget extends StatefulWidget {
   final Listing listing;
+  final VoidCallback? onReviewAdded;
 
-  const ReviewsWidget({super.key, required this.listing});
+  const ReviewsWidget({super.key, required this.listing, this.onReviewAdded});
 
   @override
   State<ReviewsWidget> createState() => _ReviewsWidgetState();
@@ -862,14 +877,11 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                     context: context,
                     builder: (_) => BlocProvider.value(
                       value: sl<ReviewsCubit>(),
-                      child: AddReviewPopup(serviceId: 61),
+                      child: AddReviewPopup(serviceId: widget.listing.id),
                     ),
                   );
-                  //listing.id
                   if (result == true) {
-                    sl<ListingBloc>().add(
-                      LoadListingDetail(listing.id.toString()),
-                    );
+                    widget.onReviewAdded?.call();
                   }
                 },
                 child: Text(
