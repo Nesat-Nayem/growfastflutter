@@ -5,7 +5,6 @@ import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
-import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:grow_first/features/widgets/status_button.dart';
 
 class CustomerBookingCard extends StatelessWidget {
@@ -24,20 +23,36 @@ class CustomerBookingCard extends StatelessWidget {
       final gallery = service['gallery'];
       if (gallery != null && gallery is List && gallery.isNotEmpty) {
         final firstImage = gallery[0];
-        if (firstImage != null && firstImage['img'] != null) {
-          final imagePath = firstImage['img'].toString();
-          // If the path already contains http/https, return as is
-          if (imagePath.startsWith('http')) {
-            return imagePath;
+        if (firstImage != null) {
+          String? imagePath;
+          // Handle both 'img' and 'image' keys
+          if (firstImage is Map) {
+            imagePath = (firstImage['img'] ?? firstImage['image'])?.toString();
+          } else if (firstImage is String) {
+            imagePath = firstImage;
           }
-          // Otherwise, construct the full URL with Laravel storage URL
-          return '$baseUrl/storage/$imagePath';
+          
+          if (imagePath != null && imagePath.isNotEmpty) {
+            if (imagePath.startsWith('http')) {
+              return imagePath;
+            }
+            return '$baseUrl/storage/$imagePath';
+          }
         }
       }
 
       // Fallback to service image if available
-      if (service['image'] != null) {
+      if (service['image'] != null && service['image'].toString().isNotEmpty) {
         final imagePath = service['image'].toString();
+        if (imagePath.startsWith('http')) {
+          return imagePath;
+        }
+        return '$baseUrl/storage/$imagePath';
+      }
+      
+      // Try service banner image
+      if (service['banner'] != null && service['banner'].toString().isNotEmpty) {
+        final imagePath = service['banner'].toString();
         if (imagePath.startsWith('http')) {
           return imagePath;
         }
@@ -46,7 +61,7 @@ class CustomerBookingCard extends StatelessWidget {
     }
 
     // Default placeholder image
-    return 'https://via.placeholder.com/400x300?text=No+Image';
+    return '';
   }
 
   Color _getStatusColor(String? status) {
@@ -81,43 +96,59 @@ class CustomerBookingCard extends StatelessWidget {
             width: double.infinity,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: CachedNetworkImage(
-                imageUrl: _getServiceImage(),
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[200],
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[200],
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.image_not_supported,
-                        size: 48,
-                        color: Colors.grey,
+              child: _getServiceImage().isEmpty
+                  ? Container(
+                      color: Colors.grey[200],
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.image_not_supported,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 8),
+                          Text('No Image', style: TextStyle(color: Colors.grey)),
+                        ],
                       ),
-                      SizedBox(height: 8),
-                      Text('No Image', style: TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ),
+                    )
+                  : CachedNetworkImage(
+                      imageUrl: _getServiceImage(),
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey[200],
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[200],
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.image_not_supported,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 8),
+                            Text('No Image', style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ),
             ),
           ),
           verticalMargin24,
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                height: 100,
-                width: 250,
+              Expanded(
                 child: Text(
                   booking?['service']?['title'] ?? "Service",
                   style: context.bodySmall.copyWith(letterSpacing: 1.1),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-
               horizontalMargin12,
               StatusButton(
                 title: booking?['status'] ?? "Pending",
