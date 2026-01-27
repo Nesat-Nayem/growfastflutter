@@ -22,3 +22,5 @@ class AccountError extends AccountState {
   final String message;
   AccountError(this.message);
 }
+
+class AccountUnauthorized extends AccountState {}

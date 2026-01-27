@@ -15,3 +15,5 @@ class DashboardError extends DashboardState {
   final String message;
   DashboardError(this.message);
 }
+
+class DashboardUnauthorized extends DashboardState {}

@@ -78,19 +78,43 @@ class _HomePageContentState extends State<HomePageContent> {
     banner.load();
   }
 
+  @override
   void dispose() {
     banner.dispose();
     super.dispose();
   }
 
+  void _openDrawer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const ModernCustomerDrawer(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: ModernCustomerDrawer(),
       appBar: AppBar(
         backgroundColor: whiteColor,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => _openDrawer(context),
+        ),
         title: Column(
-          crossAxisAlignment: .start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Pune", style: context.labelSmall),
             Row(
@@ -103,13 +127,6 @@ class _HomePageContentState extends State<HomePageContent> {
           ],
         ),
         actions: [
-          // IconButton.filled(
-          //   icon: Icon(Icons.notifications_rounded),
-          //   style: ButtonStyle(
-          //     backgroundColor: WidgetStatePropertyAll(lightGreyColor),
-          //   ),
-          //   onPressed: () {},
-          // ),
           horizontalMargin12,
           IconButton.filled(
             icon: Icon(Icons.search),

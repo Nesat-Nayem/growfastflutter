@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,10 +7,8 @@ import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/utils/sizing.dart';
-import 'package:grow_first/features/reviews/data/remote_datasource/reviews_remote_datasource.dart';
 import 'package:grow_first/features/reviews/presentation/bloc/reviews_cubit.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
-import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 
 class MyReviewsPage extends StatefulWidget {
   const MyReviewsPage({super.key});
@@ -22,23 +19,40 @@ class MyReviewsPage extends StatefulWidget {
 
 class _MyReviewsPageState extends State<MyReviewsPage> {
   late ReviewsCubit _reviewsCubit;
+  bool _isFirstLoad = true;
 
   @override
-@override
-void initState() {
-  super.initState();
-
-  _reviewsCubit = sl<ReviewsCubit>();
-
-  final appStore = sl<AppStore>();
-  if (!appStore.isLoggedIn) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.goNamed(AppRouterNames.signIn);
-    });
-  } else {
-    _reviewsCubit.loadReviews();
+  void initState() {
+    super.initState();
+    _reviewsCubit = sl<ReviewsCubit>();
   }
-}
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadReviewsIfLoggedIn();
+  }
+
+  void _loadReviewsIfLoggedIn() {
+    final appStore = sl<AppStore>();
+    if (!appStore.isLoggedIn) {
+      if (_isFirstLoad) {
+        _isFirstLoad = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.goNamed(AppRouterNames.signIn);
+        });
+      }
+    } else {
+      _reviewsCubit.loadReviews();
+    }
+  }
+
+  void _handleUnauthorized() async {
+    await sl<AppStore>().clear();
+    if (mounted) {
+      context.goNamed(AppRouterNames.signIn);
+    }
+  }
 
 
   @override
@@ -83,10 +97,18 @@ void initState() {
       value: _reviewsCubit,
       child: Scaffold(
         appBar: CustomerHomeAppBar(singleTitle: "My Reviews"),
-        drawer: ModernCustomerDrawer(),
-        body: BlocBuilder<ReviewsCubit, ReviewsState>(
+        body: BlocConsumer<ReviewsCubit, ReviewsState>(
+          listener: (context, state) {
+            if (state is ReviewsUnauthorized) {
+              _handleUnauthorized();
+            }
+          },
           builder: (context, state) {
             if (state is ReviewsLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state is ReviewsUnauthorized) {
               return const Center(child: CircularProgressIndicator());
             }
 

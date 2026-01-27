@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
+import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 
 class CustomerHomeAppBar extends StatelessWidget
     implements PreferredSizeWidget {
@@ -11,11 +12,35 @@ class CustomerHomeAppBar extends StatelessWidget
   final String? singleTitle;
   final List<Widget>? actions;
 
+  void _openDrawer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const ModernCustomerDrawer(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: whiteColor,
       scrolledUnderElevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.menu),
+        onPressed: () => _openDrawer(context),
+      ),
       title: singleTitle != null
           ? Text(
               singleTitle!,

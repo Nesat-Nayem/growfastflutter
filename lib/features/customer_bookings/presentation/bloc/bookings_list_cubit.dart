@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grow_first/features/customer_bookings/data/remote_datasource/bookings_remote_datasource.dart';
 
@@ -19,8 +20,10 @@ class BookingsListCubit extends Cubit<BookingsListState> {
         emit(BookingsListError(response['message'] ?? 'Failed to load bookings'));
       }
     } catch (e) {
-      if (e.toString().contains('401')) {
-        emit(BookingsListError('Please login to view your bookings'));
+      if (e is DioException && e.response?.statusCode == 401) {
+        emit(BookingsListUnauthorized());
+      } else if (e.toString().contains('401')) {
+        emit(BookingsListUnauthorized());
       } else {
         emit(BookingsListError(e.toString()));
       }

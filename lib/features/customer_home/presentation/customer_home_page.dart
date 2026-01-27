@@ -2,7 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/di/app_injections.dart';
+import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
@@ -14,7 +16,6 @@ import 'package:grow_first/features/customer_home/presentation/bloc/dashboard_cu
 import 'package:grow_first/features/customer_home/presentation/widgets/dashboard_stat_crump.dart';
 import 'package:grow_first/features/customer_home/presentation/widgets/recent_booking_tile.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
-import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 
 class CustomerHomePage extends StatefulWidget {
   const CustomerHomePage({super.key});
@@ -27,6 +28,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   late DashboardCubit _dashboardCubit;
   final AppStore _appStore = sl<AppStore>();
   Map<String, dynamic>? _userData;
+  bool _isFirstLoad = true;
 
   @override
   void initState() {
@@ -34,9 +36,33 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     _dashboardCubit = DashboardCubit(
       DashboardRemoteDataSourceImpl(sl<Dio>()),
     );
-    if (_appStore.isLoggedIn) {
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkLoginAndLoadData();
+  }
+
+  void _checkLoginAndLoadData() {
+    if (!_appStore.isLoggedIn) {
+      if (_isFirstLoad) {
+        _isFirstLoad = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.goNamed(AppRouterNames.signIn);
+        });
+      }
+    } else {
+      // Always refresh data when page is shown
       _dashboardCubit.loadDashboard();
       _loadUserProfile();
+    }
+  }
+
+  void _handleUnauthorized() async {
+    await _appStore.clear();
+    if (mounted) {
+      context.goNamed(AppRouterNames.signIn);
     }
   }
 
@@ -44,7 +70,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     try {
       final dio = sl<Dio>();
       final response = await dio.get('customer/profile');
-      if (response.data['status'] == 'success') {
+      if (response.data['status'] == 'success' && mounted) {
         setState(() {
           _userData = response.data['user'];
         });
@@ -52,7 +78,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         await _appStore.updateUser(response.data['user']);
       }
     } catch (e) {
-      // Silently fail, use cached data
+      // If 401 error, redirect to login
+      if (e is DioException && e.response?.statusCode == 401) {
+        await _appStore.clear();
+        if (mounted) {
+          context.goNamed(AppRouterNames.signIn);
+        }
+      }
     }
   }
 
@@ -82,10 +114,14 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       value: _dashboardCubit,
       child: Scaffold(
         appBar: CustomerHomeAppBar(),
-        drawer: ModernCustomerDrawer(),
         body: Padding(
           padding: horizontalPadding16,
-          child: BlocBuilder<DashboardCubit, DashboardState>(
+          child: BlocConsumer<DashboardCubit, DashboardState>(
+            listener: (context, state) {
+              if (state is DashboardUnauthorized) {
+                _handleUnauthorized();
+              }
+            },
             builder: (context, state) {
               // Default values
               String totalBookings = '0';

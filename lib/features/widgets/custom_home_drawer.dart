@@ -157,6 +157,8 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
   Future<void> _deleteAccount() async {
     // Store references before async operations
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
     
     // Show loading dialog
     showDialog(
@@ -179,30 +181,32 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
         await sl<AppStore>().clear();
         sl<AppBloc>().add(AppLoggedOut());
 
-        // Close all dialogs and drawer, then navigate
+        // Close loading dialog
         if (mounted) {
-          // Pop loading dialog
-          Navigator.of(context, rootNavigator: true).pop();
-          // Pop drawer
-          Navigator.of(context).pop();
-          
-          // Navigate to home after a short delay
-          await Future.delayed(const Duration(milliseconds: 100));
-          if (mounted) {
-            context.go('/');
-          }
-          
-          scaffoldMessenger.showSnackBar(
-            const SnackBar(
-              content: Text('Account deleted successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          rootNavigator.pop();
         }
+        
+        // Close drawer/modal
+        if (mounted) {
+          navigator.pop();
+        }
+        
+        // Navigate to sign in page
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (mounted) {
+          context.goNamed(AppRouterNames.signIn);
+        }
+        
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Account deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
         // Close loading dialog
         if (mounted) {
-          Navigator.of(context, rootNavigator: true).pop();
+          rootNavigator.pop();
         }
         scaffoldMessenger.showSnackBar(
           SnackBar(
@@ -214,7 +218,7 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
     } catch (e) {
       // Close loading dialog
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
+        rootNavigator.pop();
       }
       scaffoldMessenger.showSnackBar(
         const SnackBar(
@@ -227,244 +231,180 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      backgroundColor: Colors.white,
-      width: double.infinity,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton.filled(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Just close the drawer
-                  },
-                  style: const ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(Colors.transparent),
-                  ),
-                  icon: const Icon(Icons.close),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton.filled(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the modal/drawer
+                },
+                style: const ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll(Colors.transparent),
                 ),
+                icon: const Icon(Icons.close),
               ),
-              const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 20),
 
-              InkWell(
-                child: Row(
-                  children: [
-                    // CircleAvatar(
-                    //   backgroundImage: CachedNetworkImageProvider(
-                    //     "https://plus.unsplash.com/premium_photo-1664536392896-cd1743f9c02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBiZWluZ3N8ZW58MHx8MHx8fDA%3D",
-                    //     cacheManager:
-                    //         CachedNetworkImageProvider.defaultCacheManager,
-                    //   ),
-                    // ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          BlocBuilder<AppBloc, AppState>(
-                            builder: (context, appState) {
-                              final appStore = sl<AppStore>();
-                              final user = appStore.user;
-                              
-                              // Use fresh data if available
-                              final userName = _userData?['name'] ?? user?.name ?? 'Guest';
-                              final userPhone = _userData?['phone'] ?? user?.phone;
-                              final userEmail = _userData?['email'] ?? user?.email;
-                              final userContact = userPhone ?? userEmail ?? '';
-                              final userImage = _userData?['image'] ?? user?.image;
+            InkWell(
+              child: Row(
+                children: [
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        BlocBuilder<AppBloc, AppState>(
+                          builder: (context, appState) {
+                            final appStore = sl<AppStore>();
+                            final user = appStore.user;
+                            
+                            // Use fresh data if available
+                            final userName = _userData?['name'] ?? user?.name ?? 'Guest';
+                            final userPhone = _userData?['phone'] ?? user?.phone;
+                            final userEmail = _userData?['email'] ?? user?.email;
+                            final userContact = userPhone ?? userEmail ?? '';
+                            final userImage = _userData?['image'] ?? user?.image;
 
-                              return Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: Colors.grey[200],
-                                    backgroundImage:
-                                        (userImage == null || userImage.toString().isEmpty)
-                                        ? null
-                                        : CachedNetworkImageProvider(
-                                            userImage.toString().startsWith('http') ? userImage.toString() : "https://growfirst.org/$userImage",
-                                          ),
-                                    child: (userImage == null || userImage.toString().isEmpty)
-                                        ? const Icon(Icons.person, color: Colors.grey)
-                                        : null,
-                                  ),
-                                  SizedBox(width: 15),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text.rich(
-                                        TextSpan(
-                                          text: "Hey, ",
-                                          style: context.bodyLarge.copyWith(
-                                            fontWeight: FontWeight.w400,
-                                            fontFamily: "Poppins",
-                                          ),
-                                          children: [
-                                            TextSpan(
-                                              text: userName,
-                                              style: context.bodyLarge.copyWith(
-                                                letterSpacing: 1.2,
-                                                color: aquaBlueColor,
-                                                fontWeight: FontWeight.w800,
-                                                fontFamily: "Poppins",
-                                              ),
+                            return Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: Colors.grey[200],
+                                  backgroundImage:
+                                      (userImage == null || userImage.toString().isEmpty)
+                                      ? null
+                                      : CachedNetworkImageProvider(
+                                          userImage.toString().startsWith('http') ? userImage.toString() : "https://growfirst.org/$userImage",
+                                        ),
+                                  child: (userImage == null || userImage.toString().isEmpty)
+                                      ? const Icon(Icons.person, color: Colors.grey)
+                                      : null,
+                                ),
+                                SizedBox(width: 15),
+                                Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text.rich(
+                                      TextSpan(
+                                        text: "Hey, ",
+                                        style: context.bodyLarge.copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          fontFamily: "Poppins",
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: userName,
+                                            style: context.bodyLarge.copyWith(
+                                              letterSpacing: 1.2,
+                                              color: aquaBlueColor,
+                                              fontWeight: FontWeight.w800,
+                                              fontFamily: "Poppins",
                                             ),
-                                          ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (userContact.isNotEmpty)
+                                      Text(
+                                        userContact,
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 13,
                                         ),
                                       ),
-                                      if (userContact.isNotEmpty)
-                                        Text(
-                                          userContact,
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                onTap: () {
-                  Navigator.of(context).pop(); // Close drawer first
-                  context.goNamed(AppRouterNames.accountSettings);
-                },
+                  ),
+                ],
               ),
+              onTap: () {
+                Navigator.of(context).pop(); // Close drawer first
+                context.goNamed(AppRouterNames.accountSettings);
+              },
+            ),
 
-              const SizedBox(height: 40),
+            const SizedBox(height: 40),
 
-              // ──────────────────────────── MENU ITEM GROUP
-              // DrawerMenuItem(
-              //   icon: Icons.home_rounded,
-              //   label: "Home",
-              //   onTap: () {
-              //     Navigator.of(context).pop(); // Close drawer first
-              //     context.go('/');
-              //   },
-              //   color: Color(0XFF25AE7A),
-              // ),
-              DrawerMenuItem(
-                icon: Icons.dashboard,
-                label: "Dashboard",
-                onTap: () {
-                  Navigator.of(context).pop(); // Close drawer first
-                  context.goNamed(AppRouterNames.customerHome);
-                },
-                color: aquaBlueColor,
-              ),
-              DrawerMenuItem(
-                icon: Icons.event_note_rounded,
-                label: "Bookings",
+            // ──────────────────────────── MENU ITEM GROUP
+            DrawerMenuItem(
+              icon: Icons.dashboard,
+              label: "Dashboard",
+              onTap: () {
+                Navigator.of(context).pop(); // Close drawer first
+                context.goNamed(AppRouterNames.customerHome);
+              },
+              color: aquaBlueColor,
+            ),
+            DrawerMenuItem(
+              icon: Icons.event_note_rounded,
+              label: "Bookings",
+              onTap: () {
+                Navigator.of(context).pop(); // Close drawer first
+                context.goNamed(AppRouterNames.customerBookings);
+              },
+              color: Color(0XFF245F9E),
+            ),
+            DrawerMenuItem(
+              icon: Icons.settings,
+              label: "Settings",
+              onTap: () {
+                Navigator.of(context).pop(); // Close drawer first
+                context.goNamed(AppRouterNames.accountSettings);
+              },
+              color: Color(0XFF5ECFE0),
+            ),
+            DrawerMenuItem(
+              icon: Icons.business,
+              label: "Become a vendor",
+              onTap: () {
+                Navigator.of(context).pop(); // Close drawer first
+                context.pushNamed(
+                  AppRouterNames.vendorWebView,
+                  queryParameters: {
+                    'url': 'https://growfirst.org/become-vendor',
+                    'title': 'Become a Vendor',
+                  },
+                );
+              },
+              color: Color(0XFF5ECFE0),
+            ),
+            DrawerMenuItem(
+              icon: Icons.logout,
+              label: "Logout",
+              onTap: () async {
+                // Clear auth data
+                await sl<AppStore>().clear();
+                // Trigger app logout
+                sl<AppBloc>().add(AppLoggedOut());
+                // Close drawer and navigate to home
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                  context.goNamed(AppRouterNames.home);
+                }
+              },
+              color: Color(0XFF78A5E1),
+            ),
+            DrawerMenuItem(
+              icon: Icons.delete_forever,
+              label: "Delete Account",
+              onTap: () => _showDeleteAccountDialog(context),
+              color: Colors.red,
+            ),
 
-                onTap: () {
-                  Navigator.of(context).pop(); // Close drawer first
-                  context.goNamed(AppRouterNames.customerBookings);
-                },
-                color: Color(0XFF245F9E),
-              ),
-              // DrawerMenuItem(
-              //   icon: Icons.settings,
-              //   label: "Recent Boookings",
-              //   onTap: () {
-              //     context.pushNamed(
-              //       AppRouterNames.customerBookingDetail,
-              //       pathParameters: {"bookingId": "22222"},
-              //     );
-              //   },
-              //   color: Color(0XFF5ECFE0),
-              // ),
-              // DrawerMenuItem(
-              //   icon: Icons.settings,
-              //   label: "Reschedule Appointment [Pop Up Demo]",
-              //   onTap: () {
-              //     showGeneralDialog(
-              //       context: context,
-              //       barrierDismissible: true,
-              //       barrierLabel: "Dismiss",
-              //       barrierColor: Colors.black54,
-              //       transitionDuration: Duration(milliseconds: 300),
-              //       pageBuilder: (context, animation1, animation2) {
-              //         return ReschedulePopUp();
-              //       },
-              //     );
-              //   },
-              //   color: Color(0XFF78A5E1),
-              // ),
-              // DrawerMenuItem(
-              //   icon: Icons.account_balance_wallet_rounded,
-              //   label: "Wallet",
-              //   onTap: () => context.pushNamed(AppRouterNames.customerWallet),
-              //   color: Color(0XFF25AE7A),
-              // ),
-              // DrawerMenuItem(
-              //   icon: Icons.reviews_rounded,
-              //   label: "Reviews",
-              //   onTap: () {
-              //     Navigator.of(context).pop(); // Close drawer first
-              //     context.goNamed(AppRouterNames.myReview);
-              //   },
-              //   color: Color(0XFF009EF7),
-              // ),
-              DrawerMenuItem(
-                icon: Icons.settings,
-                label: "Settings",
-                onTap: () {
-                  Navigator.of(context).pop(); // Close drawer first
-                  context.goNamed(AppRouterNames.accountSettings);
-                },
-                color: Color(0XFF5ECFE0),
-              ),
-              DrawerMenuItem(
-                icon: Icons.business,
-                label: "Become a vendor",
-                onTap: () {
-                  Navigator.of(context).pop(); // Close drawer first
-                  context.pushNamed(
-                    AppRouterNames.vendorWebView,
-                    queryParameters: {
-                      'url': 'https://growfirst.org/become-vendor',
-                      'title': 'Become a Vendor',
-                    },
-                  );
-                },
-                color: Color(0XFF5ECFE0),
-              ),
-              DrawerMenuItem(
-                icon: Icons.logout,
-                label: "Logout",
-                onTap: () async {
-                  // Clear auth data
-                  await sl<AppStore>().clear();
-                  // Trigger app logout
-                  sl<AppBloc>().add(AppLoggedOut());
-                  // Close drawer and navigate to home
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                    context.goNamed(AppRouterNames.home);
-                  }
-                },
-                color: Color(0XFF78A5E1),
-              ),
-              DrawerMenuItem(
-                icon: Icons.delete_forever,
-                label: "Delete Account",
-                onTap: () => _showDeleteAccountDialog(context),
-                color: Colors.red,
-              ),
-
-              const Spacer(),
-            ],
-          ),
+            const Spacer(),
+          ],
         ),
       ),
     );

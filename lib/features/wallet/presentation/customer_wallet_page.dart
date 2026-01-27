@@ -10,10 +10,34 @@ import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 class CustomerWalletPage extends StatelessWidget {
   const CustomerWalletPage({super.key});
 
+  void _openDrawer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const ModernCustomerDrawer(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => _openDrawer(context),
+        ),
         title: Text(
           "Wallet",
           style: context.bodySmall.copyWith(
@@ -25,7 +49,6 @@ class CustomerWalletPage extends StatelessWidget {
         scrolledUnderElevation: 0,
         backgroundColor: whiteColor,
       ),
-      drawer: ModernCustomerDrawer(),
       body: Padding(
         padding: horizontalPadding16,
         child: ListView(

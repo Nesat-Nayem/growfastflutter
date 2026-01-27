@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grow_first/features/reviews/data/remote_datasource/reviews_remote_datasource.dart';
 import 'package:grow_first/features/reviews/domain/usecase/add_review_usecase.dart';
@@ -24,7 +25,13 @@ class ReviewsCubit extends Cubit<ReviewsState> {
         emit(ReviewsError(response['message'] ?? 'Failed to load reviews'));
       }
     } catch (e) {
-      emit(ReviewsError(e.toString()));
+      if (e is DioException && e.response?.statusCode == 401) {
+        emit(ReviewsUnauthorized());
+      } else if (e.toString().contains('401')) {
+        emit(ReviewsUnauthorized());
+      } else {
+        emit(ReviewsError(e.toString()));
+      }
     }
   }
 
@@ -37,7 +44,13 @@ class ReviewsCubit extends Cubit<ReviewsState> {
         emit(ReviewsError(response['message'] ?? 'Failed to delete review'));
       }
     } catch (e) {
-      emit(ReviewsError(e.toString()));
+      if (e is DioException && e.response?.statusCode == 401) {
+        emit(ReviewsUnauthorized());
+      } else if (e.toString().contains('401')) {
+        emit(ReviewsUnauthorized());
+      } else {
+        emit(ReviewsError(e.toString()));
+      }
     }
   }
 

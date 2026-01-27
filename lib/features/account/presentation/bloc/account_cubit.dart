@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grow_first/features/account/data/remote_datasource/account_remote_datasource.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
@@ -21,7 +22,13 @@ class AccountCubit extends Cubit<AccountState> {
         emit(AccountError(response['message'] ?? 'Failed to load profile'));
       }
     } catch (e) {
-      emit(AccountError(e.toString()));
+      if (e is DioException && e.response?.statusCode == 401) {
+        emit(AccountUnauthorized());
+      } else if (e.toString().contains('401')) {
+        emit(AccountUnauthorized());
+      } else {
+        emit(AccountError(e.toString()));
+      }
     }
   }
 
@@ -38,7 +45,13 @@ class AccountCubit extends Cubit<AccountState> {
         emit(AccountError(response['message'] ?? 'Failed to update profile'));
       }
     } catch (e) {
-      emit(AccountError(e.toString()));
+      if (e is DioException && e.response?.statusCode == 401) {
+        emit(AccountUnauthorized());
+      } else if (e.toString().contains('401')) {
+        emit(AccountUnauthorized());
+      } else {
+        emit(AccountError(e.toString()));
+      }
     }
   }
 
@@ -55,7 +68,13 @@ class AccountCubit extends Cubit<AccountState> {
         emit(AccountError(response['message'] ?? 'Failed to update profile'));
       }
     } catch (e) {
-      emit(AccountError(e.toString()));
+      if (e is DioException && e.response?.statusCode == 401) {
+        emit(AccountUnauthorized());
+      } else if (e.toString().contains('401')) {
+        emit(AccountUnauthorized());
+      } else {
+        emit(AccountError(e.toString()));
+      }
     }
   }
 }

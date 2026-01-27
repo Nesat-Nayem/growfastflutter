@@ -15,3 +15,5 @@ class BookingsListError extends BookingsListState {
   final String message;
   BookingsListError(this.message);
 }
+
+class BookingsListUnauthorized extends BookingsListState {}

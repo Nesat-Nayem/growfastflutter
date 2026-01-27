@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grow_first/features/customer_home/data/remote_datasource/dashboard_remote_datasource.dart';
 
@@ -18,7 +19,13 @@ class DashboardCubit extends Cubit<DashboardState> {
         emit(DashboardError(response['message'] ?? 'Failed to load dashboard'));
       }
     } catch (e) {
-      emit(DashboardError(e.toString()));
+      if (e is DioException && e.response?.statusCode == 401) {
+        emit(DashboardUnauthorized());
+      } else if (e.toString().contains('401')) {
+        emit(DashboardUnauthorized());
+      } else {
+        emit(DashboardError(e.toString()));
+      }
     }
   }
 }

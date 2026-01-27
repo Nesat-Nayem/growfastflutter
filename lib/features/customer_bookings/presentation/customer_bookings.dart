@@ -10,7 +10,6 @@ import 'package:grow_first/features/customer_bookings/data/remote_datasource/boo
 import 'package:grow_first/features/customer_bookings/presentation/bloc/bookings_list_cubit.dart';
 import 'package:grow_first/features/customer_bookings/presentation/widgets/customer_booking_card.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
-import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 
 class CustomerBookingsPage extends StatefulWidget {
   const CustomerBookingsPage({super.key});
@@ -22,6 +21,7 @@ class CustomerBookingsPage extends StatefulWidget {
 class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late BookingsListCubit _bookingsListCubit;
+  bool _isFirstLoad = true;
 
   @override
   void initState() {
@@ -29,15 +29,32 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
     _bookingsListCubit = BookingsListCubit(
       BookingsRemoteDataSourceImpl(sl<Dio>()),
     );
+  }
 
-    // Check if user is logged in
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadBookingsIfLoggedIn();
+  }
+
+  void _loadBookingsIfLoggedIn() {
     final appStore = sl<AppStore>();
     if (!appStore.isLoggedIn) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.goNamed(AppRouterNames.signIn);
-      });
+      if (_isFirstLoad) {
+        _isFirstLoad = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.goNamed(AppRouterNames.signIn);
+        });
+      }
     } else {
       _bookingsListCubit.loadBookings();
+    }
+  }
+
+  void _handleUnauthorized() async {
+    await sl<AppStore>().clear();
+    if (mounted) {
+      context.goNamed(AppRouterNames.signIn);
     }
   }
 
@@ -54,10 +71,18 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: CustomerHomeAppBar(singleTitle: "Booking List"),
-        drawer: ModernCustomerDrawer(),
-        body: BlocBuilder<BookingsListCubit, BookingsListState>(
+        body: BlocConsumer<BookingsListCubit, BookingsListState>(
+          listener: (context, state) {
+            if (state is BookingsListUnauthorized) {
+              _handleUnauthorized();
+            }
+          },
           builder: (context, state) {
             if (state is BookingsListLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state is BookingsListUnauthorized) {
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -125,14 +150,6 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
                   itemBuilder: (context, index) {
                     final booking = state.bookings[index];
                     return InkWell(
-                      // onTap: () {
-                      //   context.pushNamed(
-                      //     AppRouterNames.customerBookingDetail,
-                      //     pathParameters: {
-                      //       "bookingId": booking['id'].toString(),
-                      //     },
-                      //   );
-                      // },
                       child: CustomerBookingCard(booking: booking),
                     );
                   },

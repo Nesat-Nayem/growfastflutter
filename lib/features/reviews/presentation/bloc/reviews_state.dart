@@ -15,7 +15,10 @@ class ReviewsError extends ReviewsState {
   final String message;
   ReviewsError(this.message);
 }
+
 class ReviewSubmitSuccess extends ReviewsState {
   final String message;
   ReviewSubmitSuccess(this.message);
 }
+
+class ReviewsUnauthorized extends ReviewsState {}

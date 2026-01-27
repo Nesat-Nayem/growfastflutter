@@ -3,13 +3,31 @@ import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/sizing.dart';
-import 'package:grow_first/features/account/presentation/customer_account_settings.dart';
+import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int index;
   const CustomBottomNavBar({super.key, required this.index});
 
-  void _go(BuildContext context, String route) {}
+  void _openDrawer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const ModernCustomerDrawer(),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,8 +68,7 @@ class CustomBottomNavBar extends StatelessWidget {
             ),
 
             GestureDetector(
-              onTap: () => context.goNamed(AppRouterNames.ModernCustomerDrawer),
-
+              onTap: () => _openDrawer(context),
               child: const Center(
                 child: Icon(
                   Icons.person,

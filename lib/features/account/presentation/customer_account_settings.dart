@@ -18,7 +18,6 @@ import 'package:grow_first/features/account/presentation/bloc/account_cubit.dart
 import 'package:grow_first/features/account/presentation/widgets/date_of_bith_drop_down.dart';
 import 'package:grow_first/features/account/presentation/widgets/gender_drop_down.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
-import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 import 'package:grow_first/features/widgets/custom_textfield.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:image_picker/image_picker.dart';
@@ -69,6 +68,13 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
       });
     } else {
       _accountCubit.loadProfile();
+    }
+  }
+
+  void _handleUnauthorized() async {
+    await sl<AppStore>().clear();
+    if (mounted) {
+      context.goNamed(AppRouterNames.signIn);
     }
   }
 
@@ -211,9 +217,11 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
       value: _accountCubit,
       child: Scaffold(
         appBar: CustomerHomeAppBar(singleTitle: "Account Settings"),
-        drawer: ModernCustomerDrawer(),
         body: BlocConsumer<AccountCubit, AccountState>(
           listener: (context, state) {
+            if (state is AccountUnauthorized) {
+              _handleUnauthorized();
+            }
             if (state is AccountLoaded) {
               _populateFields(state.user);
             }
