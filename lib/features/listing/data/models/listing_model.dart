@@ -34,6 +34,7 @@ class ListingModel extends Listing {
     required super.overAllRating,
     required super.totalRatings,
     super.website,
+    super.reviewsBreakdown,
   });
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {
@@ -72,13 +73,14 @@ class ListingModel extends Listing {
           .map((e) => Include.fromJson(e))
           .toList(),
       faqs: (json['faqs'] as List? ?? []).map((e) => Faq.fromJson(e)).toList(),
-
-      // ✅ SAFE DEFAULTS FOR LIST API
       reviews: reviewsJson.map((e) => ReviewModel.fromJson(e)).toList(),
       overAllRating:
           double.tryParse(json['over_all_rating']?.toString() ?? '0') ?? 0,
       totalRatings: int.tryParse(json['total_ratings']?.toString() ?? '0') ?? 0,
-      website: json['website_url']
+      website: json['website_url'],
+      reviewsBreakdown: json['reviews_breakdown'] != null
+          ? ReviewsBreakdown.fromJson(json['reviews_breakdown'])
+          : null,
     );
   }
 }

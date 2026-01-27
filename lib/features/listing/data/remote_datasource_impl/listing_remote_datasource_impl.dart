@@ -130,7 +130,16 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
     );
 
     if (response['status'] == true) {
-      return ListingModel.fromJson(response['data']['service']);
+      final data = response['data'];
+      final serviceJson = data['service'] as Map<String, dynamic>;
+      
+      // Merge reviews data from response into service json
+      serviceJson['reviews'] = data['reviews'] ?? [];
+      serviceJson['over_all_rating'] = data['over_all_rating'] ?? 0;
+      serviceJson['total_ratings'] = data['total_ratings'] ?? 0;
+      serviceJson['reviews_breakdown'] = data['reviews_breakdown'];
+      
+      return ListingModel.fromJson(serviceJson);
     } else {
       throw ServerException();
     }

@@ -29,10 +29,11 @@ class Listing extends Equatable {
   final User user;
   final List<Include> includes;
   final List<Faq> faqs;
-final List<Review> reviews;
-final double overAllRating;
-final int totalRatings;
-final String? website;
+  final List<Review> reviews;
+  final double overAllRating;
+  final int totalRatings;
+  final String? website;
+  final ReviewsBreakdown? reviewsBreakdown;
 
   const Listing({
     required this.id,
@@ -65,10 +66,37 @@ final String? website;
     required this.overAllRating,
     required this.totalRatings,
     this.website,
+    this.reviewsBreakdown,
   });
 
   @override
   List<Object?> get props => [id];
+}
+
+class ReviewsBreakdown {
+  final int fiveStar;
+  final int fourStar;
+  final int threeStar;
+  final int twoStar;
+  final int oneStar;
+
+  const ReviewsBreakdown({
+    required this.fiveStar,
+    required this.fourStar,
+    required this.threeStar,
+    required this.twoStar,
+    required this.oneStar,
+  });
+
+  factory ReviewsBreakdown.fromJson(Map<String, dynamic> json) {
+    return ReviewsBreakdown(
+      fiveStar: json['five_star'] ?? 0,
+      fourStar: json['four_star'] ?? 0,
+      threeStar: json['three_star'] ?? 0,
+      twoStar: json['two_star'] ?? 0,
+      oneStar: json['one_star'] ?? 0,
+    );
+  }
 }
 
 class Gallery {

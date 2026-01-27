@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dartz/dartz.dart' as listing;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -7,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
-import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/core/storage/secure_storage.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/app_assets.dart';
@@ -252,7 +250,10 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                         ],
                       ),
                       const Spacer(),
-                      ReviewBuilder(),
+                      ReviewBuilder(
+                        rating: listing?.overAllRating ?? 0,
+                        totalReviews: listing?.totalRatings ?? 0,
+                      ),
                     ],
                   ),
                   verticalMargin16,
@@ -260,7 +261,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   Row(
                     children: [
                       Text(
-                        "Pune",
+                        listing?.city ?? "Location",
                         style: context.labelMedium.copyWith(
                           fontWeight: FontWeight.w300,
                         ),
@@ -284,7 +285,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                     padding: verticalPadding24,
                     decoration: BoxDecoration(color: Colors.grey.shade100),
                     child: Column(
-                      mainAxisAlignment: .center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "${listing?.user.companyName}",
@@ -293,7 +294,10 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                           ),
                         ),
                         verticalMargin8,
-                        ReviewBuilder(),
+                        ReviewBuilder(
+                          rating: listing?.overAllRating ?? 0,
+                          totalReviews: listing?.totalRatings ?? 0,
+                        ),
                       ],
                     ),
                   ),
@@ -805,22 +809,29 @@ class _FaqSectionState extends State<FaqSection> {
 }
 
 class ReviewBuilder extends StatelessWidget {
-  const ReviewBuilder({super.key});
+  final double rating;
+  final int totalReviews;
+  
+  const ReviewBuilder({
+    super.key,
+    this.rating = 0,
+    this.totalReviews = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: .center,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Icon(Icons.star, color: Colors.amber),
         horizontalMargin4,
         Text.rich(
           style: context.labelMedium,
           TextSpan(
-            text: "4.9 ",
+            text: "${rating.toStringAsFixed(1)} ",
             children: [
               TextSpan(
-                text: "(255 reviews)",
+                text: "($totalReviews reviews)",
                 style: context.labelMedium.copyWith(color: lightGreyTextColor),
               ),
             ],
@@ -847,7 +858,34 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
   @override
   Widget build(BuildContext context) {
     final reviews = widget.listing.reviews;
-    final visibleReviews = loadMore ? reviews : reviews.take(1).toList();
+    final visibleReviews = loadMore ? reviews : reviews.take(3).toList();
+    final breakdown = widget.listing.reviewsBreakdown;
+    final totalReviews = widget.listing.totalRatings;
+    
+    // Calculate percentages for rating bars
+    double getPercent(int count) {
+      if (totalReviews == 0) return 0;
+      return count / totalReviews;
+    }
+
+    // Build star icons based on rating
+    Widget buildStars(double rating) {
+      final fullStars = rating.floor();
+      final hasHalfStar = (rating - fullStars) >= 0.5;
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(5, (i) {
+          if (i < fullStars) {
+            return const Icon(Icons.star, color: Colors.amber, size: 18);
+          } else if (i == fullStars && hasHalfStar) {
+            return const Icon(Icons.star_half, color: Colors.amber, size: 18);
+          } else {
+            return Icon(Icons.star, color: Colors.grey.shade300, size: 18);
+          }
+        }),
+      );
+    }
+
     return Container(
       padding: allPadding16,
       decoration: BoxDecoration(
@@ -863,7 +901,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Reviews (${widget.listing.totalRatings})"),
+              Text("Reviews ($totalReviews)"),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -907,28 +945,18 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.star, color: Colors.amber, size: 18),
-                    Icon(Icons.star, color: Colors.amber, size: 18),
-                    Icon(Icons.star, color: Colors.amber, size: 18),
-                    Icon(Icons.star, color: Colors.amber, size: 18),
-                    Icon(Icons.star, color: Colors.amber, size: 18),
-                  ],
-                ),
+                buildStars(widget.listing.overAllRating),
                 verticalMargin8,
                 Text(
-                  "(${widget.listing.overAllRating} out of 5.0)",
+                  "(${widget.listing.overAllRating.toStringAsFixed(1)} out of 5.0)",
                   style: context.labelSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     color: lightGreyTextColor,
                   ),
                 ),
-
                 verticalMargin12,
                 Text(
-                  "Based On ${widget.listing.totalRatings} Reviews",
+                  "Based On $totalReviews Reviews",
                   style: context.labelLarge.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -937,66 +965,71 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
             ),
           ),
           verticalMargin12,
-          _ratingRow(context, "5 Star Ratings", 0.9, "2,547"),
-          _ratingRow(context, "4 Star Ratings", 0.75, "1,245"),
-          _ratingRow(context, "3 Star Ratings", 0.5, "600"),
-          _ratingRow(context, "2 Star Ratings", 0.45, "560"),
-          _ratingRow(context, "1 Star Ratings", 0.3, "400"),
-          verticalMargin8,
-
-          verticalMargin8,
+          // Dynamic rating breakdown
+          _ratingRow(
+            context,
+            "5 Star Ratings",
+            getPercent(breakdown?.fiveStar ?? 0),
+            "${breakdown?.fiveStar ?? 0}",
+          ),
+          _ratingRow(
+            context,
+            "4 Star Ratings",
+            getPercent(breakdown?.fourStar ?? 0),
+            "${breakdown?.fourStar ?? 0}",
+          ),
+          _ratingRow(
+            context,
+            "3 Star Ratings",
+            getPercent(breakdown?.threeStar ?? 0),
+            "${breakdown?.threeStar ?? 0}",
+          ),
+          _ratingRow(
+            context,
+            "2 Star Ratings",
+            getPercent(breakdown?.twoStar ?? 0),
+            "${breakdown?.twoStar ?? 0}",
+          ),
+          _ratingRow(
+            context,
+            "1 Star Ratings",
+            getPercent(breakdown?.oneStar ?? 0),
+            "${breakdown?.oneStar ?? 0}",
+          ),
+          verticalMargin16,
 
           if (reviews.isEmpty) ...[
             const Padding(
               padding: EdgeInsets.all(12),
-              child: Text("No reviews yet"),
+              child: Center(child: Text("No reviews yet")),
             ),
           ] else ...[
             ...visibleReviews.map(
-              (review) => ReviewCardListing(review: review),
-            ),
-
-            verticalMargin12,
-
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: greyButttonColor,
-                  padding: verticalPadding8 + horizontalPadding12,
-                ),
-                onPressed: () {
-                  setState(() {
-                    loadMore = !loadMore;
-                  });
-                },
-                child: Text(
-                  loadMore ? "Show Less" : "Load More",
-                  style: context.labelSmall,
-                ),
+              (review) => ReviewCardListing(
+                review: review,
+                onReviewUpdated: widget.onReviewAdded,
               ),
             ),
-          ],
-
-          verticalMargin8,
-          if (loadMore) ...[
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: greyButttonColor,
-                  minimumSize: Size(0, 0),
-                  padding: verticalPadding8 + horizontalPadding12,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(3),
+            if (reviews.length > 3) ...[
+              verticalMargin12,
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: greyButttonColor,
+                    padding: verticalPadding8 + horizontalPadding12,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      loadMore = !loadMore;
+                    });
+                  },
+                  child: Text(
+                    loadMore ? "Show Less" : "Load More (${reviews.length - 3} more)",
+                    style: context.labelSmall,
                   ),
                 ),
-                onPressed: () {
-                  setState(() {
-                    loadMore = !loadMore;
-                  });
-                },
-                child: Text("Show Less", style: context.labelSmall),
               ),
-            ),
+            ],
           ],
         ],
       ),
@@ -1027,7 +1060,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
           Expanded(
             flex: 4,
             child: LinearProgressIndicator(
-              value: percent,
+              value: percent.clamp(0.0, 1.0),
               borderRadius: BorderRadius.circular(12),
               backgroundColor: Colors.grey.shade300,
               color: Colors.amber,
@@ -1035,8 +1068,8 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
             ),
           ),
           horizontalMargin8,
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 40,
             child: Text(
               count,
               style: context.labelMedium,
