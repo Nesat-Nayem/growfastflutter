@@ -42,14 +42,6 @@ class CustomerHomeAppBar extends StatelessWidget
           ? actions
           : [
               IconButton.filled(
-                icon: const Icon(Icons.notifications_rounded),
-                style: ButtonStyle(
-                  backgroundColor: WidgetStatePropertyAll(lightGreyColor),
-                ),
-                onPressed: () {},
-              ),
-              horizontalMargin12,
-              IconButton.filled(
                 icon: const Icon(Icons.search),
                 style: ButtonStyle(
                   backgroundColor: WidgetStatePropertyAll(lightGreyColor),
