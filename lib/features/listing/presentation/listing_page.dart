@@ -242,30 +242,21 @@ class _ListingPageState extends State<ListingPage> {
   Widget _buildGridView(ListingState state) {
     return GridView.builder(
       controller: _scrollController,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.62,
-        crossAxisSpacing: 5,
-        mainAxisSpacing: 5,
+        childAspectRatio: 0.58,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
       ),
+      padding: const EdgeInsets.only(bottom: 8),
       itemCount: state.listings.length + (state.hasMorePages ? 1 : 0),
       itemBuilder: (context, index) {
         if (index >= state.listings.length) {
           return _buildLoadMoreIndicator(state);
         }
-        return InkWell(
-          onTap: () {
-            context.pushNamed(
-              AppRouterNames.listingDetail,
-              pathParameters: {
-                "listingId": state.listings[index].id.toString(),
-              },
-            );
-          },
-          child: ListingTile(
-            isGridView: true,
-            listing: state.listings[index],
-          ),
+        return ListingTile(
+          isGridView: true,
+          listing: state.listings[index],
         );
       },
     );

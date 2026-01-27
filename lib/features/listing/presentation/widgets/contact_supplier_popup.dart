@@ -173,15 +173,20 @@ class _ContactSupplierPopupState extends State<ContactSupplierPopup> {
                   children: [
                     // Vendor name and rating
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          widget.listing.user.name,
-                          style: context.labelMedium.copyWith(
-                            fontWeight: FontWeight.w400,
+                        Expanded(
+                          child: Text(
+                            widget.listing.title,
+                            style: context.labelMedium.copyWith(
+                              fontWeight: FontWeight.w400,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.star_rounded,
                                 size: 16, color: selectiveYellowColor),
@@ -223,7 +228,9 @@ class _ContactSupplierPopupState extends State<ContactSupplierPopup> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.listing.title,
+                                widget.listing.user.companyName.isNotEmpty 
+                                    ? widget.listing.user.companyName 
+                                    : widget.listing.user.name,
                                 style: context.labelLarge.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -243,10 +250,14 @@ class _ContactSupplierPopupState extends State<ContactSupplierPopup> {
                                   Icon(Icons.location_on_outlined,
                                       size: 16, color: lightGreyTextColor),
                                   horizontalMargin4,
-                                  Text(
-                                    widget.listing.city,
-                                    style: context.labelSmall.copyWith(
-                                      color: lightGreyTextColor,
+                                  Expanded(
+                                    child: Text(
+                                      widget.listing.city,
+                                      style: context.labelSmall.copyWith(
+                                        color: lightGreyTextColor,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
