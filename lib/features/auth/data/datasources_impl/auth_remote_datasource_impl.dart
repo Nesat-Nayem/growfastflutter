@@ -10,7 +10,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this.dio);
 
   @override
-  Future<int> sendOtp(String phone) async {
+  Future<Map<String, dynamic>> sendOtp(String phone) async {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.post,
@@ -19,7 +19,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     if (response['status'] == 'success') {
-      return response['user_id'];
+      return {
+        'user_id': response['user_id'],
+        'is_test': response['is_test'] ?? false,
+        'test_otp': response['test_otp'],
+      };
     } else {
       throw ServerException();
     }

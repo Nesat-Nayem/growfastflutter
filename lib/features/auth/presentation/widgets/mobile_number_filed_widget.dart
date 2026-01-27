@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grow_first/core/theme/colors.dart';
-import 'package:grow_first/core/utils/countries.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
-import 'package:grow_first/features/auth/domain/entities/country.dart';
-import 'package:grow_first/features/auth/presentation/widgets/country_picker_sheet.dart';
 
 class MobileNumberField extends StatefulWidget {
   final String initialCountryCode;
@@ -29,43 +26,30 @@ class MobileNumberField extends StatefulWidget {
 }
 
 class _MobileNumberFieldState extends State<MobileNumberField> {
-  late String _countryCode;
-  late String _flagAsset;
+  // Fixed to India only
+  final String _countryCode = 'IN';
+  final String _flagAsset = '🇮🇳';
+  final String _dialCode = '+91';
   String? _errorText;
 
-  @override
-  void initState() {
-    super.initState();
-    _countryCode = widget.initialCountryCode;
-    _flagAsset = widget.initialFlagAsset;
-  }
-
-  String? _validate(String value, Country country) {
+  String? _validate(String value) {
     if (value.isEmpty) return "Please enter a mobile number";
     if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
       return "Only digits are allowed";
     }
-    if (value.length > country.maxLength) {
-      return "Number must be less than ${country.maxLength + 1}";
+    // Indian mobile numbers are exactly 10 digits
+    if (value.length != 10) {
+      return "Mobile number must be 10 digits";
     }
-    if (value.length < country.minLength) {
-      return "Number must be between ${country.minLength} and ${country.maxLength} digits";
+    // Indian mobile numbers start with 6, 7, 8, or 9
+    if (!RegExp(r'^[6-9]').hasMatch(value)) {
+      return "Invalid Indian mobile number";
     }
     return null;
   }
 
-  // Get the currently selected country from your local list
-  Country _getSelectedCountry() {
-    return kCountriesList.firstWhere(
-      (c) => c.code == _countryCode,
-      orElse: () => kCountriesList.first,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final selectedCountry = _getSelectedCountry();
-
     return Column(
       children: [
         Container(
@@ -78,49 +62,17 @@ class _MobileNumberFieldState extends State<MobileNumberField> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(100),
-                child: Text(_flagAsset),
+                child: Text(_flagAsset, style: const TextStyle(fontSize: 20)),
               ),
               horizontalMargin8,
-              InkWell(
-                onTap: () async {
-                  final Country? selected = await showModalBottomSheet(
-                    context: context,
-                    showDragHandle: true,
-                    isScrollControlled: true,
-                    backgroundColor: whiteColor,
-                    useSafeArea: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                    ),
-                    builder: (_) {
-                      return const CountryPickerSheet();
-                    },
-                  );
-
-                  if (selected != null) {
-                    _countryCode = selected.code;
-                    _flagAsset = selected.flag;
-
-                    widget.onCountryChanged?.call(_countryCode);
-
-                    final error = _validate(
-                      widget.controller.text.trim(),
-                      _getSelectedCountry(),
-                    );
-                    setState(() => _errorText = error);
-                  }
-                },
-                child: Row(
-                  children: [
-                    Text(_countryCode, style: context.bodySmall),
-                    horizontalMargin4,
-                    const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-                  ],
-                ),
+              // Country code display (non-clickable - India only)
+              Row(
+                children: [
+                  Text(_dialCode, style: context.bodySmall),
+                  horizontalMargin4,
+                ],
               ),
-              horizontalMargin16,
+              horizontalMargin8,
               Expanded(
                 child: Column(
                   children: [
@@ -129,15 +81,17 @@ class _MobileNumberFieldState extends State<MobileNumberField> {
                       onTapOutside: (_) =>
                           FocusManager.instance.primaryFocus?.unfocus(),
                       keyboardType: TextInputType.phone,
+                      maxLength: 10,
                       style: context.bodySmall,
                       decoration: InputDecoration(
-                        hintText: "1234567890",
+                        hintText: "Enter 10 digit mobile number",
                         hintStyle: TextStyle(color: lightGreyColor),
                         border: InputBorder.none,
                         isDense: true,
+                        counterText: '', // Hide character counter
                       ),
                       onChanged: (value) {
-                        final error = _validate(value, selectedCountry);
+                        final error = _validate(value);
                         setState(() => _errorText = error);
                         widget.onValidChanged?.call(error == null);
                         widget.onChanged?.call(value);

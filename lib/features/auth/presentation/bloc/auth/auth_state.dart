@@ -4,6 +4,8 @@ import 'package:grow_first/features/auth/domain/entities/auth_user.dart';
 class AuthState extends Equatable {
   final bool isLoading;
   final bool isOtpSent;
+  final bool isTestOtp;
+  final String? testOtp;
   final AuthUser? user;
   final String? token;
   final String? error;
@@ -11,6 +13,8 @@ class AuthState extends Equatable {
   const AuthState({
     this.isLoading = false,
     this.isOtpSent = false,
+    this.isTestOtp = false,
+    this.testOtp,
     this.user,
     this.token,
     this.error,
@@ -19,6 +23,8 @@ class AuthState extends Equatable {
   AuthState copyWith({
     bool? isLoading,
     bool? isOtpSent,
+    bool? isTestOtp,
+    String? testOtp,
     AuthUser? user,
     String? token,
     String? error,
@@ -26,6 +32,8 @@ class AuthState extends Equatable {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       isOtpSent: isOtpSent ?? this.isOtpSent,
+      isTestOtp: isTestOtp ?? this.isTestOtp,
+      testOtp: testOtp ?? this.testOtp,
       user: user ?? this.user,
       token: token ?? this.token,
       error: error,
@@ -33,5 +41,5 @@ class AuthState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [isLoading, isOtpSent, user, token, error];
+  List<Object?> get props => [isLoading, isOtpSent, isTestOtp, testOtp, user, token, error];
 }

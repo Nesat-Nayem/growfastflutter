@@ -344,15 +344,15 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
               const SizedBox(height: 40),
 
               // ──────────────────────────── MENU ITEM GROUP
-              DrawerMenuItem(
-                icon: Icons.home_rounded,
-                label: "Home",
-                onTap: () {
-                  Navigator.of(context).pop(); // Close drawer first
-                  context.go('/');
-                },
-                color: Color(0XFF25AE7A),
-              ),
+              // DrawerMenuItem(
+              //   icon: Icons.home_rounded,
+              //   label: "Home",
+              //   onTap: () {
+              //     Navigator.of(context).pop(); // Close drawer first
+              //     context.go('/');
+              //   },
+              //   color: Color(0XFF25AE7A),
+              // ),
               DrawerMenuItem(
                 icon: Icons.dashboard,
                 label: "Dashboard",
@@ -406,15 +406,15 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
               //   onTap: () => context.pushNamed(AppRouterNames.customerWallet),
               //   color: Color(0XFF25AE7A),
               // ),
-              DrawerMenuItem(
-                icon: Icons.reviews_rounded,
-                label: "Reviews",
-                onTap: () {
-                  Navigator.of(context).pop(); // Close drawer first
-                  context.goNamed(AppRouterNames.myReview);
-                },
-                color: Color(0XFF009EF7),
-              ),
+              // DrawerMenuItem(
+              //   icon: Icons.reviews_rounded,
+              //   label: "Reviews",
+              //   onTap: () {
+              //     Navigator.of(context).pop(); // Close drawer first
+              //     context.goNamed(AppRouterNames.myReview);
+              //   },
+              //   color: Color(0XFF009EF7),
+              // ),
               DrawerMenuItem(
                 icon: Icons.settings,
                 label: "Settings",

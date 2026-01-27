@@ -15,7 +15,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SendOtpEvent>(_sendOtp);
     on<VerifyOtpEvent>(_verifyOtp);
     on<ResetOtpSentEvent>((event, emit) {
-      emit(state.copyWith(isOtpSent: false));
+      emit(state.copyWith(isOtpSent: false, isTestOtp: false, testOtp: null));
     });
   }
 
@@ -31,7 +31,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           error: Helpers.convertFailureToMessage(failure),
         ),
       ),
-      (_) => emit(state.copyWith(isLoading: false, isOtpSent: true)),
+      (response) => emit(state.copyWith(
+        isLoading: false,
+        isOtpSent: true,
+        isTestOtp: response.isTest,
+        testOtp: response.testOtp,
+      )),
     );
   }
 
