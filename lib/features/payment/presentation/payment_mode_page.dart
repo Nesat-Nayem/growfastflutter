@@ -252,6 +252,13 @@ class _PaymentModePageState extends State<PaymentModePage> {
         'contact': cart['cart_adresses']?[0]?['phone'] ?? '',
         'email': cart['cart_adresses']?[0]?['email'] ?? '',
       },
+      'config': {
+        'display': {
+          'hide': [
+            {'method': 'sdk_compatibility_check'}
+          ]
+        }
+      },
     };
 
     try {
