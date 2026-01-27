@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grow_first/features/account/data/remote_datasource/account_remote_datasource.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
@@ -28,6 +29,23 @@ class AccountCubit extends Cubit<AccountState> {
     emit(AccountUpdating());
     try {
       final response = await remoteDataSource.updateProfile(data);
+      if (response['status'] == 'success') {
+        // Update AppStore with new user data
+        final updatedUser = response['user'];
+        await appStore.load(); // Reload from secure storage
+        emit(AccountUpdateSuccess(updatedUser));
+      } else {
+        emit(AccountError(response['message'] ?? 'Failed to update profile'));
+      }
+    } catch (e) {
+      emit(AccountError(e.toString()));
+    }
+  }
+
+  Future<void> updateProfileWithImage(Map<String, dynamic> data, File image) async {
+    emit(AccountUpdating());
+    try {
+      final response = await remoteDataSource.updateProfileWithImage(data, image);
       if (response['status'] == 'success') {
         // Update AppStore with new user data
         final updatedUser = response['user'];

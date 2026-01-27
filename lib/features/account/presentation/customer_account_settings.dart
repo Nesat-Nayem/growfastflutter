@@ -1,25 +1,27 @@
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
+import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/app_assets.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/account/data/remote_datasource/account_remote_datasource.dart';
 import 'package:grow_first/features/account/presentation/bloc/account_cubit.dart';
-import 'package:grow_first/features/account/presentation/widgets/country_state_selection.dart';
 import 'package:grow_first/features/account/presentation/widgets/date_of_bith_drop_down.dart';
 import 'package:grow_first/features/account/presentation/widgets/gender_drop_down.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 import 'package:grow_first/features/widgets/custom_textfield.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
-import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sizer/sizer.dart';
 
 class CustomerAccountSettings extends StatefulWidget {
@@ -38,12 +40,17 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _postalCodeController = TextEditingController();
+  final _countryController = TextEditingController();
+  final _stateController = TextEditingController();
 
   // Dropdown and date values
   String? _selectedGender;
   DateTime? _selectedDateOfBirth;
-  String? _selectedCountry;
-  String? _selectedState;
+  
+  // Image
+  File? _selectedImage;
+  String? _currentImageUrl;
+  final ImagePicker _imagePicker = ImagePicker();
 
   late AccountCubit _accountCubit;
 
@@ -74,8 +81,17 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
     _addressController.dispose();
     _cityController.dispose();
     _postalCodeController.dispose();
+    _countryController.dispose();
+    _stateController.dispose();
     _accountCubit.close();
     super.dispose();
+  }
+
+  String _getImageUrl(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    final config = sl<AppConfig>();
+    return '${config.imageBaseUrl}/$imagePath';
   }
 
   void _populateFields(Map<String, dynamic> user) {
@@ -86,12 +102,13 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
     _addressController.text = user['address'] ?? '';
     _cityController.text = user['city'] ?? '';
     _postalCodeController.text = user['post_code'] ?? '';
+    _countryController.text = user['country'] ?? '';
+    _stateController.text = user['state'] ?? '';
 
     // Set dropdown and date values
     setState(() {
       _selectedGender = user['gender'];
-      _selectedCountry = user['country'];
-      _selectedState = user['state'];
+      _currentImageUrl = user['image'];
 
       // Parse date of birth
       if (user['date_of_birth'] != null &&
@@ -105,7 +122,67 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
     });
   }
 
-  void _saveChanges() {
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+
+      if (pickedFile != null) {
+        final file = File(pickedFile.path);
+        final fileSize = await file.length();
+        
+        // Check file size (500KB = 512000 bytes)
+        if (fileSize > 512000) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Image size must be less than 500KB'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        // Check file extension
+        final extension = pickedFile.path.split('.').last.toLowerCase();
+        if (!['jpg', 'jpeg', 'png'].contains(extension)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Only .jpg and .png files are allowed'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        setState(() {
+          _selectedImage = file;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      _selectedImage = null;
+      _currentImageUrl = null;
+    });
+  }
+
+  Future<void> _saveChanges() async {
     final data = {
       'name': _nameController.text,
       'user_name': _userNameController.text,
@@ -115,11 +192,17 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
       'city': _cityController.text,
       'post_code': _postalCodeController.text,
       'gender': _selectedGender,
-      'country': _selectedCountry,
-      'state': _selectedState,
+      'country': _countryController.text,
+      'state': _stateController.text,
       'date_of_birth': _selectedDateOfBirth?.toIso8601String().split('T')[0],
     };
-    _accountCubit.updateProfile(data);
+
+    // If image is selected, use FormData
+    if (_selectedImage != null) {
+      await _accountCubit.updateProfileWithImage(data, _selectedImage!);
+    } else {
+      await _accountCubit.updateProfile(data);
+    }
   }
 
   @override
@@ -161,61 +244,75 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CircleAvatar(
+                          radius: 30,
                           backgroundColor: Colors.grey[200],
-                          child: const Icon(Icons.person, color: Colors.grey),
+                          backgroundImage: _selectedImage != null
+                              ? FileImage(_selectedImage!)
+                              : (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
+                                  ? CachedNetworkImageProvider(_getImageUrl(_currentImageUrl))
+                                  : null,
+                          child: (_selectedImage == null && (_currentImageUrl == null || _currentImageUrl!.isEmpty))
+                              ? const Icon(Icons.person, color: Colors.grey, size: 30)
+                              : null,
                         ),
                         horizontalMargin16,
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: .start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Container(
-                                    padding:
-                                        allPadding8 +
-                                        horizontalPadding12 +
-                                        verticalPadding4 / 2,
-                                    decoration: BoxDecoration(
-                                      color: textBlackColor,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        SvgPicture.asset(
-                                          AppAssets.iconUploadCloudSvg,
-                                          height: 18,
-                                        ),
-                                        horizontalMargin8,
-                                        Text(
-                                          "Upload",
-                                          style: context.labelSmall.copyWith(
-                                            color: whiteColor,
+                                  InkWell(
+                                    onTap: _pickImage,
+                                    child: Container(
+                                      padding:
+                                          allPadding8 +
+                                          horizontalPadding12 +
+                                          verticalPadding4 / 2,
+                                      decoration: BoxDecoration(
+                                        color: textBlackColor,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          SvgPicture.asset(
+                                            AppAssets.iconUploadCloudSvg,
+                                            height: 18,
                                           ),
-                                        ),
-                                      ],
+                                          horizontalMargin8,
+                                          Text(
+                                            "Upload",
+                                            style: context.labelSmall.copyWith(
+                                              color: whiteColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                   horizontalMargin12,
-                                  Container(
-                                    padding:
-                                        allPadding8 +
-                                        horizontalPadding24 +
-                                        verticalPadding4 / 2,
-                                    decoration: BoxDecoration(
-                                      color: greyButttonColor,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      "Remove",
-                                      style: context.labelSmall,
+                                  InkWell(
+                                    onTap: _removeImage,
+                                    child: Container(
+                                      padding:
+                                          allPadding8 +
+                                          horizontalPadding24 +
+                                          verticalPadding4 / 2,
+                                      decoration: BoxDecoration(
+                                        color: greyButttonColor,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        "Remove",
+                                        style: context.labelSmall,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                               verticalMargin8,
                               Text(
-                                "*Image size should be at least 320px big and less that 500kb. Allowed files .png and .jpg",
+                                "*Image size should be at least 320px big and less than 500kb. Allowed files .png and .jpg",
                                 style: context.labelSmall.copyWith(
                                   color: lavaRedColor.withValues(alpha: 0.4),
                                   fontSize: 12.5.sp,
@@ -338,15 +435,30 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                       hintText: "Enter address",
                     ),
                     verticalMargin16,
-                    CountryStateSection(
-                      initialCountry: _selectedCountry,
-                      initialState: _selectedState,
-                      onCountryChanged: (value) {
-                        _selectedCountry = value;
-                      },
-                      onStateChanged: (value) {
-                        _selectedState = value;
-                      },
+                    Text(
+                      "Country",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    CustomTextfield(
+                      controller: _countryController,
+                      hintText: "Enter country",
+                    ),
+                    verticalMargin16,
+                    Text(
+                      "State",
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    verticalMargin8,
+                    CustomTextfield(
+                      controller: _stateController,
+                      hintText: "Enter state",
                     ),
                     verticalMargin16,
                     Text(
