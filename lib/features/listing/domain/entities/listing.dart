@@ -34,6 +34,8 @@ class Listing extends Equatable {
   final int totalRatings;
   final String? website;
   final ReviewsBreakdown? reviewsBreakdown;
+  final double? latitude;
+  final double? longitude;
 
   const Listing({
     required this.id,
@@ -67,6 +69,8 @@ class Listing extends Equatable {
     required this.totalRatings,
     this.website,
     this.reviewsBreakdown,
+    this.latitude,
+    this.longitude,
   });
 
   @override

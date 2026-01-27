@@ -402,7 +402,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                       ],
                     ),
                     child: Column(
-                      crossAxisAlignment: .stretch,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
                           "Location",
@@ -411,12 +411,10 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                           ),
                         ),
                         verticalMargin12,
-                        Container(
-                          height: 220,
-                          decoration: BoxDecoration(
-                            color: greyButttonColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                        LocationMapWidget(
+                          latitude: listing?.latitude,
+                          longitude: listing?.longitude,
+                          address: listing?.address ?? '',
                         ),
                       ],
                     ),
@@ -1079,5 +1077,203 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
         ],
       ),
     );
+  }
+}
+
+class LocationMapWidget extends StatelessWidget {
+  final double? latitude;
+  final double? longitude;
+  final String address;
+
+  const LocationMapWidget({
+    super.key,
+    this.latitude,
+    this.longitude,
+    required this.address,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (address.isEmpty) {
+      return Container(
+        height: 220,
+        decoration: BoxDecoration(
+          color: greyButttonColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.location_off, size: 48, color: Colors.grey),
+              SizedBox(height: 8),
+              Text(
+                'Location not available',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    return GestureDetector(
+      onTap: _openInMaps,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: 220,
+          child: Stack(
+            children: [
+              // Map placeholder with address
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                ),
+                child: Stack(
+                  children: [
+                    // Use a network image of the map
+                    Positioned.fill(
+                      child: CachedNetworkImage(
+                        imageUrl: _getStaticMapUrl(),
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey.shade200,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.location_on, size: 48, color: Colors.red),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  address,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Tap to view on map',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Map pin overlay
+                    const Center(
+                      child: Icon(
+                        Icons.location_on,
+                        size: 40,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Address bar at bottom
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 20, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.directions, size: 16, color: Colors.white),
+                            SizedBox(width: 4),
+                            Text(
+                              'Directions',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getStaticMapUrl() {
+    // Using OpenStreetMap static map service (free, no API key)
+    if (latitude != null && longitude != null && latitude != 0.0 && longitude != 0.0) {
+      return 'https://staticmap.openstreetmap.de/staticmap.php?center=$latitude,$longitude&zoom=15&size=600x300&maptype=mapnik';
+    }
+    // Fallback: use nominatim to geocode address
+    final encodedAddress = Uri.encodeComponent(address);
+    return 'https://staticmap.openstreetmap.de/staticmap.php?center=$encodedAddress&zoom=15&size=600x300&maptype=mapnik';
+  }
+
+  Future<void> _openInMaps() async {
+    String url;
+    if (latitude != null && longitude != null && latitude != 0.0 && longitude != 0.0) {
+      url = 'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    } else {
+      url = 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}';
+    }
+    
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 }
