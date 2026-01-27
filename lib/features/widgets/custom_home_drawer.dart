@@ -149,36 +149,50 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      await _deleteAccount(context);
+    if (confirmed == true && mounted) {
+      await _deleteAccount();
     }
   }
 
-  Future<void> _deleteAccount(BuildContext context) async {
-    // Show loading
+  Future<void> _deleteAccount() async {
+    // Store references before async operations
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
+    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const PopScope(
+        canPop: false,
+        child: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      ),
     );
 
     try {
       final dio = sl<Dio>();
       final response = await dio.delete('/customer/delete-account');
 
-      if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading
-      }
-
       if (response.data['status'] == 'success') {
-        // Clear local data
+        // Clear local data first
         await sl<AppStore>().clear();
         sl<AppBloc>().add(AppLoggedOut());
 
-        if (context.mounted) {
-          Navigator.of(context).pop(); // Close drawer
-          context.goNamed(AppRouterNames.home);
-          ScaffoldMessenger.of(context).showSnackBar(
+        // Close all dialogs and drawer, then navigate
+        if (mounted) {
+          // Pop loading dialog
+          Navigator.of(context, rootNavigator: true).pop();
+          // Pop drawer
+          Navigator.of(context).pop();
+          
+          // Navigate to home after a short delay
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (mounted) {
+            context.go('/');
+          }
+          
+          scaffoldMessenger.showSnackBar(
             const SnackBar(
               content: Text('Account deleted successfully'),
               backgroundColor: Colors.green,
@@ -186,25 +200,28 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
           );
         }
       } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.data['message'] ?? 'Failed to delete account'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        // Close loading dialog
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop();
         }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete account. Please try again.'),
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(response.data['message'] ?? 'Failed to delete account'),
             backgroundColor: Colors.red,
           ),
         );
       }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete account. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -220,15 +237,15 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Align(
-                alignment: AlignmentGeometry.topRight,
+                alignment: Alignment.topRight,
                 child: IconButton.filled(
                   onPressed: () {
-                    context.goNamed(AppRouterNames.home);
+                    Navigator.of(context).pop(); // Just close the drawer
                   },
-                  style: ButtonStyle(
+                  style: const ButtonStyle(
                     backgroundColor: WidgetStatePropertyAll(Colors.transparent),
                   ),
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                 ),
               ),
               const SizedBox(height: 20),
@@ -327,6 +344,15 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
               const SizedBox(height: 40),
 
               // ──────────────────────────── MENU ITEM GROUP
+              DrawerMenuItem(
+                icon: Icons.home_rounded,
+                label: "Home",
+                onTap: () {
+                  Navigator.of(context).pop(); // Close drawer first
+                  context.go('/');
+                },
+                color: Color(0XFF25AE7A),
+              ),
               DrawerMenuItem(
                 icon: Icons.dashboard,
                 label: "Dashboard",
