@@ -84,11 +84,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       Row(
                         children: [
                           CircleAvatar(
-                            backgroundImage: user?.image != null
-                                ? CachedNetworkImageProvider(_getImageUrl(user!.image))
-                                : const CachedNetworkImageProvider(
-                                    "https://via.placeholder.com/100x100?text=User",
-                                  ),
+                            backgroundColor: Colors.grey[200],
+                            backgroundImage: user?.image != null && user!.image!.isNotEmpty
+                                ? CachedNetworkImageProvider(_getImageUrl(user.image!))
+                                : null,
+                            child: user?.image == null || user!.image!.isEmpty
+                                ? const Icon(Icons.person, color: Colors.grey)
+                                : null,
                           ),
                           horizontalMargin12,
                           Column(

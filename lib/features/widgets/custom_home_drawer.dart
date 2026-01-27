@@ -82,7 +82,6 @@ import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
-import 'package:grow_first/features/customer_bookings/presentation/widgets/reschedule_pop_up.dart';
 import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/app/di/app_injections.dart';
@@ -228,17 +227,20 @@ class ModernCustomerDrawer extends StatelessWidget {
                               final userContact =
                                   user?.phone ?? user?.email ?? '';
                               final userImage = user?.image;
-                              print("User Image is :$userImage");
 
                               return Row(
                                 children: [
                                   CircleAvatar(
+                                    backgroundColor: Colors.grey[200],
                                     backgroundImage:
                                         (userImage == null || userImage.isEmpty)
-                                        ? AssetImage("assets/images/g_logo.png")
+                                        ? null
                                         : CachedNetworkImageProvider(
-                                            "https://growfirst.org/$userImage",
+                                            userImage.startsWith('http') ? userImage : "https://growfirst.org/$userImage",
                                           ),
+                                    child: (userImage == null || userImage.isEmpty)
+                                        ? const Icon(Icons.person, color: Colors.grey)
+                                        : null,
                                   ),
                                   SizedBox(width: 15),
                                   Column(
@@ -284,7 +286,10 @@ class ModernCustomerDrawer extends StatelessWidget {
                     ),
                   ],
                 ),
-                onTap: () => context.goNamed(AppRouterNames.accountSettings),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close drawer first
+                  context.goNamed(AppRouterNames.accountSettings);
+                },
               ),
 
               const SizedBox(height: 40),
@@ -293,14 +298,20 @@ class ModernCustomerDrawer extends StatelessWidget {
               DrawerMenuItem(
                 icon: Icons.dashboard,
                 label: "Dashboard",
-                onTap: () => context.pushNamed(AppRouterNames.customerHome),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close drawer first
+                  context.goNamed(AppRouterNames.customerHome);
+                },
                 color: aquaBlueColor,
               ),
               DrawerMenuItem(
                 icon: Icons.event_note_rounded,
                 label: "Bookings",
 
-                onTap: () => context.pushNamed(AppRouterNames.customerBookings),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close drawer first
+                  context.goNamed(AppRouterNames.customerBookings);
+                },
                 color: Color(0XFF245F9E),
               ),
               // DrawerMenuItem(
@@ -340,13 +351,19 @@ class ModernCustomerDrawer extends StatelessWidget {
               DrawerMenuItem(
                 icon: Icons.reviews_rounded,
                 label: "Reviews",
-                onTap: () => context.pushNamed(AppRouterNames.myReview),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close drawer first
+                  context.goNamed(AppRouterNames.myReview);
+                },
                 color: Color(0XFF009EF7),
               ),
               DrawerMenuItem(
                 icon: Icons.settings,
                 label: "Settings",
-                onTap: () => context.pushNamed(AppRouterNames.accountSettings),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close drawer first
+                  context.goNamed(AppRouterNames.accountSettings);
+                },
                 color: Color(0XFF5ECFE0),
               ),
               DrawerMenuItem(

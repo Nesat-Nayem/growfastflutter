@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -162,15 +161,8 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CircleAvatar(
-                          child: ClipOval(
-                            child: CachedNetworkImage(
-                              imageUrl:
-                                  "https://picsum.photos/seed/avatar2/100/100",
-                              fit: BoxFit.cover,
-                              width: 40,
-                              height: 40,
-                            ),
-                          ),
+                          backgroundColor: Colors.grey[200],
+                          child: const Icon(Icons.person, color: Colors.grey),
                         ),
                         horizontalMargin16,
                         Expanded(
