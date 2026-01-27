@@ -26,6 +26,7 @@ class CustomerHomePage extends StatefulWidget {
 class _CustomerHomePageState extends State<CustomerHomePage> {
   late DashboardCubit _dashboardCubit;
   final AppStore _appStore = sl<AppStore>();
+  Map<String, dynamic>? _userData;
 
   @override
   void initState() {
@@ -35,6 +36,23 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     );
     if (_appStore.isLoggedIn) {
       _dashboardCubit.loadDashboard();
+      _loadUserProfile();
+    }
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final dio = sl<Dio>();
+      final response = await dio.get('customer/profile');
+      if (response.data['status'] == 'success') {
+        setState(() {
+          _userData = response.data['user'];
+        });
+        // Update AppStore with fresh data
+        await _appStore.updateUser(response.data['user']);
+      }
+    } catch (e) {
+      // Silently fail, use cached data
     }
   }
 
@@ -53,7 +71,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = _appStore.user;
+    // Use fresh data if available, otherwise fall back to AppStore
+    final userName = _userData?['name'] ?? _appStore.user?.name ?? 'Guest';
+    final userEmail = _userData?['email'] ?? _appStore.user?.email;
+    final userPhone = _userData?['phone'] ?? _appStore.user?.phone;
+    final userImage = _userData?['image'] ?? _appStore.user?.image;
+    final userContact = userEmail ?? userPhone ?? '';
+
     return BlocProvider.value(
       value: _dashboardCubit,
       child: Scaffold(
@@ -85,10 +109,14 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         children: [
                           CircleAvatar(
                             backgroundColor: Colors.grey[200],
-                            backgroundImage: user?.image != null && user!.image!.isNotEmpty
-                                ? CachedNetworkImageProvider(_getImageUrl(user.image!))
+                            backgroundImage: userImage != null && userImage.toString().isNotEmpty
+                                ? CachedNetworkImageProvider(
+                                    userImage.toString().startsWith('http') 
+                                        ? userImage.toString() 
+                                        : _getImageUrl(userImage.toString())
+                                  )
                                 : null,
-                            child: user?.image == null || user!.image!.isEmpty
+                            child: userImage == null || userImage.toString().isEmpty
                                 ? const Icon(Icons.person, color: Colors.grey)
                                 : null,
                           ),
@@ -104,7 +132,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                   text: "Hey, ",
                                   children: [
                                     TextSpan(
-                                      text: user?.name ?? 'Guest',
+                                      text: userName,
                                       style: context.bodyLarge.copyWith(
                                         fontWeight: FontWeight.w900,
                                         color: aquaBlueColor,
@@ -114,7 +142,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                 ),
                               ),
                               Text(
-                                user?.email ?? user?.phone ?? '',
+                                userContact,
                                 style: context.labelLarge.copyWith(
                                   fontWeight: FontWeight.w300,
                                 ),

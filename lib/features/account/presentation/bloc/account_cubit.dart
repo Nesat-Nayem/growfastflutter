@@ -32,7 +32,7 @@ class AccountCubit extends Cubit<AccountState> {
       if (response['status'] == 'success') {
         // Update AppStore with new user data
         final updatedUser = response['user'];
-        await appStore.load(); // Reload from secure storage
+        await appStore.updateUser(updatedUser);
         emit(AccountUpdateSuccess(updatedUser));
       } else {
         emit(AccountError(response['message'] ?? 'Failed to update profile'));
@@ -49,7 +49,7 @@ class AccountCubit extends Cubit<AccountState> {
       if (response['status'] == 'success') {
         // Update AppStore with new user data
         final updatedUser = response['user'];
-        await appStore.load(); // Reload from secure storage
+        await appStore.updateUser(updatedUser);
         emit(AccountUpdateSuccess(updatedUser));
       } else {
         emit(AccountError(response['message'] ?? 'Failed to update profile'));

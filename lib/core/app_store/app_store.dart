@@ -35,6 +35,19 @@ class AppStore {
     debugPrint('Auth saved: ${await secureStore.read(_kUser)}');
   }
 
+  /// Update user data after profile update
+  Future<void> updateUser(Map<String, dynamic> userData) async {
+    if (_userModel == null) return;
+    
+    // Merge existing user data with updated data
+    final currentJson = _userModel!.toJson();
+    currentJson.addAll(userData);
+    
+    _userModel = AuthUserModel.fromJson(currentJson);
+    await secureStore.write(_kUser, jsonEncode(_userModel!.toJson()));
+    debugPrint('User updated: ${await secureStore.read(_kUser)}');
+  }
+
   /// Call on app start / splash
   Future<void> load() async {
     final token = await secureStore.read(_kToken);

@@ -86,7 +86,7 @@ import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
 import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 
-class ModernCustomerDrawer extends StatelessWidget {
+class ModernCustomerDrawer extends StatefulWidget {
   const ModernCustomerDrawer({
     super.key,
     this.name,
@@ -97,6 +97,35 @@ class ModernCustomerDrawer extends StatelessWidget {
   final String? name;
   final String? email;
   final String? profileImage;
+
+  @override
+  State<ModernCustomerDrawer> createState() => _ModernCustomerDrawerState();
+}
+
+class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
+  Map<String, dynamic>? _userData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final dio = sl<Dio>();
+      final response = await dio.get('customer/profile');
+      if (response.data['status'] == 'success' && mounted) {
+        setState(() {
+          _userData = response.data['user'];
+        });
+        // Update AppStore with fresh data
+        await sl<AppStore>().updateUser(response.data['user']);
+      }
+    } catch (e) {
+      // Silently fail, use cached data
+    }
+  }
 
   Future<void> _showDeleteAccountDialog(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -223,22 +252,25 @@ class ModernCustomerDrawer extends StatelessWidget {
                             builder: (context, appState) {
                               final appStore = sl<AppStore>();
                               final user = appStore.user;
-                              final userName = user?.name ?? 'Guest';
-                              final userContact =
-                                  user?.phone ?? user?.email ?? '';
-                              final userImage = user?.image;
+                              
+                              // Use fresh data if available
+                              final userName = _userData?['name'] ?? user?.name ?? 'Guest';
+                              final userPhone = _userData?['phone'] ?? user?.phone;
+                              final userEmail = _userData?['email'] ?? user?.email;
+                              final userContact = userPhone ?? userEmail ?? '';
+                              final userImage = _userData?['image'] ?? user?.image;
 
                               return Row(
                                 children: [
                                   CircleAvatar(
                                     backgroundColor: Colors.grey[200],
                                     backgroundImage:
-                                        (userImage == null || userImage.isEmpty)
+                                        (userImage == null || userImage.toString().isEmpty)
                                         ? null
                                         : CachedNetworkImageProvider(
-                                            userImage.startsWith('http') ? userImage : "https://growfirst.org/$userImage",
+                                            userImage.toString().startsWith('http') ? userImage.toString() : "https://growfirst.org/$userImage",
                                           ),
-                                    child: (userImage == null || userImage.isEmpty)
+                                    child: (userImage == null || userImage.toString().isEmpty)
                                         ? const Icon(Icons.person, color: Colors.grey)
                                         : null,
                                   ),
