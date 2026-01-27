@@ -183,11 +183,11 @@ class _HomePageContentState extends State<HomePageContent> {
                 } else if (state.categories.isNotEmpty) {
                   return Column(
                     children: [
-                      Container(
-                        height: 50,
-                        width: double.infinity,
-                        child: AdWidget(ad: banner),
-                      ),
+                      // Container(
+                      //   height: 50,
+                      //   width: double.infinity,
+                      //   child: AdWidget(ad: banner),
+                      // ),
                       Row(
                         children: [
                           Expanded(
