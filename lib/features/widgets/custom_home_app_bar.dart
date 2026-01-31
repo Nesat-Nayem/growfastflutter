@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
@@ -12,11 +13,13 @@ class CustomerHomeAppBar extends StatelessWidget
     this.singleTitle,
     this.actions,
     this.backOpensDrawer = false,
+    this.backGoesToHome = false,
   });
 
   final String? singleTitle;
   final List<Widget>? actions;
   final bool backOpensDrawer;
+  final bool backGoesToHome;
 
   void _openDrawer(BuildContext context) {
     showModalBottomSheet(
@@ -50,6 +53,8 @@ class CustomerHomeAppBar extends StatelessWidget
             onPressed: () {
               if (backOpensDrawer) {
                 _openDrawer(context);
+              } else if (backGoesToHome) {
+                context.goNamed(AppRouterNames.home);
               } else {
                 context.pop();
               }
