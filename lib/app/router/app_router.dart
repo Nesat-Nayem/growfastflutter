@@ -65,6 +65,7 @@ class AppRouter {
     AppRouterPaths.accountSettingsPath,
     AppRouterPaths.accountSettingsPath,
     AppRouterPaths.ModernCustomerDrawerPath,
+    AppRouterPaths.vendorWebViewPath,
     '/vendor-dashboard',
     '/vendor-choose-plan',
     '/vendor-kyc-form',

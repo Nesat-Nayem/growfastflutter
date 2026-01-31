@@ -116,11 +116,80 @@ class SubCategoriesScreen extends StatefulWidget {
   State<SubCategoriesScreen> createState() => _SubCategoriesScreenState();
 }
 
+// class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
+//   @override
+//   void initState() {
+//     super.initState();
+//     context.read<CategoryBloc>().add(LoadSubcategories(widget.category.id));
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(widget.category.name),
+//         leading: IconButton(
+//           icon: const Icon(Icons.arrow_back),
+//           onPressed: () => context.pop(),
+//         ),
+//       ),
+//       body: Padding(
+//         padding: horizontalPadding12,
+//         child: BlocBuilder<CategoryBloc, CategoryState>(
+//           bloc: context.read<CategoryBloc>(),
+//           builder: (_, state) {
+//             if (state.isSubcategoriesLoading == true) {
+//               return const Center(child: CircularProgressIndicator());
+//             } else if (state.subcategories.isEmpty) {
+//               return Center(
+//                 child: Text("No subcategories found", style: context.bodySmall),
+//               );
+//             }
+
+//             return GridView.builder(
+//               padding: verticalPadding8,
+//               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+//                 crossAxisCount: 3,
+//                 crossAxisSpacing: 13,
+//                 mainAxisSpacing: 13,
+//               ),
+//               itemCount: state.subcategories.length,
+//               itemBuilder: (context, index) {
+//                 return InkWell(
+//                   onTap: () {
+//                     context.pop();
+//                     context.pushNamed(
+//                       AppRouterNames.listings,
+//                       queryParameters: {
+//                         "categoryId": widget.category.id.toString(),
+//                         "subcategoryId": state.subcategories[index].id
+//                             .toString(),
+//                       },
+//                     );
+//                   },
+//                   child: CategoryTile(
+//                     isSubcategory: true,
+//                     subcategory: state.subcategories[index],
+//                   ),
+//                 );
+//               },
+//             );
+//           },
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
+  bool _redirected = false; // important to avoid multiple redirects
+
   @override
   void initState() {
     super.initState();
-    context.read<CategoryBloc>().add(LoadSubcategories(widget.category.id));
+    context.read<CategoryBloc>().add(
+          LoadSubcategories(widget.category.id),
+        );
   }
 
   @override
@@ -135,15 +204,32 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
       ),
       body: Padding(
         padding: horizontalPadding12,
-        child: BlocBuilder<CategoryBloc, CategoryState>(
-          bloc: context.read<CategoryBloc>(),
-          builder: (_, state) {
-            if (state.isSubcategoriesLoading == true) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state.subcategories.isEmpty) {
-              return Center(
-                child: Text("No subcategories found", style: context.bodySmall),
+        child: BlocConsumer<CategoryBloc, CategoryState>(
+          listener: (context, state) {
+            /// ✅ DATA LOAD HO GAYA
+            if (!state.isSubcategoriesLoading &&
+                state.subcategories.isEmpty &&
+                !_redirected) {
+              _redirected = true;
+
+              /// 👉 Direct listings page
+              context.pop(); // close dialog/screen
+              context.pushNamed(
+                AppRouterNames.listings,
+                queryParameters: {
+                  "categoryId": widget.category.id.toString(),
+                },
               );
+            }
+          },
+          builder: (context, state) {
+            if (state.isSubcategoriesLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state.subcategories.isEmpty) {
+              // UI flash avoid karne ke liye empty widget
+              return const SizedBox.shrink();
             }
 
             return GridView.builder(
@@ -162,8 +248,8 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
                       AppRouterNames.listings,
                       queryParameters: {
                         "categoryId": widget.category.id.toString(),
-                        "subcategoryId": state.subcategories[index].id
-                            .toString(),
+                        "subcategoryId":
+                            state.subcategories[index].id.toString(),
                       },
                     );
                   },

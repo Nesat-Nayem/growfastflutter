@@ -46,9 +46,7 @@ class HomeServiceSection extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: context.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: context.bodyMedium.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
             IconButton(
@@ -228,7 +226,7 @@ class _ServiceSectionCard extends StatelessWidget {
                     style: context.labelMedium.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   verticalMargin8,
@@ -258,9 +256,7 @@ class _ServiceSectionCard extends StatelessWidget {
                       if (appStore.isLoggedIn) {
                         context.pushNamed(
                           AppRouterNames.customerSelectBookingLocation,
-                          pathParameters: {
-                            "listingId": service.id.toString(),
-                          },
+                          pathParameters: {"listingId": service.id.toString()},
                         );
                       } else {
                         context.pushNamed(
@@ -275,9 +271,7 @@ class _ServiceSectionCard extends StatelessWidget {
                     },
                     padding: verticalPadding12,
                     borderRadius: 6,
-                    textStyle: context.labelMedium.copyWith(
-                      color: whiteColor,
-                    ),
+                    textStyle: context.labelMedium.copyWith(color: whiteColor),
                   ),
                   verticalMargin8,
                   // Contact Supplier Button
@@ -331,8 +325,9 @@ class _ServiceSectionCard extends StatelessWidget {
       if (raw.startsWith('http')) {
         return raw;
       }
-      final normalized =
-          raw.startsWith('storage/') ? raw.replaceFirst('storage/', '') : raw;
+      final normalized = raw.startsWith('storage/')
+          ? raw.replaceFirst('storage/', '')
+          : raw;
       return "https://growfirst.org/storage/$normalized";
     }
 
@@ -342,8 +337,9 @@ class _ServiceSectionCard extends StatelessWidget {
       if (raw.startsWith('http')) {
         return raw;
       }
-      final normalized =
-          raw.startsWith('storage/') ? raw.replaceFirst('storage/', '') : raw;
+      final normalized = raw.startsWith('storage/')
+          ? raw.replaceFirst('storage/', '')
+          : raw;
       return "https://growfirst.org/storage/$normalized";
     }
 

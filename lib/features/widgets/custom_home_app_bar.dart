@@ -35,12 +35,25 @@ class CustomerHomeAppBar extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      leadingWidth: 96,
       backgroundColor: whiteColor,
       scrolledUnderElevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () => _openDrawer(context),
+      leading: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              context.pop();
+            },
+            icon: Icon(Icons.arrow_back),
+          ),
+
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => _openDrawer(context),
+          ),
+        ],
       ),
+
       title: singleTitle != null
           ? Text(
               singleTitle!,

@@ -34,7 +34,7 @@ class CustomBottomNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        height: 75,
+        height: 48,
         padding: horizontalPadding16 + horizontalPadding4 + verticalPadding4,
         color: whiteColor,
         child: Row(
@@ -51,8 +51,8 @@ class CustomBottomNavBar extends StatelessWidget {
             GestureDetector(
               onTap: () => context.goNamed(AppRouterNames.home),
               child: Container(
-                height: 80,
-                width: 80,
+                height: 55,
+                width: 55,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
