@@ -216,7 +216,7 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
     return BlocProvider.value(
       value: _accountCubit,
       child: Scaffold(
-        appBar: CustomerHomeAppBar(singleTitle: "Account Settings"),
+        appBar: CustomerHomeAppBar(singleTitle: "Account Settings", backOpensDrawer: true),
         body: BlocConsumer<AccountCubit, AccountState>(
           listener: (context, state) {
             if (state is AccountUnauthorized) {

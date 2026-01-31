@@ -7,10 +7,16 @@ import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 
 class CustomerHomeAppBar extends StatelessWidget
     implements PreferredSizeWidget {
-  const CustomerHomeAppBar({super.key, this.singleTitle, this.actions});
+  const CustomerHomeAppBar({
+    super.key,
+    this.singleTitle,
+    this.actions,
+    this.backOpensDrawer = false,
+  });
 
   final String? singleTitle;
   final List<Widget>? actions;
+  final bool backOpensDrawer;
 
   void _openDrawer(BuildContext context) {
     showModalBottomSheet(
@@ -42,7 +48,11 @@ class CustomerHomeAppBar extends StatelessWidget
         children: [
           IconButton(
             onPressed: () {
-              context.pop();
+              if (backOpensDrawer) {
+                _openDrawer(context);
+              } else {
+                context.pop();
+              }
             },
             icon: Icon(Icons.arrow_back),
           ),

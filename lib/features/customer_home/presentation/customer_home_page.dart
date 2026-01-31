@@ -113,7 +113,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     return BlocProvider.value(
       value: _dashboardCubit,
       child: Scaffold(
-        appBar: CustomerHomeAppBar(),
+        appBar: CustomerHomeAppBar(backOpensDrawer: true),
         body: Padding(
           padding: horizontalPadding16,
           child: BlocConsumer<DashboardCubit, DashboardState>(

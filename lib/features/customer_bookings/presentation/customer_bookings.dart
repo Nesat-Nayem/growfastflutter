@@ -70,7 +70,7 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
       value: _bookingsListCubit,
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: CustomerHomeAppBar(singleTitle: "Booking List"),
+        appBar: CustomerHomeAppBar(singleTitle: "Booking List", backOpensDrawer: true),
         body: BlocConsumer<BookingsListCubit, BookingsListState>(
           listener: (context, state) {
             if (state is BookingsListUnauthorized) {
