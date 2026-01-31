@@ -63,7 +63,6 @@ class CategoryTile extends StatelessWidget {
     final url = imageUrl;
     
     return Container(
-      width: 125,
       padding: horizontalPadding4,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.only(

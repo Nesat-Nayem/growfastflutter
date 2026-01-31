@@ -291,43 +291,57 @@ class _HomePageContentState extends State<HomePageContent> {
                           125,
                           MediaQuery.sizeOf(context).height * 0.17,
                         ),
-                        child: ListView.separated(
-                          clipBehavior: Clip.none,
-                          scrollDirection: Axis.horizontal,
-                          itemBuilder: (context, index) {
-                            return InkWell(
-                              onTap: () {
-                                final categoryBloc = context
-                                    .read<CategoryBloc>();
-                                showGeneralDialog(
-                                  context: context,
-                                  barrierDismissible: true,
-                                  barrierLabel: "Dismiss",
-                                  barrierColor: Colors.black54,
-                                  transitionDuration: Duration(
-                                    milliseconds: 300,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Calculate tile width to fit exactly 3 tiles with spacing
+                            final screenWidth = MediaQuery.sizeOf(context).width;
+                            final horizontalPadding = 6.0; // horizontalPadding3 = 3 on each side
+                            final availableWidth = screenWidth - horizontalPadding;
+                            final spacing = 12.0;
+                            final tileWidth = (availableWidth - (spacing * 2)) / 3;
+                            
+                            return ListView.separated(
+                              clipBehavior: Clip.none,
+                              scrollDirection: Axis.horizontal,
+                              itemBuilder: (context, index) {
+                                return InkWell(
+                                  onTap: () {
+                                    final categoryBloc = context
+                                        .read<CategoryBloc>();
+                                    showGeneralDialog(
+                                      context: context,
+                                      barrierDismissible: true,
+                                      barrierLabel: "Dismiss",
+                                      barrierColor: Colors.black54,
+                                      transitionDuration: Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      pageBuilder:
+                                          (context, animation1, animation2) {
+                                            return BlocProvider<CategoryBloc>.value(
+                                              value: categoryBloc,
+                                              child: SubCategoriesScreen(
+                                                category: state.categories[index],
+                                              ),
+                                            );
+                                          },
+                                    );
+                                  },
+                                  child: SizedBox(
+                                    width: tileWidth,
+                                    child: CategoryTile(
+                                      category: state.categories[index],
+                                    ),
                                   ),
-                                  pageBuilder:
-                                      (context, animation1, animation2) {
-                                        return BlocProvider<CategoryBloc>.value(
-                                          value: categoryBloc,
-                                          child: SubCategoriesScreen(
-                                            category: state.categories[index],
-                                          ),
-                                        );
-                                      },
                                 );
                               },
-                              child: CategoryTile(
-                                category: state.categories[index],
-                              ),
+                              separatorBuilder: (context, index) =>
+                                  horizontalMargin12,
+                              itemCount: state.categories.length > 25
+                                  ? 25
+                                  : state.categories.length,
                             );
                           },
-                          separatorBuilder: (context, index) =>
-                              horizontalMargin12,
-                          itemCount: state.categories.length > 25
-                              ? 25
-                              : state.categories.length,
                         ),
                       ),
                     ],

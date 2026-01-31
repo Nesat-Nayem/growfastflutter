@@ -65,37 +65,47 @@ class _ExploreCategoriesView extends StatelessWidget {
                   );
                 } else if (state.categories.isNotEmpty) {
                   return Expanded(
-                    child: GridView.builder(
-                      padding: verticalPadding8,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 13,
-                        mainAxisSpacing: 13,
-                      ),
-                      itemCount: state.categories.length,
-                      itemBuilder: (context, index) {
-                        return InkWell(
-                          onTap: () {
-                            final categoryBloc = context.read<CategoryBloc>();
-                            showGeneralDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              barrierLabel: "Dismiss",
-                              barrierColor: Colors.black54,
-                              transitionDuration: Duration(milliseconds: 300),
-                              pageBuilder: (context, animation1, animation2) {
-                                return BlocProvider<CategoryBloc>.value(
-                                  value: categoryBloc,
-                                  child: SubCategoriesScreen(
-                                    category: state.categories[index],
-                                  ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Calculate item width to fit 3 items per row
+                        final spacing = 13.0;
+                        final itemWidth = (constraints.maxWidth - (spacing * 2)) / 3;
+                        final itemHeight = itemWidth * 1.1; // Maintain aspect ratio
+                        
+                        return GridView.builder(
+                          padding: verticalPadding8,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: spacing,
+                            mainAxisSpacing: spacing,
+                            childAspectRatio: itemWidth / itemHeight,
+                          ),
+                          itemCount: state.categories.length,
+                          itemBuilder: (context, index) {
+                            return InkWell(
+                              onTap: () {
+                                final categoryBloc = context.read<CategoryBloc>();
+                                showGeneralDialog(
+                                  context: context,
+                                  barrierDismissible: true,
+                                  barrierLabel: "Dismiss",
+                                  barrierColor: Colors.black54,
+                                  transitionDuration: Duration(milliseconds: 300),
+                                  pageBuilder: (context, animation1, animation2) {
+                                    return BlocProvider<CategoryBloc>.value(
+                                      value: categoryBloc,
+                                      child: SubCategoriesScreen(
+                                        category: state.categories[index],
+                                      ),
+                                    );
+                                  },
                                 );
                               },
+                              child: CategoryTile(
+                                category: state.categories[index],
+                              ),
                             );
                           },
-                          child: CategoryTile(
-                            category: state.categories[index],
-                          ),
                         );
                       },
                     ),
