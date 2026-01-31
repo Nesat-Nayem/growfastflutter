@@ -9,6 +9,7 @@ import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
+import 'package:grow_first/core/utils/location_service.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/categories/presentation/bloc/category_bloc.dart';
 import 'package:grow_first/features/categories/presentation/widgets/category_tile.dart';
@@ -57,6 +58,12 @@ class HomePageContent extends StatefulWidget {
 
 class _HomePageContentState extends State<HomePageContent> {
   final PageStorageKey _pageKey = PageStorageKey("customer-home-scroll");
+  final LocationService _locationService = LocationService();
+  
+  String _city = "Fetching...";
+  String _address = "Getting your location";
+  bool _isLoadingLocation = true;
+  
   BannerAd banner = BannerAd(
     size: AdSize.banner,
     adUnitId: 'ca-app-pub-3940256099942544/9214589741',
@@ -76,6 +83,25 @@ class _HomePageContentState extends State<HomePageContent> {
   void initState() {
     super.initState();
     banner.load();
+    _fetchLocation();
+  }
+
+  Future<void> _fetchLocation() async {
+    final location = await _locationService.getCurrentLocation();
+    if (mounted) {
+      setState(() {
+        _isLoadingLocation = false;
+        if (location != null) {
+          _city = location.city;
+          _address = location.pincode.isNotEmpty 
+              ? "${location.address}, ${location.pincode}"
+              : location.address;
+        } else {
+          _city = "Location unavailable";
+          _address = "Enable location access";
+        }
+      });
+    }
   }
 
   @override
@@ -113,18 +139,27 @@ class _HomePageContentState extends State<HomePageContent> {
           icon: const Icon(Icons.menu),
           onPressed: () => _openDrawer(context),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Pune", style: context.labelSmall),
-            Row(
-              children: [
-                Text("BTM Layout, 500628", style: context.labelSmall),
-                horizontalMargin4,
-                Icon(Icons.arrow_right_sharp),
-              ],
-            ),
-          ],
+        title: GestureDetector(
+          onTap: _fetchLocation,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_city, style: context.labelSmall),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      _isLoadingLocation ? "Getting your location" : _address,
+                      style: context.labelSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  horizontalMargin4,
+                  Icon(Icons.arrow_right_sharp),
+                ],
+              ),
+            ],
+          ),
         ),
         actions: [
           horizontalMargin12,
