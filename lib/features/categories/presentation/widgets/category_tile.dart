@@ -1,5 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/core/config/app_config.dart';
 import 'package:grow_first/core/theme/colors.dart';
@@ -23,8 +25,29 @@ class CategoryTile extends StatelessWidget {
   String? get imageUrl {
     final image = isSubcategory ? subcategory?.image : category?.image;
     if (image == null || image.isEmpty) return null;
-    if (image.startsWith('http')) return image;
-    return "${sl<AppConfig>().imageBaseUrl}/storage/$image";
+    
+    // Already a full URL
+    if (image.startsWith('http://') || image.startsWith('https://')) {
+      return image;
+    }
+    
+    final baseUrl = sl<AppConfig>().imageBaseUrl;
+    
+    // Handle paths that already include 'storage/'
+    if (image.startsWith('storage/')) {
+      return "$baseUrl/$image";
+    }
+    
+    // Handle paths starting with '/'
+    final normalizedImage = image.startsWith('/') ? image.substring(1) : image;
+    
+    return "$baseUrl/storage/$normalizedImage";
+  }
+
+  bool get isSvg {
+    final url = imageUrl;
+    if (url == null) return false;
+    return url.toLowerCase().endsWith('.svg');
   }
 
   String get title {
@@ -37,6 +60,8 @@ class CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final url = imageUrl;
+    
     return Container(
       width: 125,
       padding: horizontalPadding4,
@@ -52,29 +77,9 @@ class CategoryTile extends StatelessWidget {
         ),
       ),
       child: Column(
-        mainAxisAlignment: .center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          imageUrl != null
-              ? CachedNetworkImage(
-                  imageUrl: imageUrl!,
-                  height: 45,
-                  width: 45,
-                  errorWidget: (context, url, error) => Icon(
-                    CupertinoIcons.photo,
-                    size: 45,
-                    color: whiteColor.withOpacity(0.5),
-                  ),
-                  placeholder: (context, url) => Icon(
-                    CupertinoIcons.photo,
-                    size: 45,
-                    color: whiteColor.withOpacity(0.3),
-                  ),
-                )
-              : Icon(
-                  CupertinoIcons.photo,
-                  size: 45,
-                  color: whiteColor.withOpacity(0.5),
-                ),
+          _buildImage(url),
           verticalMargin4,
           Text(
             title,
@@ -84,6 +89,57 @@ class CategoryTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildImage(String? url) {
+    if (url == null) {
+      return _buildPlaceholder();
+    }
+
+    if (isSvg) {
+      return SvgPicture.network(
+        url,
+        height: 45,
+        width: 45,
+        fit: BoxFit.contain,
+        placeholderBuilder: (context) => _buildLoadingIndicator(),
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: url,
+      height: 45,
+      width: 45,
+      fit: BoxFit.contain,
+      fadeInDuration: const Duration(milliseconds: 200),
+      fadeOutDuration: const Duration(milliseconds: 200),
+      memCacheHeight: 90,
+      memCacheWidth: 90,
+      errorWidget: (context, url, error) => _buildPlaceholder(),
+      placeholder: (context, url) => _buildLoadingIndicator(),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Icon(
+      CupertinoIcons.photo,
+      size: 45,
+      color: whiteColor.withValues(alpha: 0.5),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return SizedBox(
+      height: 45,
+      width: 45,
+      child: Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: whiteColor.withValues(alpha: 0.5),
+        ),
       ),
     );
   }
