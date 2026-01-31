@@ -339,6 +339,15 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
 
             // ──────────────────────────── MENU ITEM GROUP
             DrawerMenuItem(
+              icon: Icons.home,
+              label: "Home",
+              onTap: () {
+                Navigator.of(context).pop(); // Close drawer first
+                context.goNamed(AppRouterNames.home);
+              },
+              color: Color(0XFF4CAF50),
+            ),
+            DrawerMenuItem(
               icon: Icons.dashboard,
               label: "Dashboard",
               onTap: () {
