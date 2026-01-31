@@ -1,6 +1,13 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+enum LocationStatus {
+  granted,
+  denied,
+  deniedForever,
+  serviceDisabled,
+}
+
 class LocationData {
   final String city;
   final String address;
@@ -25,31 +32,40 @@ class LocationService {
   LocationData? _cachedLocation;
   LocationData? get cachedLocation => _cachedLocation;
 
-  Future<bool> checkPermission() async {
+  Future<LocationStatus> checkAndRequestPermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return false;
+      return LocationStatus.serviceDisabled;
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
+    
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        return false;
+        return LocationStatus.denied;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      return false;
+      return LocationStatus.deniedForever;
     }
 
-    return true;
+    return LocationStatus.granted;
+  }
+
+  Future<void> openLocationSettings() async {
+    await Geolocator.openLocationSettings();
+  }
+
+  Future<void> openAppSettings() async {
+    await Geolocator.openAppSettings();
   }
 
   Future<LocationData?> getCurrentLocation() async {
     try {
-      final hasPermission = await checkPermission();
-      if (!hasPermission) return null;
+      final status = await checkAndRequestPermission();
+      if (status != LocationStatus.granted) return null;
 
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -75,7 +91,6 @@ class LocationService {
         return _cachedLocation;
       }
     } catch (e) {
-      // Return cached location if available
       return _cachedLocation;
     }
     return null;

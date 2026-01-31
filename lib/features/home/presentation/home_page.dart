@@ -63,6 +63,7 @@ class _HomePageContentState extends State<HomePageContent> {
   String _city = "Fetching...";
   String _address = "Getting your location";
   bool _isLoadingLocation = true;
+  LocationStatus? _locationStatus;
   
   BannerAd banner = BannerAd(
     size: AdSize.banner,
@@ -87,20 +88,57 @@ class _HomePageContentState extends State<HomePageContent> {
   }
 
   Future<void> _fetchLocation() async {
-    final location = await _locationService.getCurrentLocation();
-    if (mounted) {
-      setState(() {
-        _isLoadingLocation = false;
-        if (location != null) {
-          _city = location.city;
-          _address = location.pincode.isNotEmpty 
-              ? "${location.address}, ${location.pincode}"
-              : location.address;
-        } else {
+    setState(() => _isLoadingLocation = true);
+    
+    final status = await _locationService.checkAndRequestPermission();
+    _locationStatus = status;
+    
+    if (status == LocationStatus.granted) {
+      final location = await _locationService.getCurrentLocation();
+      if (mounted) {
+        setState(() {
+          _isLoadingLocation = false;
+          if (location != null) {
+            _city = location.city;
+            _address = location.pincode.isNotEmpty 
+                ? "${location.address}, ${location.pincode}"
+                : location.address;
+          } else {
+            _city = "Location unavailable";
+            _address = "Tap to retry";
+          }
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoadingLocation = false;
           _city = "Location unavailable";
-          _address = "Enable location access";
-        }
-      });
+          _address = "Tap to enable location";
+        });
+      }
+    }
+  }
+
+  Future<void> _handleLocationTap() async {
+    if (_locationStatus == LocationStatus.granted) {
+      // Already have permission, just refresh
+      await _fetchLocation();
+    } else if (_locationStatus == LocationStatus.serviceDisabled) {
+      // Location service is off, open location settings
+      await _locationService.openLocationSettings();
+      // Retry after returning from settings
+      await Future.delayed(const Duration(milliseconds: 500));
+      await _fetchLocation();
+    } else if (_locationStatus == LocationStatus.deniedForever) {
+      // Permission permanently denied, open app settings
+      await _locationService.openAppSettings();
+      // Retry after returning from settings
+      await Future.delayed(const Duration(milliseconds: 500));
+      await _fetchLocation();
+    } else {
+      // Permission denied or not requested yet, request again
+      await _fetchLocation();
     }
   }
 
@@ -140,7 +178,7 @@ class _HomePageContentState extends State<HomePageContent> {
           onPressed: () => _openDrawer(context),
         ),
         title: GestureDetector(
-          onTap: _fetchLocation,
+          onTap: _handleLocationTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
