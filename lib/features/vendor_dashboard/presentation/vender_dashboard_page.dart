@@ -45,6 +45,13 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
   bool isMobileValid = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Load countries when page initializes
+    sl<VendorBloc>().add(LoadCountries());
+  }
+
+  @override
   void dispose() {
     fullNameController.dispose();
     companyNameController.dispose();
@@ -313,54 +320,8 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
                         selectedCountry != null &&
                         selectedState != null &&
                         selectedCity != null) {
-                      if (isMobileValid) {
-                        sl<VendorBloc>().add(
-                          SubmitVendorStep1(
-                            VendorStep1Request(
-                              fullName: fullNameController.text.trim(),
-                              companyName: companyNameController.text.trim(),
-                              email: emailController.text.trim(),
-                              phone: mobileController.text.trim(),
-                              gender: selectedGender!,
-                              country: sl<VendorBloc>().state.countries
-                                  .firstWhere(
-                                    (country) =>
-                                        country.name == selectedCountry,
-                                  )
-                                  .id
-                                  .toString(),
-                              state: sl<VendorBloc>().state.states
-                                  .firstWhere(
-                                    (state) => state.name == selectedState,
-                                  )
-                                  .id
-                                  .toString(),
-                              city: sl<VendorBloc>().state.cities
-                                  .firstWhere(
-                                    (city) => city.name == selectedCity,
-                                  )
-                                  .id
-                                  .toString(),
-                              locality: '',
-                              subLocality: '',
-                              pincode: postalCodeController.text.trim(),
-                            ),
-                          ),
-                        );
-                      } else {
-                        // show error
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Please enter a valid mobile number",
-                              style: context.labelSmall.copyWith(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      // Navigate to next step
+                      // Navigate to next step directly
+                      context.pushNamed(AppRouterNames.vendorChoosePlan);
                     } else {
                       // show error
                       setState(() {});
