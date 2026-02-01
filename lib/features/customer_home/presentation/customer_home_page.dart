@@ -16,6 +16,7 @@ import 'package:grow_first/features/customer_home/presentation/bloc/dashboard_cu
 import 'package:grow_first/features/customer_home/presentation/widgets/dashboard_stat_crump.dart';
 import 'package:grow_first/features/customer_home/presentation/widgets/recent_booking_tile.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
+import 'package:grow_first/features/widgets/skeleton_loader.dart';
 
 class CustomerHomePage extends StatefulWidget {
   const CustomerHomePage({super.key});
@@ -53,7 +54,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         });
       }
     } else {
-      // Always refresh data when page is shown
       _dashboardCubit.loadDashboard();
       _loadUserProfile();
     }
@@ -74,11 +74,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         setState(() {
           _userData = response.data['user'];
         });
-        // Update AppStore with fresh data
         await _appStore.updateUser(response.data['user']);
       }
     } catch (e) {
-      // If 401 error, redirect to login
       if (e is DioException && e.response?.statusCode == 401) {
         await _appStore.clear();
         if (mounted) {
@@ -86,6 +84,11 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         }
       }
     }
+  }
+
+  Future<void> _onRefresh() async {
+    _dashboardCubit.loadDashboard();
+    await _loadUserProfile();
   }
 
   @override
@@ -103,7 +106,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Use fresh data if available, otherwise fall back to AppStore
     final userName = _userData?['name'] ?? _appStore.user?.name ?? 'Guest';
     final userEmail = _userData?['email'] ?? _appStore.user?.email;
     final userPhone = _userData?['phone'] ?? _appStore.user?.phone;
@@ -113,162 +115,283 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     return BlocProvider.value(
       value: _dashboardCubit,
       child: Scaffold(
-        appBar: CustomerHomeAppBar(backOpensDrawer: true),
-        body: Padding(
-          padding: horizontalPadding16,
-          child: BlocConsumer<DashboardCubit, DashboardState>(
-            listener: (context, state) {
-              if (state is DashboardUnauthorized) {
-                _handleUnauthorized();
-              }
-            },
-            builder: (context, state) {
-              // Default values
-              String totalBookings = '0';
-              String walletBalance = '0';
-              List<dynamic> recentBookings = [];
+        appBar: CustomerHomeAppBar(
+          backOpensDrawer: true,
+          actions: [
+            BlocBuilder<DashboardCubit, DashboardState>(
+              builder: (context, state) {
+                final isLoading = state is DashboardLoading;
+                return IconButton(
+                  onPressed: isLoading ? null : _onRefresh,
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: aquaBlueColor,
+                            ),
+                          )
+                        : Icon(
+                            Icons.refresh_rounded,
+                            color: aquaBlueColor,
+                            key: const ValueKey('refresh'),
+                          ),
+                  ),
+                  tooltip: 'Refresh',
+                );
+              },
+            ),
+            horizontalMargin8,
+          ],
+        ),
+        body: BlocConsumer<DashboardCubit, DashboardState>(
+          listener: (context, state) {
+            if (state is DashboardUnauthorized) {
+              _handleUnauthorized();
+            }
+          },
+          builder: (context, state) {
+            if (state is DashboardLoading) {
+              return _buildSkeletonLoading();
+            }
 
-              if (state is DashboardLoaded) {
-                totalBookings = (state.data['total_bookings'] ?? 0).toString();
-                walletBalance = (state.data['wallet_balance'] ?? 0).toString();
-                recentBookings = state.data['recent_bookings'] ?? [];
-              }
+            if (state is DashboardError) {
+              return _buildErrorState(state.message);
+            }
 
-              return ListView(
+            String totalBookings = '0';
+            List<dynamic> recentBookings = [];
+
+            if (state is DashboardLoaded) {
+              totalBookings = (state.data['total_bookings'] ?? 0).toString();
+              recentBookings = state.data['recent_bookings'] ?? [];
+            }
+
+            return RefreshIndicator(
+              onRefresh: _onRefresh,
+              color: aquaBlueColor,
+              child: ListView(
+                padding: horizontalPadding16,
                 children: [
                   verticalMargin16,
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // User Info Section
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.grey[200],
-                            backgroundImage: userImage != null && userImage.toString().isNotEmpty
-                                ? CachedNetworkImageProvider(
-                                    userImage.toString().startsWith('http') 
-                                        ? userImage.toString() 
-                                        : _getImageUrl(userImage.toString())
-                                  )
-                                : null,
-                            child: userImage == null || userImage.toString().isEmpty
-                                ? const Icon(Icons.person, color: Colors.grey)
-                                : null,
-                          ),
-                          horizontalMargin12,
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text.rich(
-                                style: context.bodyLarge.copyWith(
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                TextSpan(
-                                  text: "Hey, ",
-                                  children: [
-                                    TextSpan(
-                                      text: userName,
-                                      style: context.bodyLarge.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                        color: aquaBlueColor,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                userContact,
-                                style: context.labelLarge.copyWith(
-                                  fontWeight: FontWeight.w300,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      verticalMargin24,
-                      // Dashboard Stats Section
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Dashboard",
-                            style: context.labelLarge.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          verticalMargin16,
-                          if (state is DashboardLoading)
-                            const Center(child: CircularProgressIndicator())
-                          else
-                            DashboardStatCrump(
-                              title: "Total Orders",
-                              icon: AppAssets.iconCartSvg,
-                              percent: "",
-                              isProfit: true,
-                              statValue: totalBookings,
-                              displayCurrency: false,
-                              backgroundIconColor: lightPastelPinkColor,
-                            ),
-                            // Wallet Balance - Hidden for now
-                            // Expanded(
-                            //   child: DashboardStatCrump(
-                            //     title: "Wallet\nBalance",
-                            //     icon: AppAssets.iconWalletSvg,
-                            //     percent: "",
-                            //     isProfit: true,
-                            //     statValue: walletBalance,
-                            //     displayCurrency: true,
-                            //     backgroundIconColor: lightPastelGreenColor,
-                            //   ),
-                            // ),
-                        ],
-                      ),
-                      verticalMargin24,
-                      // Recent Bookings Section
-                      Text(
-                        "Recent Bookings",
-                        style: context.labelLarge.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      verticalMargin8,
-                      if (state is DashboardLoading)
-                        const Center(child: CircularProgressIndicator())
-                      else if (recentBookings.isEmpty)
-                        Container(
-                          padding: allPadding16,
-                          child: Center(
-                            child: Text(
-                              'No bookings yet',
-                              style: context.bodyMedium.copyWith(color: Colors.grey),
-                            ),
-                          ),
-                        )
-                      else
-                        ...recentBookings.take(5).map((booking) {
-                          final service = booking['service'];
-                          final gallery = service?['gallery'] as List?;
-                          String? imageUrl;
-                          if (gallery != null && gallery.isNotEmpty) {
-                            imageUrl = _getImageUrl(gallery[0]['img']);
-                          }
-                          return RecentBookingTile(
-                            title: service?['title'] ?? 'Service',
-                            date: booking['created_at']?.toString().split('T')[0] ?? '',
-                            imageUrl: imageUrl,
-                          );
-                        }),
-                      verticalMargin48,
-                    ],
-                  ),
+                  _buildUserInfoSection(userName, userContact, userImage),
+                  verticalMargin24,
+                  _buildDashboardSection(totalBookings),
+                  verticalMargin24,
+                  _buildRecentBookingsSection(recentBookings),
+                  verticalMargin48,
                 ],
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _buildSkeletonLoading() {
+    return Padding(
+      padding: horizontalPadding16,
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        children: const [
+          SizedBox(height: 16),
+          DashboardSkeleton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: horizontalPadding24,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: allPadding24,
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: Colors.red.shade400,
+              ),
+            ),
+            verticalMargin24,
+            Text(
+              'Oops! Something went wrong',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            verticalMargin8,
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade600,
+              ),
+            ),
+            verticalMargin24,
+            ElevatedButton.icon(
+              onPressed: _onRefresh,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: aquaBlueColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserInfoSection(String userName, String userContact, dynamic userImage) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: Colors.grey[200],
+          backgroundImage: userImage != null && userImage.toString().isNotEmpty
+              ? CachedNetworkImageProvider(
+                  userImage.toString().startsWith('http')
+                      ? userImage.toString()
+                      : _getImageUrl(userImage.toString()),
+                )
+              : null,
+          child: userImage == null || userImage.toString().isEmpty
+              ? const Icon(Icons.person, color: Colors.grey)
+              : null,
+        ),
+        horizontalMargin12,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text.rich(
+                style: context.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w400,
+                ),
+                TextSpan(
+                  text: "Hey, ",
+                  children: [
+                    TextSpan(
+                      text: userName,
+                      style: context.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: aquaBlueColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (userContact.isNotEmpty)
+                Text(
+                  userContact,
+                  style: context.labelLarge.copyWith(
+                    fontWeight: FontWeight.w300,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDashboardSection(String totalBookings) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Dashboard",
+          style: context.labelLarge.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        verticalMargin16,
+        DashboardStatCrump(
+          title: "Total Orders",
+          icon: AppAssets.iconCartSvg,
+          percent: "",
+          isProfit: true,
+          statValue: totalBookings,
+          displayCurrency: false,
+          backgroundIconColor: lightPastelPinkColor,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentBookingsSection(List<dynamic> recentBookings) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Recent Bookings",
+          style: context.labelLarge.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        verticalMargin12,
+        if (recentBookings.isEmpty)
+          Container(
+            padding: allPadding24,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.event_note_outlined,
+                    size: 40,
+                    color: Colors.grey.shade400,
+                  ),
+                  verticalMargin8,
+                  Text(
+                    'No bookings yet',
+                    style: context.bodyMedium.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...recentBookings.take(5).map((booking) {
+            final service = booking['service'];
+            final gallery = service?['gallery'] as List?;
+            String? imageUrl;
+            if (gallery != null && gallery.isNotEmpty) {
+              imageUrl = _getImageUrl(gallery[0]['img']);
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: RecentBookingTile(
+                title: service?['title'] ?? 'Service',
+                date: booking['created_at']?.toString().split('T')[0] ?? '',
+                imageUrl: imageUrl,
+              ),
+            );
+          }),
+      ],
     );
   }
 }
