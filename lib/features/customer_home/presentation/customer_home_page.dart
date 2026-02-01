@@ -116,6 +116,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       value: _dashboardCubit,
       child: Scaffold(
         appBar: CustomerHomeAppBar(
+          singleTitle: "Dashboard",
           backOpensDrawer: true,
           actions: [
             BlocBuilder<DashboardCubit, DashboardState>(
