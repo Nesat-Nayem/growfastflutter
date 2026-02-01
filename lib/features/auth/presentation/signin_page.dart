@@ -106,6 +106,25 @@ class _SigninPageState extends State<SigninPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Back button
+                      GestureDetector(
+                        onTap: () {
+                          context.goNamed(AppRouterNames.home);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      verticalMargin16,
                       Text(
                         "Welcome To\nLogin",
                         style: context.titleLarge.copyWith(
