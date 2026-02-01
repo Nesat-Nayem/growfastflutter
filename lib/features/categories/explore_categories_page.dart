@@ -27,7 +27,10 @@ class _ExploreCategoriesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomerHomeAppBar(backGoesToHome: true),
+      appBar: CustomerHomeAppBar(
+        singleTitle: "Categories",
+        backGoesToHome: true,
+      ),
       body: Padding(
         padding: horizontalPadding16 + topPadding24,
         child: Column(
