@@ -58,4 +58,12 @@ class AppRouterNames {
   static const search = 'search';
 
   static const ModernCustomerDrawer = 'ModernCustomerDrawer';
+
+  static const vendorDashboard = 'vendor-dashboard';
+
+  static const vendorChoosePlan = 'vendor-choose-plan';
+
+  static const vendorKycForm = 'vendor-kyc-form';
+
+  static const vendorConfirmRegistration = 'vendor-confirm-registration';
 }

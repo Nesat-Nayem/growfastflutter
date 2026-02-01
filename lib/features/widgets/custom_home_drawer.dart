@@ -379,13 +379,7 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
               label: "Become a vendor",
               onTap: () {
                 Navigator.of(context).pop(); // Close drawer first
-                context.pushNamed(
-                  AppRouterNames.vendorWebView,
-                  queryParameters: {
-                    'url': 'https://growfirst.org/become-vendor',
-                    'title': 'Become a Vendor',
-                  },
-                );
+                context.pushNamed(AppRouterNames.vendorDashboard);
               },
               color: Color(0XFF5ECFE0),
             ),

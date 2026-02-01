@@ -67,4 +67,12 @@ class AppRouterPaths {
   static String searchPath = '/${AppRouterNames.search}';
 
   static String ModernCustomerDrawerPath= '/${AppRouterNames.ModernCustomerDrawer}';
+
+  static String vendorDashboardPath = '/${AppRouterNames.vendorDashboard}';
+
+  static String vendorChoosePlanPath = '/${AppRouterNames.vendorChoosePlan}';
+
+  static String vendorKycFormPath = '/${AppRouterNames.vendorKycForm}';
+
+  static String vendorConfirmRegistrationPath = '/${AppRouterNames.vendorConfirmRegistration}';
 }

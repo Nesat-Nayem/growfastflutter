@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
@@ -19,13 +20,13 @@ class VendorRegistrationChoosePlan extends StatelessWidget {
         child: Padding(
           padding: bottomPadding12 + horizontalPadding16,
           child: Column(
-            mainAxisAlignment: .end,
-            mainAxisSize: .min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
               GradientButton(
                 text: "Next",
                 onTap: () {
-                  context.pushNamed('vendorKycForm');
+                  context.pushNamed(AppRouterNames.vendorKycForm);
                 },
                 // iconWithTitle: Padding(
                 //   padding: horizontalPadding4 / 2,

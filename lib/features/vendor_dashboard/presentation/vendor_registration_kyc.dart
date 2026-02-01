@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:go_router/go_router.dart';
+import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
@@ -25,13 +26,13 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
         child: Padding(
           padding: bottomPadding12 + horizontalPadding16,
           child: Column(
-            mainAxisAlignment: .end,
-            mainAxisSize: .min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
               GradientButton(
                 text: "Next",
                 onTap: () {
-                  context.goNamed('vendorConfirmRegistration');
+                  context.goNamed(AppRouterNames.vendorConfirmRegistration);
                 },
                 textStyle: context.labelLarge.copyWith(color: whiteColor),
               ),

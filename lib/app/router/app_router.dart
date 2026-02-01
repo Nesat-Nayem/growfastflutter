@@ -35,6 +35,10 @@ import 'package:grow_first/features/splash/splash_page.dart';
 import 'package:grow_first/features/wallet/presentation/customer_wallet_page.dart';
 import 'package:grow_first/features/webview/vendor_webview_page.dart';
 import 'package:grow_first/features/widgets/custom_home_drawer.dart';
+import 'package:grow_first/features/vendor_dashboard/presentation/vender_dashboard_page.dart';
+import 'package:grow_first/features/vendor_dashboard/presentation/vendor_registration_choose_plan.dart';
+import 'package:grow_first/features/vendor_dashboard/presentation/vendor_registration_kyc.dart';
+import 'package:grow_first/features/vendor_dashboard/presentation/vendor_confirm_registration.dart';
 import '../bloc/app_bloc/app_bloc.dart';
 
 class AppRouter {
@@ -66,10 +70,10 @@ class AppRouter {
     AppRouterPaths.accountSettingsPath,
     AppRouterPaths.ModernCustomerDrawerPath,
     AppRouterPaths.vendorWebViewPath,
-    '/vendor-dashboard',
-    '/vendor-choose-plan',
-    '/vendor-kyc-form',
-    '/vendor-confirm-registration',
+    AppRouterPaths.vendorDashboardPath,
+    AppRouterPaths.vendorChoosePlanPath,
+    AppRouterPaths.vendorKycFormPath,
+    AppRouterPaths.vendorConfirmRegistrationPath,
   ];
 
   static GoRouter buildRouter(AppBloc appBloc) {
@@ -349,6 +353,26 @@ class AppRouter {
           name: AppRouterNames.search,
           path: AppRouterPaths.searchPath,
           builder: (_, state) => const SearchPage(),
+        ),
+        GoRoute(
+          name: AppRouterNames.vendorDashboard,
+          path: AppRouterPaths.vendorDashboardPath,
+          builder: (_, state) => const VendorDashboardPage(),
+        ),
+        GoRoute(
+          name: AppRouterNames.vendorChoosePlan,
+          path: AppRouterPaths.vendorChoosePlanPath,
+          builder: (_, state) => const VendorRegistrationChoosePlan(),
+        ),
+        GoRoute(
+          name: AppRouterNames.vendorKycForm,
+          path: AppRouterPaths.vendorKycFormPath,
+          builder: (_, state) => const VendorUploadKycPage(),
+        ),
+        GoRoute(
+          name: AppRouterNames.vendorConfirmRegistration,
+          path: AppRouterPaths.vendorConfirmRegistrationPath,
+          builder: (_, state) => const VendorConfirmRegistration(),
         ),
       ],
     );

@@ -18,6 +18,7 @@ import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:grow_first/features/widgets/custom_text_field.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 
+
 class VendorDashboardPage extends StatefulWidget {
   const VendorDashboardPage({super.key});
 
@@ -301,7 +302,7 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
                 bloc: sl<VendorBloc>(),
                 listener: (context, state) {
                   if (state.step1Success) {
-                    context.pushNamed('vendorChoosePlanForm');
+                    context.pushNamed(AppRouterNames.vendorChoosePlan);
                   }
                 },
                 child: GradientButton(
