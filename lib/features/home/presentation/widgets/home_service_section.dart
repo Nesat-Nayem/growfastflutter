@@ -11,7 +11,6 @@ import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/home/data/model/service_section_model.dart';
 import 'package:grow_first/features/listing/presentation/widgets/contact_supplier_simple_popup.dart';
-import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:grow_first/features/widgets/shimmer.dart';
 
 class HomeServiceSection extends StatelessWidget {
@@ -37,6 +36,14 @@ class HomeServiceSection extends StatelessWidget {
     if (services.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    // Calculate card dimensions to match listing page grid view
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final horizontalPadding = 6.0; // horizontalPadding3 * 2
+    final cardGap = 8.0;
+    final cardWidth = (screenWidth - horizontalPadding - cardGap) / 2;
+    // Use same aspect ratio as listing page (0.58)
+    final cardHeight = cardWidth / 0.58;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,14 +73,17 @@ class HomeServiceSection extends StatelessWidget {
         ),
         verticalMargin8,
         SizedBox(
-          height: min(340, MediaQuery.sizeOf(context).height * 0.45),
+          height: cardHeight,
           child: ListView.separated(
             clipBehavior: Clip.none,
             scrollDirection: Axis.horizontal,
             itemCount: min(10, services.length),
-            separatorBuilder: (_, __) => horizontalMargin12,
+            separatorBuilder: (_, __) => SizedBox(width: cardGap),
             itemBuilder: (context, index) {
-              return _ServiceSectionCard(service: services[index]);
+              return _ServiceSectionCard(
+                service: services[index],
+                cardWidth: cardWidth,
+              );
             },
           ),
         ),
@@ -111,12 +121,16 @@ class HomeServiceSection extends StatelessWidget {
 
 class _ServiceSectionCard extends StatelessWidget {
   final ServiceSectionModel service;
+  final double? cardWidth;
 
-  const _ServiceSectionCard({required this.service});
+  const _ServiceSectionCard({required this.service, this.cardWidth});
 
   @override
   Widget build(BuildContext context) {
     final imageUrl = _resolveImageUrl();
+    // Calculate card width: (screen width - horizontal padding - gap between cards) / 2
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final calculatedWidth = cardWidth ?? ((screenWidth - 6 - 8) / 2); // 6 = horizontalPadding3*2, 8 = gap
 
     return InkWell(
       onTap: () {
@@ -126,40 +140,35 @@ class _ServiceSectionCard extends StatelessWidget {
         );
       },
       child: Container(
-        width: 200,
+        width: calculatedWidth,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
           color: Colors.white,
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image with location badge
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(15),
-                  ),
+                AspectRatio(
+                  aspectRatio: 1.3,
                   child: imageUrl != null
                       ? CachedNetworkImage(
                           imageUrl: imageUrl,
-                          height: 135,
                           width: double.infinity,
                           fit: BoxFit.cover,
                           placeholder: (_, __) => Container(
-                            height: 135,
                             color: Colors.grey.shade200,
                           ),
                           errorWidget: (_, __, ___) => Container(
-                            height: 135,
                             color: Colors.grey.shade300,
                             child: const Icon(Icons.image_not_supported),
                           ),
                         )
                       : Container(
-                          height: 135,
                           color: lightGreySnowColor,
                           alignment: Alignment.center,
                           child: const Icon(Icons.image_not_supported_outlined),
@@ -172,22 +181,23 @@ class _ServiceSectionCard extends StatelessWidget {
                     left: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: 6,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: lightGreySnowColor.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 16),
+                          Icon(Icons.location_on, size: 12, color: Colors.grey.shade700),
                           const SizedBox(width: 2),
                           Text(
                             service.city!,
                             style: context.labelSmall.copyWith(
-                              fontWeight: FontWeight.w400,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
@@ -197,106 +207,139 @@ class _ServiceSectionCard extends StatelessWidget {
               ],
             ),
             // Content
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Rating row
-                  Row(
-                    children: [
-                      const Spacer(),
-                      const Icon(
-                        Icons.star_rounded,
-                        size: 16,
-                        color: selectiveYellowColor,
-                      ),
-                      Text(
-                        "(4.5)",
-                        style: context.labelSmall.copyWith(
-                          color: lightGreyTextColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  verticalMargin4,
-                  // Title
-                  Text(
-                    service.title,
-                    style: context.labelMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  verticalMargin8,
-                  // Price
-                  Text.rich(
-                    TextSpan(
-                      text: "₹",
-                      style: context.labelMedium.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Rating row
+                    Row(
                       children: [
-                        TextSpan(
-                          text: service.price,
-                          style: context.bodySmall.copyWith(
-                            fontWeight: FontWeight.w700,
+                        const Spacer(),
+                        Icon(Icons.star, size: 14, color: selectiveYellowColor),
+                        const SizedBox(width: 2),
+                        Text(
+                          "(4.5)",
+                          style: context.labelSmall.copyWith(
+                            color: lightGreyTextColor,
+                            fontSize: 11,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  verticalMargin8,
-                  // Book Now Button
-                  GradientButton(
-                    text: "Book Now",
-                    onTap: () {
-                      final appStore = sl<AppStore>();
-                      if (appStore.isLoggedIn) {
-                        context.pushNamed(
-                          AppRouterNames.customerSelectBookingLocation,
-                          pathParameters: {"listingId": service.id.toString()},
-                        );
-                      } else {
-                        context.pushNamed(
-                          AppRouterNames.signIn,
-                          extra: {
-                            "redirectTo":
+                    const SizedBox(height: 4),
+                    // Title
+                    Text(
+                      service.title,
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    // Price
+                    Text(
+                      "₹${service.price}",
+                      style: context.labelLarge.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Book Now Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 34,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF00C6C6), Color(0xFF0099CC)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final appStore = sl<AppStore>();
+                            if (appStore.isLoggedIn) {
+                              context.pushNamed(
                                 AppRouterNames.customerSelectBookingLocation,
-                            "listingId": service.id.toString(),
+                                pathParameters: {"listingId": service.id.toString()},
+                              );
+                            } else {
+                              context.pushNamed(
+                                AppRouterNames.signIn,
+                                extra: {
+                                  "redirectTo": AppRouterNames.customerSelectBookingLocation,
+                                  "listingId": service.id.toString(),
+                                },
+                              );
+                            }
                           },
-                        );
-                      }
-                    },
-                    padding: verticalPadding12,
-                    borderRadius: 6,
-                    textStyle: context.labelMedium.copyWith(color: whiteColor),
-                  ),
-                  verticalMargin8,
-                  // Contact Supplier Button
-                  GradientButton(
-                    text: "Contact Supplier",
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ContactSupplierSimplePopup(
-                            serviceId: service.id,
-                            serviceTitle: service.title,
-                            servicePrice: service.price,
-                            serviceCity: service.city ?? '',
-                            serviceImageUrl: _resolveImageUrl(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: whiteColor,
+                            elevation: 0,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          child: Text(
+                            "Book Now",
+                            style: context.labelSmall.copyWith(
+                              color: whiteColor,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      );
-                    },
-                    hideGradient: true,
-                    padding: verticalPadding12,
-                    borderRadius: 6,
-                    backgroundColor: greyButttonColor,
-                    textStyle: context.labelMedium,
-                  ),
-                ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Contact Supplier Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 34,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ContactSupplierSimplePopup(
+                                serviceId: service.id,
+                                serviceTitle: service.title,
+                                servicePrice: service.price,
+                                serviceCity: service.city ?? '',
+                                serviceImageUrl: _resolveImageUrl(),
+                              ),
+                            ),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: textBlackColor,
+                          side: BorderSide(color: Colors.grey.shade300),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            "Contact Supplier",
+                            style: context.labelSmall.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
