@@ -228,9 +228,9 @@ class _ContactSupplierPopupState extends State<ContactSupplierPopup> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.listing.user.companyName.isNotEmpty 
-                                    ? widget.listing.user.companyName 
-                                    : widget.listing.user.name,
+                                (widget.listing.user?.companyName.isNotEmpty ?? false)
+                                    ? widget.listing.user!.companyName 
+                                    : (widget.listing.user?.name ?? 'Unknown'),
                                 style: context.labelLarge.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),

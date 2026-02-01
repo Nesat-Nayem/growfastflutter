@@ -9,7 +9,7 @@ class Listing extends Equatable {
   final String? image;
   final int userId;
   final int categoryId;
-  final int subcategoryId;
+  final int? subcategoryId;
   final String price;
   final String description;
   final String? additionalServices;
@@ -26,7 +26,7 @@ class Listing extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<Gallery> gallery;
-  final User user;
+  final User? user;
   final List<Include> includes;
   final List<Faq> faqs;
   final List<Review> reviews;
@@ -44,7 +44,7 @@ class Listing extends Equatable {
     this.image,
     required this.userId,
     required this.categoryId,
-    required this.subcategoryId,
+    this.subcategoryId,
     required this.price,
     required this.description,
     this.additionalServices,
@@ -61,7 +61,7 @@ class Listing extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     required this.gallery,
-    required this.user,
+    this.user,
     required this.includes,
     required this.faqs,
     required this.reviews,

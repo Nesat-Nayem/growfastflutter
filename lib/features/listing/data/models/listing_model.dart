@@ -10,7 +10,7 @@ class ListingModel extends Listing {
     super.image,
     required super.userId,
     required super.categoryId,
-    required super.subcategoryId,
+    super.subcategoryId,
     required super.price,
     required super.description,
     super.additionalServices,
@@ -27,7 +27,7 @@ class ListingModel extends Listing {
     required super.createdAt,
     required super.updatedAt,
     required super.gallery,
-    required super.user,
+    super.user,
     required super.includes,
     required super.faqs,
     required super.reviews,
@@ -45,12 +45,12 @@ class ListingModel extends Listing {
         : const [];
 
     return ListingModel(
-      id: json['id'],
-      slug: json['slug'],
-      title: json['title'],
+      id: json['id'] ?? 0,
+      slug: json['slug'] ?? '',
+      title: json['title'] ?? '',
       image: json['image'],
-      userId: json['user_id'],
-      categoryId: json['category_id'],
+      userId: json['user_id'] ?? 0,
+      categoryId: json['category_id'] ?? 0,
       subcategoryId: json['subcategory_id'],
       price: json['price']?.toString() ?? '0',
       description: json['description'] ?? '',
@@ -61,27 +61,27 @@ class ListingModel extends Listing {
       state: json['state']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
       pincode: json['pincode']?.toString() ?? '',
-      status: int.tryParse(json['status'].toString()) ?? 0,
-      view: int.tryParse(json['view'].toString()) ?? 0,
-      trustSeal: int.tryParse(json['trust_seal'].toString()) ?? 0,
+      status: int.tryParse(json['status']?.toString() ?? '0') ?? 0,
+      view: int.tryParse(json['view']?.toString() ?? '0') ?? 0,
+      trustSeal: int.tryParse(json['trust_seal']?.toString() ?? '0') ?? 0,
       gstNumber: json['gst_number'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
       gallery: (json['gallery'] as List? ?? [])
-          .map((e) => Gallery.fromJson(e))
+          .map((e) => Gallery.fromJson(e as Map<String, dynamic>))
           .toList(),
-      user: User.fromJson(json['user']),
+      user: json['user'] != null ? User.fromJson(json['user'] as Map<String, dynamic>) : null,
       includes: (json['includes'] as List? ?? [])
-          .map((e) => Include.fromJson(e))
+          .map((e) => Include.fromJson(e as Map<String, dynamic>))
           .toList(),
-      faqs: (json['faqs'] as List? ?? []).map((e) => Faq.fromJson(e)).toList(),
-      reviews: reviewsJson.map((e) => ReviewModel.fromJson(e)).toList(),
+      faqs: (json['faqs'] as List? ?? []).map((e) => Faq.fromJson(e as Map<String, dynamic>)).toList(),
+      reviews: reviewsJson.map((e) => ReviewModel.fromJson(e as Map<String, dynamic>)).toList(),
       overAllRating:
           double.tryParse(json['over_all_rating']?.toString() ?? '0') ?? 0,
       totalRatings: int.tryParse(json['total_ratings']?.toString() ?? '0') ?? 0,
       website: json['website_url'],
       reviewsBreakdown: json['reviews_breakdown'] != null
-          ? ReviewsBreakdown.fromJson(json['reviews_breakdown'])
+          ? ReviewsBreakdown.fromJson(json['reviews_breakdown'] as Map<String, dynamic>)
           : null,
       latitude: double.tryParse(json['latitude']?.toString() ?? ''),
       longitude: double.tryParse(json['longitude']?.toString() ?? ''),

@@ -92,7 +92,7 @@ class ListingTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        listing?.user.companyName ?? "",
+                        listing?.user?.companyName ?? "",
                         style: context.labelSmall.copyWith(
                           color: lightGreyTextColor,
                           fontSize: 11,

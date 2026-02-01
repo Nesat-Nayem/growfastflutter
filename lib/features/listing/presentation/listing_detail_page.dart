@@ -80,7 +80,7 @@ ${listing.title}
 
 💰 Price: ₹${listing.price}
 📍 Address: ${listing.address}
-📞 Phone: ${listing.user.phone}
+📞 Phone: ${listing.user?.phone ?? 'N/A'}
 
 View details:
 ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
@@ -288,7 +288,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "${listing?.user.companyName}",
+                          "${listing?.user?.companyName ?? ''}",
                           style: context.bodyMedium.copyWith(
                             color: lightGreyTextColor,
                           ),
