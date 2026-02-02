@@ -67,18 +67,7 @@ class PlanDto {
   static List<String> _parseFeatures(Map<String, dynamic> json) {
     final features = <String>[];
     
-    // Add banner limit feature first
-    if (json['banner_limit'] != null) {
-      final limit = json['banner_limit'];
-      features.add(limit == 0 ? 'Unlimited banners' : 'Up to $limit banners');
-    }
-    
-    // Add service limit feature
-    if (json['service_limit'] != null) {
-      features.add('Up to ${json['service_limit']} services');
-    }
-    
-    // Parse description to extract feature lines
+    // Parse description to extract feature lines (only dynamic data from admin)
     final description = json['description'];
     if (description != null) {
       String descText = description.toString();
