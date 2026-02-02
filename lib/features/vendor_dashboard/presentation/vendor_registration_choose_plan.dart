@@ -146,9 +146,9 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
             _openRazorpayCheckout(state);
           }
           
-          // When payment is stored successfully, navigate to KYC
+          // When payment is stored successfully, navigate to Confirmation
           if (state.paymentSuccess) {
-            context.pushNamed(AppRouterNames.vendorKycForm);
+            context.pushNamed(AppRouterNames.vendorConfirmRegistration);
           }
           
           // Show errors
@@ -165,11 +165,11 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
             child: Column(
               children: [
                 StepProgressHeader(
-                  currentStep: 1,
+                  currentStep: 2,
                   steps: const [
                     StepItem(label: "Basic Info", icon: Icons.info_outline),
-                    StepItem(label: "Choose\nPlan", icon: Icons.cast_outlined),
                     StepItem(label: "KYC Details", icon: Icons.description_outlined),
+                    StepItem(label: "Choose\nPlan", icon: Icons.cast_outlined),
                     StepItem(label: "Confirm\non", icon: Icons.check),
                   ],
                 ),

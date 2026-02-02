@@ -80,7 +80,7 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
   }
 
   void _skipKyc() {
-    context.goNamed(AppRouterNames.vendorConfirmRegistration);
+    context.goNamed(AppRouterNames.vendorChoosePlan);
   }
 
   @override
@@ -90,8 +90,8 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
       body: BlocConsumer<VendorBloc, VendorState>(
         bloc: sl<VendorBloc>(),
         listener: (context, state) {
-          if (state.kycSuccess || state.registrationComplete) {
-            context.goNamed(AppRouterNames.vendorConfirmRegistration);
+          if (state.kycSuccess) {
+            context.goNamed(AppRouterNames.vendorChoosePlan);
           }
           if (state.kycError != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -105,11 +105,11 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
             child: Column(
               children: [
                 StepProgressHeader(
-                  currentStep: 2,
+                  currentStep: 1,
                   steps: const [
                     StepItem(label: "Basic Info", icon: Icons.info_outline),
-                    StepItem(label: "Choose\nPlan", icon: Icons.cast_outlined),
                     StepItem(label: "KYC Details", icon: Icons.description_outlined),
+                    StepItem(label: "Choose\nPlan", icon: Icons.cast_outlined),
                     StepItem(label: "Confirm\non", icon: Icons.check),
                   ],
                 ),

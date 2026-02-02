@@ -115,7 +115,7 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
         },
         listener: (context, state) {
           if (state.step1Success) {
-            context.pushNamed(AppRouterNames.vendorChoosePlan);
+            context.pushNamed(AppRouterNames.vendorKycForm);
           }
           if (state.step1Error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
