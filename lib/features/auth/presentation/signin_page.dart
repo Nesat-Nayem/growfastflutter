@@ -96,12 +96,12 @@ class _SigninPageState extends State<SigninPage> {
         final token = response.data['token'];
         final userData = response.data['user'];
         
-        // Create AuthUserModel from response
+        // Create AuthUserModel from response with proper null handling
         final userModel = AuthUserModel.fromJson({
           'id': userData['id'],
           'ref_code': userData['ref_code'] ?? '',
           'ref_by': userData['ref_by'],
-          'name': userData['name'],
+          'name': userData['name'] ?? '',
           'user_name': userData['user_name'],
           'gender': userData['gender'],
           'date_of_birth': userData['date_of_birth'],
@@ -109,8 +109,8 @@ class _SigninPageState extends State<SigninPage> {
           'state': userData['state'],
           'city': userData['city'],
           'post_code': userData['post_code'],
-          'email': userData['email'],
-          'phone': userData['phone'],
+          'email': userData['email'] ?? '',
+          'phone': userData['phone'] ?? '',
           'address': userData['address'],
           'sub_locality': userData['sub_locality'],
           'image': userData['image'],
@@ -126,11 +126,11 @@ class _SigninPageState extends State<SigninPage> {
           'job_title': userData['job_title'],
           'customer_type_id': userData['customer_type_id'],
           'is_block': userData['is_block'] ?? 'N',
-          'role': userData['role'],
-          'status': userData['status']?.toString() ?? 'active',
-          'otp_created_at': userData['otp_created_at'],
+          'role': userData['role'] ?? 'user',
+          'status': userData['status'] ?? 0,
+          'otp_created_at': userData['otp_created_at'] ?? '',
           'step': userData['step'] ?? 0,
-          'otp': userData['otp'],
+          'otp': userData['otp'] ?? '',
           'created_at': userData['created_at'] ?? DateTime.now().toIso8601String(),
           'updated_at': userData['updated_at'] ?? DateTime.now().toIso8601String(),
           'description': userData['description'],
