@@ -8,12 +8,7 @@ class RegisterStep1UseCase {
 
   RegisterStep1UseCase(this.repository);
 
-  Future<Either<Failure, void>> call(VendorStep1Request request) async {
-    try {
-      await repository.registerStep1(request);
-      return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure());
-    }
+  Future<Either<Failure, VendorStep1Response>> call(VendorStep1Request request) {
+    return repository.registerStep1(request);
   }
 }

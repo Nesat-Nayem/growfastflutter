@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
-import 'package:grow_first/core/utils/sizing.dart';
+
 import 'package:grow_first/features/auth/presentation/bloc/country/country_cubit.dart';
 import 'package:grow_first/features/auth/presentation/bloc/country/country_state.dart';
 import 'package:grow_first/features/auth/presentation/widgets/mobile_number_filed_widget.dart';
@@ -14,10 +14,7 @@ import 'package:grow_first/features/vendor_dashboard/data/models/vendor_step_one
 import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_bloc.dart';
 import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_event.dart';
 import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_state.dart';
-import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:grow_first/features/widgets/custom_text_field.dart';
-import 'package:grow_first/features/widgets/gradient_button.dart';
-
 
 class VendorDashboardPage extends StatefulWidget {
   const VendorDashboardPage({super.key});
@@ -29,26 +26,33 @@ class VendorDashboardPage extends StatefulWidget {
 class _VendorDashboardPageState extends State<VendorDashboardPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController fullNameController = TextEditingController();
-  final TextEditingController companyNameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController mobileController = TextEditingController();
-  final TextEditingController websiteController = TextEditingController();
-  final TextEditingController gstNocontroller = TextEditingController();
-  final TextEditingController postalCodeController = TextEditingController();
+  final fullNameController = TextEditingController();
+  final companyNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final mobileController = TextEditingController();
+  final websiteController = TextEditingController();
+  final gstNocontroller = TextEditingController();
+  final postalCodeController = TextEditingController();
+  final localityController = TextEditingController();
+  final subLocalityController = TextEditingController();
+  final detailAddressController = TextEditingController();
+  final nameOfServiceController = TextEditingController();
 
-  // Dropdown selections
   String? selectedGender = 'Male';
   String? selectedCountry;
   String? selectedState;
   String? selectedCity;
+  int? selectedCountryId;
+  int? selectedStateId;
   bool isMobileValid = false;
 
   @override
   void initState() {
     super.initState();
-    // Load countries when page initializes
-    sl<VendorBloc>().add(LoadCountries());
+    // Reset vendor registration state to clear any stale data from previous sessions
+    sl<VendorBloc>().add(ResetVendorRegistration());
+    // Then load countries
+    Future.microtask(() => sl<VendorBloc>().add(LoadCountries()));
   }
 
   @override
@@ -60,293 +64,478 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
     websiteController.dispose();
     gstNocontroller.dispose();
     postalCodeController.dispose();
+    localityController.dispose();
+    subLocalityController.dispose();
+    detailAddressController.dispose();
+    nameOfServiceController.dispose();
     super.dispose();
+  }
+
+  void _submitStep1() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final request = VendorStep1Request(
+      fullName: fullNameController.text.trim(),
+      companyName: companyNameController.text.trim(),
+      email: emailController.text.trim(),
+      phone: mobileController.text.trim(),
+      gender: selectedGender ?? 'Male',
+      website: websiteController.text.trim().isEmpty ? null : websiteController.text.trim(),
+      gst: gstNocontroller.text.trim().isEmpty ? null : gstNocontroller.text.trim(),
+      country: selectedCountryId?.toString() ?? '',
+      state: selectedStateId?.toString() ?? '',
+      city: selectedCity ?? '',
+      locality: localityController.text.trim(),
+      subLocality: subLocalityController.text.trim(),
+      pincode: postalCodeController.text.trim(),
+      detailAddress: detailAddressController.text.trim(),
+      nameOfService: nameOfServiceController.text.trim(),
+    );
+
+    sl<VendorBloc>().add(SubmitVendorStep1(request));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomerHomeAppBar(singleTitle: "Become a vendor"),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              StepProgressHeader(
-                currentStep: 0,
-                steps: const [
-                  StepItem(label: "Basic Info", icon: Icons.info_outline),
-                  StepItem(label: "Choose Plan", icon: Icons.cast_outlined),
-                  StepItem(
-                    label: "KYC Details",
-                    icon: Icons.description_outlined,
-                  ),
-                  StepItem(label: "Confirmation", icon: Icons.check),
-                ],
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      verticalMargin16,
-                      // Full Name
-                      Text("Full Name", style: context.labelMedium),
-                      verticalMargin8,
-                      CustomTextField(
-                        controller: fullNameController,
-                        hintText: "Full Name",
-                        keyboardType: TextInputType.text,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return "Full Name is required";
-                          }
-                          return null;
-                        },
-                      ),
-                      verticalMargin16,
-
-                      // Company Name
-                      Text("Company Name", style: context.labelMedium),
-                      verticalMargin8,
-                      CustomTextField(
-                        controller: companyNameController,
-                        hintText: "Company Name",
-                        keyboardType: TextInputType.text,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return "Company Name is required";
-                          }
-                          return null;
-                        },
-                      ),
-                      verticalMargin16,
-
-                      // Email
-                      Text("Email", style: context.labelMedium),
-                      verticalMargin8,
-                      CustomTextField(
-                        controller: emailController,
-                        hintText: "Email",
-                        keyboardType: TextInputType.text,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return "Email is required";
-                          }
-                          final emailRegex = RegExp(
-                            r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
-                          );
-                          if (!emailRegex.hasMatch(value.trim())) {
-                            return "Enter a valid email";
-                          }
-                          return null;
-                        },
-                      ),
-                      verticalMargin16,
-
-                      // Mobile Number
-                      Text("Mobile Number", style: context.labelMedium),
-                      verticalMargin8,
-                      BlocBuilder<CountryCubit, CountryState>(
-                        bloc: sl<CountryCubit>(),
-                        builder: (context, state) {
-                          if (state is CountryLoaded) {
-                            return MobileNumberField(
-                              controller: mobileController,
-                              initialCountryCode: state.countries
-                                  .firstWhere(
-                                    (e) =>
-                                        e.code ==
-                                        PlatformDispatcher
-                                            .instance
-                                            .locale
-                                            .countryCode,
-                                  )
-                                  .code,
-                              initialFlagAsset: state.countries
-                                  .firstWhere(
-                                    (e) =>
-                                        e.code ==
-                                        PlatformDispatcher
-                                            .instance
-                                            .locale
-                                            .countryCode,
-                                  )
-                                  .flag,
-                              onValidChanged: (isValid) {
-                                setState(() {
-                                  isMobileValid = isValid;
-                                });
-                              },
-                            );
-                          }
-                          return const SizedBox();
-                        },
-                      ),
-                      GenderDropdownField(
-                        value: selectedGender,
-                        onChanged: (value) {
-                          setState(() => selectedGender = value);
-                        },
-                      ),
-                      if (selectedGender == null)
-                        Text(
-                          "Gender is required",
-                          style: TextStyle(color: Colors.red, fontSize: 12),
-                        ),
-                      verticalMargin16,
-
-                      // Website
-                      Text("Website (Optional)", style: context.labelMedium),
-                      verticalMargin8,
-                      CustomTextField(
-                        controller: websiteController,
-                        hintText: "www.yourwebsitedomain.com",
-                        keyboardType: TextInputType.text,
-                      ),
-                      verticalMargin16,
-
-                      // GST No
-                      Text("GST No. (Optional)", style: context.labelMedium),
-                      verticalMargin8,
-                      CustomTextField(
-                        controller: gstNocontroller,
-                        hintText: "Enter your GSTIN",
-                        keyboardType: TextInputType.text,
-                      ),
-                      verticalMargin16,
-
-                      // Country & State Row
-                      CountryStateRow(
-                        onCountryChanged: (value) {
-                          setState(() {
-                            selectedCountry = value;
-                            selectedState = null;
-                            selectedCity = null;
-                          });
-                        },
-                        onStateChanged: (value) {
-                          setState(() {
-                            selectedState = value;
-                            selectedCity = null;
-                          });
-                        },
-                        selectedCountry: selectedCountry,
-                        selectedState: selectedState,
-                      ),
-                      if (selectedCountry == null)
-                        Text(
-                          "Country is required",
-                          style: TextStyle(color: Colors.red, fontSize: 12),
-                        ),
-                      if (selectedState == null)
-                        Text(
-                          "State is required",
-                          style: TextStyle(color: Colors.red, fontSize: 12),
-                        ),
-                      verticalMargin16,
-
-                      // City
-                      BlocBuilder<VendorBloc, VendorState>(
-                        bloc: sl<VendorBloc>(),
-                        builder: (context, state) {
-                          return CustomDropdownField<String>(
-                            label: "City",
-                            hint: "Select City",
-                            value: selectedCity,
-                            onChanged: (value) {
-                              setState(() => selectedCity = value);
-                            },
-                            items: state.cities.map((city) {
-                              return DropdownMenuItem<String>(
-                                value: city.name,
-                                child: Text(city.name),
-                              );
-                            }).toList(),
-                          );
-                        },
-                      ),
-                      if (selectedCity == null)
-                        Text(
-                          "City is required",
-                          style: TextStyle(color: Colors.red, fontSize: 12),
-                        ),
-                      verticalMargin16,
-
-                      // Postal Code
-                      Text("Postal Code", style: context.labelMedium),
-                      verticalMargin8,
-                      CustomTextField(
-                        controller: postalCodeController,
-                        hintText: "Enter your postal code",
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return "Postal Code is required";
-                          }
-                          return null;
-                        },
-                        keyboardType: TextInputType.text,
-                      ),
-                      verticalMargin16,
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text("Become a vendor", style: TextStyle(color: Colors.black)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => context.pop(),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        bottom: true,
-        child: Padding(
-          padding: bottomPadding12 + horizontalPadding16,
-          child: Column(
-            mainAxisAlignment: .end,
-            mainAxisSize: .min,
+      body: BlocConsumer<VendorBloc, VendorState>(
+        bloc: sl<VendorBloc>(),
+        listenWhen: (previous, current) {
+          return (previous.step1Success != current.step1Success) ||
+                 (previous.step1Error != current.step1Error);
+        },
+        listener: (context, state) {
+          if (state.step1Success) {
+            context.pushNamed(AppRouterNames.vendorChoosePlan);
+          }
+          if (state.step1Error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.step1Error!), backgroundColor: Colors.red),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state.isLoading) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text("Loading..."),
+                ],
+              ),
+            );
+          }
+          
+          return Column(
             children: [
-              BlocListener<VendorBloc, VendorState>(
-                bloc: sl<VendorBloc>(),
-                listener: (context, state) {
-                  if (state.step1Success) {
-                    context.pushNamed(AppRouterNames.vendorChoosePlan);
-                  }
-                },
-                child: GradientButton(
-                  text: "Next",
-                  onTap: () {
-                    if (_formKey.currentState!.validate() &&
-                        selectedGender != null &&
-                        selectedCountry != null &&
-                        selectedState != null &&
-                        selectedCity != null) {
-                      // Navigate to next step directly
-                      context.pushNamed(AppRouterNames.vendorChoosePlan);
-                    } else {
-                      // show error
-                      setState(() {});
-                    }
-                  },
-                  textStyle: context.labelLarge.copyWith(color: whiteColor),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Step Progress Header
+                        _buildStepHeader(),
+                        const SizedBox(height: 16),
+                        
+                        // Full Name
+                        _buildLabel("Full Name *"),
+                        _buildTextInput(fullNameController, "Enter full name", required: true),
+                        
+                        // Company Name
+                        _buildLabel("Company Name *"),
+                        _buildTextInput(companyNameController, "Enter company name", required: true),
+                        
+                        // Email
+                        _buildLabel("Email *"),
+                        _buildTextInput(emailController, "Enter email", required: true, isEmail: true),
+                        
+                        // Mobile Number
+                        _buildLabel("Mobile Number *"),
+                        _buildMobileInput(),
+                        
+                        // Name of Service
+                        _buildLabel("Name of Service *"),
+                        _buildTextInput(nameOfServiceController, "e.g. Plumbing, Cleaning", required: true),
+                        
+                        // Gender
+                        _buildLabel("Gender"),
+                        _buildGenderDropdown(),
+                        
+                        // Website
+                        _buildLabel("Website (Optional)"),
+                        _buildTextInput(websiteController, "www.yourwebsite.com"),
+                        
+                        // GST No
+                        _buildLabel("GST No. (Optional)"),
+                        _buildTextInput(gstNocontroller, "Enter your GSTIN"),
+                        
+                        // Country & State Row
+                        Row(
+                          children: [
+                            Expanded(child: _buildCountryDropdown(state)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _buildStateDropdown(state)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // City
+                        _buildCityDropdown(state),
+                        const SizedBox(height: 16),
+                        
+                        // Locality
+                        _buildLabel("Locality (Optional)"),
+                        _buildTextInput(localityController, "Enter locality"),
+                        
+                        // Sub Locality
+                        _buildLabel("Sub Locality (Optional)"),
+                        _buildTextInput(subLocalityController, "Enter sub locality"),
+                        
+                        // Postal Code
+                        _buildLabel("Postal Code (Optional)"),
+                        _buildTextInput(postalCodeController, "Enter postal code"),
+                        
+                        // Detail Address
+                        _buildLabel("Detail Address *"),
+                        _buildTextInput(detailAddressController, "Enter full address", required: true),
+                        
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Next Button at bottom
+              SafeArea(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: state.isSubmittingStep1 ? null : _submitStep1,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10326B),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      state.isSubmittingStep1 ? "Submitting..." : "Next",
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
                 ),
               ),
             ],
-          ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStepHeader() {
+    return SizedBox(
+      height: 100,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStep(Icons.info_outline, "Basic Info", isActive: true),
+            _buildStepLine(),
+            _buildStep(Icons.cast_outlined, "Choose Plan"),
+            _buildStepLine(),
+            _buildStep(Icons.description_outlined, "KYC Details"),
+            _buildStepLine(),
+            _buildStep(Icons.check, "Confirmation"),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildStep(IconData icon, String label, {bool isActive = false, bool isCompleted = false}) {
+    return Column(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: isActive
+                ? const LinearGradient(colors: [Color(0xFF10326B), Color(0xFF30D3D9)])
+                : null,
+            color: isCompleted ? const Color(0xFF30D3D9) : (isActive ? null : Colors.white),
+            border: Border.all(
+              color: isActive || isCompleted ? Colors.transparent : Colors.grey.shade300,
+              width: 2,
+            ),
+          ),
+          child: Icon(icon, size: 22, color: isActive || isCompleted ? Colors.white : Colors.grey.shade500),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              color: isActive ? Colors.black : Colors.grey.shade600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepLine() {
+    return Container(
+      width: 20,
+      height: 2,
+      margin: const EdgeInsets.only(top: 24),
+      color: Colors.grey.shade300,
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(text, style: context.labelMedium),
+    );
+  }
+
+  Widget _buildTextInput(TextEditingController controller, String hint, {bool required = false, bool isEmail = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: CustomTextField(
+        controller: controller,
+        hintText: hint,
+        keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
+        validator: required
+            ? (value) {
+                if (value == null || value.trim().isEmpty) return "This field is required";
+                if (isEmail && !RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(value.trim())) {
+                  return "Enter a valid email";
+                }
+                return null;
+              }
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildMobileInput() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: BlocBuilder<CountryCubit, CountryState>(
+        bloc: sl<CountryCubit>(),
+        builder: (context, state) {
+          if (state is CountryLoaded) {
+            final defaultCountry = state.countries.firstWhere(
+              (e) => e.code == PlatformDispatcher.instance.locale.countryCode,
+              orElse: () => state.countries.first,
+            );
+            return MobileNumberField(
+              controller: mobileController,
+              initialCountryCode: defaultCountry.code,
+              initialFlagAsset: defaultCountry.flag,
+              onValidChanged: (isValid) => setState(() => isMobileValid = isValid),
+            );
+          }
+          return CustomTextField(
+            controller: mobileController,
+            hintText: "Mobile Number",
+            keyboardType: TextInputType.phone,
+            validator: (v) => v?.isEmpty == true ? "Required" : null,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: DropdownButtonFormField<String>(
+        dropdownColor: whiteColor,
+        value: selectedGender,
+        icon: const Icon(Icons.keyboard_arrow_down_rounded),
+        decoration: InputDecoration(
+          hintText: "Select Gender",
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: lightGreyColor, width: 1),
+          ),
+        ),
+        items: ["Male", "Female", "Other"]
+            .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+            .toList(),
+        onChanged: (v) => setState(() => selectedGender = v),
+      ),
+    );
+  }
+
+  Widget _buildCountryDropdown(VendorState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("Country"),
+        DropdownButtonFormField<String>(
+          value: selectedCountry,
+          isExpanded: true,
+          dropdownColor: Colors.white,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          decoration: InputDecoration(
+            hintText: "Select Country",
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+          ),
+          items: state.countries
+              .map((c) => DropdownMenuItem<String>(
+                    value: c.name,
+                    child: Text(c.name, overflow: TextOverflow.ellipsis),
+                  ))
+              .toList(),
+          onChanged: (value) {
+            if (value == null || state.countries.isEmpty) return;
+            final country = state.countries.firstWhere((c) => c.name == value);
+            setState(() {
+              selectedCountry = value;
+              selectedCountryId = country.id;
+              selectedState = null;
+              selectedStateId = null;
+              selectedCity = null;
+            });
+            sl<VendorBloc>().add(LoadStates(country.id));
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStateDropdown(VendorState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("State"),
+        DropdownButtonFormField<String>(
+          value: selectedState,
+          isExpanded: true,
+          dropdownColor: Colors.white,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          decoration: InputDecoration(
+            hintText: state.isStatesLoading ? "Loading..." : "Select State",
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+          ),
+          items: state.states
+              .map((s) => DropdownMenuItem<String>(
+                    value: s.name,
+                    child: Text(s.name, overflow: TextOverflow.ellipsis),
+                  ))
+              .toList(),
+          onChanged: (value) {
+            if (value == null || state.states.isEmpty) return;
+            final st = state.states.firstWhere((s) => s.name == value);
+            setState(() {
+              selectedState = value;
+              selectedStateId = st.id;
+              selectedCity = null;
+            });
+            sl<VendorBloc>().add(LoadCities(st.id));
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCityDropdown(VendorState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel("City"),
+        DropdownButtonFormField<String>(
+          value: selectedCity,
+          isExpanded: true,
+          dropdownColor: Colors.white,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          decoration: InputDecoration(
+            hintText: state.isCitiesLoading ? "Loading..." : "Select City",
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+          ),
+          items: state.cities
+              .map((city) => DropdownMenuItem<String>(
+                    value: city.name,
+                    child: Text(city.name, overflow: TextOverflow.ellipsis),
+                  ))
+              .toList(),
+          onChanged: (value) => setState(() => selectedCity = value),
+        ),
+      ],
+    );
+  }
 }
 
+// Keep these for other pages that import them
 class StepProgressHeader extends StatelessWidget {
   final int currentStep;
   final List<StepItem> steps;
 
-  const StepProgressHeader({
-    super.key,
-    required this.currentStep,
-    required this.steps,
-  });
+  const StepProgressHeader({super.key, required this.currentStep, required this.steps});
 
   @override
   Widget build(BuildContext context) {
@@ -358,15 +547,8 @@ class StepProgressHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: List.generate(steps.length * 2 - 1, (index) {
             if (index.isOdd) {
-              // Connector line
-              return Container(
-                width: 20,
-                margin: const EdgeInsets.only(top: 24),
-                height: 2,
-                color: Colors.grey.shade300,
-              );
+              return Container(width: 20, margin: const EdgeInsets.only(top: 24), height: 2, color: Colors.grey.shade300);
             }
-
             final stepIndex = index ~/ 2;
             final step = steps[stepIndex];
             final isActive = stepIndex == currentStep;
@@ -374,23 +556,11 @@ class StepProgressHeader extends StatelessWidget {
 
             return Column(
               children: [
-                _StepCircle(
-                  icon: step.icon,
-                  isActive: isActive,
-                  isCompleted: isCompleted,
-                ),
+                _StepCircle(icon: step.icon, isActive: isActive, isCompleted: isCompleted),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: 80,
-                  child: Text(
-                    step.label,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                      color: isActive ? Colors.black : Colors.grey.shade600,
-                    ),
-                  ),
+                  child: Text(step.label, textAlign: TextAlign.center, style: TextStyle(fontSize: 13, fontWeight: isActive ? FontWeight.w600 : FontWeight.w500, color: isActive ? Colors.black : Colors.grey.shade600)),
                 ),
               ],
             );
@@ -406,11 +576,7 @@ class _StepCircle extends StatelessWidget {
   final bool isActive;
   final bool isCompleted;
 
-  const _StepCircle({
-    required this.icon,
-    required this.isActive,
-    required this.isCompleted,
-  });
+  const _StepCircle({required this.icon, required this.isActive, required this.isCompleted});
 
   @override
   Widget build(BuildContext context) {
@@ -419,26 +585,11 @@ class _StepCircle extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: isActive
-            ? const LinearGradient(
-                colors: [Color(0xFF10326B), Color(0xFF30D3D9)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
+        gradient: isActive ? const LinearGradient(colors: [Color(0xFF10326B), Color(0xFF30D3D9)], begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
         color: isCompleted ? const Color(0xFF30D3D9) : Colors.white,
-        border: Border.all(
-          color: isActive || isCompleted
-              ? Colors.transparent
-              : Colors.grey.shade300,
-          width: 2,
-        ),
+        border: Border.all(color: isActive || isCompleted ? Colors.transparent : Colors.grey.shade300, width: 2),
       ),
-      child: Icon(
-        icon,
-        size: 22,
-        color: isActive || isCompleted ? Colors.white : Colors.grey.shade500,
-      ),
+      child: Icon(icon, size: 22, color: isActive || isCompleted ? Colors.white : Colors.grey.shade500),
     );
   }
 }
@@ -446,259 +597,5 @@ class _StepCircle extends StatelessWidget {
 class StepItem {
   final String label;
   final IconData icon;
-
   const StepItem({required this.label, required this.icon});
-}
-
-class GenderDropdownField extends StatelessWidget {
-  final String? value;
-  final ValueChanged<String?> onChanged;
-
-  const GenderDropdownField({super.key, this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Gender",
-          style: context.labelMedium.copyWith(
-            fontWeight: FontWeight.w400,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          dropdownColor: whiteColor,
-          initialValue: value,
-          icon: Padding(
-            padding: horizontalPadding12,
-            child: const Icon(Icons.keyboard_arrow_down_rounded),
-          ),
-          decoration: InputDecoration(
-            hintText: "Select Gender",
-            hintStyle: context.labelMedium.copyWith(
-              fontWeight: FontWeight.w400,
-              letterSpacing: 1.2,
-            ),
-            contentPadding: verticalPadding8 + horizontalPadding8,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: lightGreyColor, width: 1),
-            ),
-          ),
-          items: [
-            DropdownMenuItem(
-              value: "Male",
-              child: Text(
-                "Male",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-            DropdownMenuItem(
-              value: "Female",
-              child: Text(
-                "Female",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-            DropdownMenuItem(
-              value: "Other",
-              child: Text(
-                "Other",
-                style: context.labelMedium.copyWith(
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-          ],
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-}
-
-class CustomDropdownField<T> extends StatelessWidget {
-  final String label;
-  final T? value;
-  final String hint;
-  final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?> onChanged;
-
-  const CustomDropdownField({
-    super.key,
-    required this.label,
-    required this.hint,
-    required this.items,
-    required this.onChanged,
-    this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w400,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<T>(
-          value: value,
-          isExpanded: true,
-          dropdownColor: Colors.white,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-          style: context.labelMedium.copyWith(
-            fontWeight: FontWeight.w400,
-            letterSpacing: 1.2,
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: context.labelMedium.copyWith(
-              fontWeight: FontWeight.w400,
-              letterSpacing: 1.2,
-            ),
-
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 14,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
-            ),
-          ),
-          items: items,
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-}
-
-class CountryStateRow extends StatelessWidget {
-  final String? selectedCountry;
-  final String? selectedState;
-  final ValueChanged<String?>? onCountryChanged;
-  final ValueChanged<String?>? onStateChanged;
-
-  const CountryStateRow({
-    super.key,
-    this.selectedCountry,
-    this.selectedState,
-    this.onCountryChanged,
-    this.onStateChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // COUNTRY
-        BlocBuilder<VendorBloc, VendorState>(
-          bloc: sl<VendorBloc>(),
-          builder: (context, state) {
-            return Expanded(
-              child: CustomDropdownField<String>(
-                label: "Country",
-                hint: "Select Country",
-                value:
-                    selectedCountry ??
-                    (state.countries.isNotEmpty
-                        ? state.countries.first.name
-                        : null),
-                onChanged: (value) {
-                  if (onCountryChanged != null) {
-                    onCountryChanged!(value);
-                  }
-                  sl<VendorBloc>().add(
-                    LoadStates(
-                      state.countries
-                          .firstWhere((country) => country.name == value)
-                          .id,
-                    ),
-                  );
-                },
-                items: state.countries.map((country) {
-                  return DropdownMenuItem<String>(
-                    value: country.name,
-                    child: Text(
-                      country.name,
-                      style: context.labelMedium.copyWith(
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            );
-          },
-        ),
-
-        const SizedBox(width: 12),
-
-        // STATE
-        BlocBuilder<VendorBloc, VendorState>(
-          bloc: sl<VendorBloc>(),
-          builder: (context, state) {
-            return Expanded(
-              child: CustomDropdownField<String>(
-                label: "State",
-                hint: "Select State",
-                value:
-                    selectedState ??
-                    (state.states.isNotEmpty ? state.states.first.name : null),
-                onChanged: (value) {
-                  if (onStateChanged != null) {
-                    onStateChanged!(value);
-                  }
-                  sl<VendorBloc>().add(
-                    LoadCities(
-                      state.states
-                          .firstWhere((state) => state.name == value)
-                          .id,
-                    ),
-                  );
-                },
-                items: state.states.map((state) {
-                  return DropdownMenuItem<String>(
-                    value: state.name,
-                    child: Text(
-                      state.name,
-                      style: context.labelMedium.copyWith(
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
 }

@@ -1,102 +1,330 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
-import 'package:grow_first/core/utils/extensions/context_extensions.dart';
-import 'package:grow_first/core/utils/sizing.dart';
+import 'package:grow_first/features/home/di/injections.dart';
+import 'package:grow_first/features/vendor_dashboard/data/models/payment_order_dto.dart';
+import 'package:grow_first/features/vendor_dashboard/data/models/plan_dto.dart';
+import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_bloc.dart';
+import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_event.dart';
+import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_state.dart';
 import 'package:grow_first/features/vendor_dashboard/presentation/vender_dashboard_page.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
-import 'package:grow_first/features/widgets/gradient_button.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
-class VendorRegistrationChoosePlan extends StatelessWidget {
+class VendorRegistrationChoosePlan extends StatefulWidget {
   const VendorRegistrationChoosePlan({super.key});
+
+  @override
+  State<VendorRegistrationChoosePlan> createState() => _VendorRegistrationChoosePlanState();
+}
+
+class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChoosePlan> {
+  late Razorpay _razorpay;
+  int? selectedPlanId;
+  bool isProcessingPayment = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    
+    // Load plans
+    sl<VendorBloc>().add(const LoadPlans());
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    setState(() => isProcessingPayment = false);
+    
+    // Store payment
+    sl<VendorBloc>().add(StorePayment(StorePaymentRequest(
+      planId: selectedPlanId!,
+      transactionId: response.paymentId!,
+    )));
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    setState(() => isProcessingPayment = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment failed: ${response.message}'), backgroundColor: Colors.red),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    setState(() => isProcessingPayment = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('External wallet: ${response.walletName}')),
+    );
+  }
+
+  void _openRazorpayCheckout(VendorState state) {
+    if (state.paymentOrder == null) return;
+
+    final order = state.paymentOrder!;
+    final vendorData = state.vendorData;
+
+    var options = {
+      'key': order.key,
+      'amount': order.amount,
+      'order_id': order.orderId,
+      'name': 'Grow First',
+      'description': 'Vendor Subscription',
+      'prefill': {
+        'contact': vendorData?.phone ?? '',
+        'email': vendorData?.email ?? '',
+      },
+      'theme': {'color': '#10326B'},
+    };
+
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _selectAndPay(PlanDto plan) {
+    setState(() {
+      selectedPlanId = plan.id;
+      isProcessingPayment = true;
+    });
+
+    if (plan.isFree) {
+      // For free plan, directly store payment with empty transaction
+      sl<VendorBloc>().add(StorePayment(StorePaymentRequest(
+        planId: plan.id,
+        transactionId: 'FREE_${DateTime.now().millisecondsSinceEpoch}',
+      )));
+    } else {
+      // Create payment order for paid plans
+      sl<VendorBloc>().add(CreatePaymentOrder(planId: plan.id, gateway: 'razorpay'));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomerHomeAppBar(singleTitle: "Become a vendor"),
-      bottomNavigationBar: SafeArea(
-        bottom: true,
-        child: Padding(
-          padding: bottomPadding12 + horizontalPadding16,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GradientButton(
-                text: "Next",
-                onTap: () {
-                  context.pushNamed(AppRouterNames.vendorKycForm);
-                },
-                // iconWithTitle: Padding(
-                //   padding: horizontalPadding4 / 2,
-                //   child: Icon(
-                //     Icons.arrow_outward_rounded,
-                //     color: whiteColor,
-                //     size: 17,
-                //   ),
-                // ),
-                textStyle: context.labelLarge.copyWith(color: whiteColor),
-              ),
-            ],
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            StepProgressHeader(
-              currentStep: 1,
-              steps: const [
-                StepItem(label: "Basic Info", icon: Icons.info_outline),
-                StepItem(label: "Choose Plan", icon: Icons.cast_outlined),
-                StepItem(
-                  label: "KYC Details",
-                  icon: Icons.description_outlined,
+      body: BlocConsumer<VendorBloc, VendorState>(
+        bloc: sl<VendorBloc>(),
+        listener: (context, state) {
+          // When payment order is created, open Razorpay
+          if (state.paymentOrder != null && isProcessingPayment) {
+            _openRazorpayCheckout(state);
+          }
+          
+          // When payment is stored successfully, navigate to KYC
+          if (state.paymentSuccess) {
+            context.pushNamed(AppRouterNames.vendorKycForm);
+          }
+          
+          // Show errors
+          if (state.paymentError != null) {
+            setState(() => isProcessingPayment = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.paymentError!), backgroundColor: Colors.red),
+            );
+          }
+        },
+        builder: (context, state) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                StepProgressHeader(
+                  currentStep: 1,
+                  steps: const [
+                    StepItem(label: "Basic Info", icon: Icons.info_outline),
+                    StepItem(label: "Choose Plan", icon: Icons.cast_outlined),
+                    StepItem(label: "KYC Details", icon: Icons.description_outlined),
+                    StepItem(label: "Confirmation", icon: Icons.check),
+                  ],
                 ),
-                StepItem(label: "Confirmation", icon: Icons.check),
+                Expanded(
+                  child: state.isLoadingPlans
+                      ? const Center(child: CircularProgressIndicator())
+                      : SingleChildScrollView(
+                          child: PricingContent(
+                            plans: state.plans,
+                            selectedPlanId: selectedPlanId,
+                            isProcessing: isProcessingPayment || state.isCreatingOrder || state.isStoringPayment,
+                            onSelectPlan: _selectAndPay,
+                          ),
+                        ),
+                ),
               ],
             ),
-            Expanded(child: SingleChildScrollView(child: PricingPage())),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-class PricingPage extends StatefulWidget {
-  const PricingPage({super.key});
+class PricingContent extends StatelessWidget {
+  final List<PlanDto> plans;
+  final int? selectedPlanId;
+  final bool isProcessing;
+  final Function(PlanDto) onSelectPlan;
+
+  const PricingContent({
+    super.key,
+    required this.plans,
+    this.selectedPlanId,
+    required this.isProcessing,
+    required this.onSelectPlan,
+  });
 
   @override
-  State<PricingPage> createState() => _PricingPageState();
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text("Pricing Plan", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          const Text(
+            "Affordable plans designed to match your\nneeds and budget.",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: textLightColor),
+          ),
+          const SizedBox(height: 30),
+          
+          if (plans.isEmpty)
+            const Center(child: Text("No plans available"))
+          else
+            ...plans.map((plan) => Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: PlanCard(
+                plan: plan,
+                isSelected: selectedPlanId == plan.id,
+                isProcessing: isProcessing && selectedPlanId == plan.id,
+                onSelect: () => onSelectPlan(plan),
+              ),
+            )),
+        ],
+      ),
+    );
+  }
 }
 
-class _PricingPageState extends State<PricingPage> {
-  bool isMonthlySelected = true;
+class PlanCard extends StatelessWidget {
+  final PlanDto plan;
+  final bool isSelected;
+  final bool isProcessing;
+  final VoidCallback onSelect;
 
-  Widget _toggleItem(String text, bool selected) {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          isMonthlySelected = !isMonthlySelected;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEAF1FF) : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.black : Colors.grey,
+  const PlanCard({
+    super.key,
+    required this.plan,
+    required this.isSelected,
+    required this.isProcessing,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        gradient: isSelected
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF5FA8C8), Color(0xFF9ED2E0)],
+              )
+            : null,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
+        border: isSelected ? Border.all(color: const Color(0xFF30D3D9), width: 2) : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                height: 52,
+                width: 52,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: const LinearGradient(colors: [Color(0xFF6DD5ED), Color(0xFF2193B0)]),
+                ),
+                child: Icon(plan.isFree ? Icons.star_outline : Icons.diamond_outlined, color: Colors.white),
+              ),
+              if (plan.isFree)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.green,
+                  ),
+                  child: const Text("FREE", style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
+            ],
           ),
-        ),
+          const SizedBox(height: 20),
+          Text(plan.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text(plan.description ?? "Get started with our ${plan.name} plan", style: TextStyle(color: isSelected ? null : Colors.grey, fontSize: 15)),
+          const SizedBox(height: 20),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: plan.isFree ? "Free" : "₹${plan.amount.toStringAsFixed(0)}",
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
+                ),
+                if (!plan.isFree)
+                  TextSpan(
+                    text: "  / ${plan.duration} months",
+                    style: TextStyle(color: isSelected ? Colors.black : Colors.grey, fontSize: 14),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Divider(),
+          const SizedBox(height: 16),
+          if (plan.serviceLimit != null) _featureItem("Up to ${plan.serviceLimit} services"),
+          if (plan.bannerLimit != null) _featureItem("Up to ${plan.bannerLimit} banners"),
+          _featureItem("24/7 Customer Support"),
+          _featureItem("Dashboard Access"),
+          const SizedBox(height: 30),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: isProcessing
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    onPressed: onSelect,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isSelected ? Colors.white : const Color(0xFF10326B),
+                      foregroundColor: isSelected ? const Color(0xFF10326B) : Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: Text(plan.isFree ? "Start Free" : "Choose Plan", style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -106,364 +334,9 @@ class _PricingPageState extends State<PricingPage> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          const Icon(Icons.check_circle, color: Colors.black, size: 20),
+          const Icon(Icons.check_circle, color: Colors.green, size: 20),
           const SizedBox(width: 10),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
-        ],
-      ),
-    );
-  }
-
-  bool chooseStandard = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Text(
-            "Pricing Plan",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            "Affordable plans designed to match your\nneeds and budget.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: textLightColor,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          /// Monthly / Yearly Toggle
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _toggleItem("Monthly", isMonthlySelected),
-                _toggleItem("Yearly", !isMonthlySelected),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 30),
-
-          /// Pricing Card
-          InkWell(
-            onTap: () {
-              setState(() {
-                chooseStandard = !chooseStandard;
-              });
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                gradient: !chooseStandard
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF5FA8C8), Color(0xFF9ED2E0)],
-                      )
-                    : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// Icon
-                  Container(
-                    height: 52,
-                    width: 52,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF6DD5ED), Color(0xFF2193B0)],
-                      ),
-                    ),
-                    child: const Icon(Icons.track_changes, color: Colors.white),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    "Basic Plan",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "Unleash the Power of Your Business with Basic Plan.",
-                    style: TextStyle(
-                      color: chooseStandard ? Colors.grey : null,
-                      fontSize: 15,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  /// Price
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: "₹2500.00",
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        TextSpan(
-                          text: "  per month",
-                          style: TextStyle(
-                            color: chooseStandard ? Colors.grey : Colors.black,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                  Divider(color: lightBlackTextColor),
-
-                  const SizedBox(height: 16),
-
-                  _featureItem("1 Bathroom cleaning"),
-                  _featureItem("Up to 3 bedrooms cleaning"),
-                  _featureItem("Full Furnished Room Cleaning"),
-                  _featureItem("Additional 05 Rooms"),
-                  _featureItem("Small Kitchen (0–150 ft²)"),
-
-                  const SizedBox(height: 30),
-
-                  /// Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        side: const BorderSide(color: Colors.black),
-                      ),
-                      child: const Text(
-                        "Choose Plan",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          verticalMargin32,
-          InkWell(
-            onTap: () {
-              setState(() {
-                chooseStandard = !chooseStandard;
-              });
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                gradient: chooseStandard
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF5FA8C8), Color(0xFF9ED2E0)],
-                      )
-                    : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  /// Curved light overlay (right side)
-                  chooseStandard
-                      ? Positioned(
-                          top: -30,
-                          right: 10,
-                          child: Container(
-                            height: 700,
-                            width: 700,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF5FA8C8), Color(0xFF9ED2E0)],
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      /// Top Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            height: 52,
-                            width: 52,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.diamond_outlined,
-                              color: Color(0xFF1F2A44),
-                              size: 28,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: chooseStandard
-                                    ? Colors.white
-                                    : textBlackColor,
-                              ),
-                            ),
-                            child: Text(
-                              "Best offer",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: chooseStandard ? Colors.white : null,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      /// Title
-                      const Text(
-                        "Standard",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2A44),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        "Take Your Business to the Next Level with Business Plan.",
-                        style: TextStyle(
-                          color: Color(0xFF1F2A44),
-                          fontSize: 14,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      /// Price
-                      RichText(
-                        text: const TextSpan(
-                          children: [
-                            TextSpan(
-                              text: "₹2500.00",
-                              style: TextStyle(
-                                fontSize: 34,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1F2A44),
-                              ),
-                            ),
-                            TextSpan(
-                              text: "  per month",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF1F2A44),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-                      const Divider(color: Colors.white),
-
-                      const SizedBox(height: 20),
-
-                      _feature("24/7 Customer Support"),
-                      _feature("Live Chat Assistance"),
-                      _feature("Secure Payment Options"),
-                      _feature("Instant Booking & Tracking"),
-                      _feature("Multiple City Leads"),
-
-                      const SizedBox(height: 40),
-
-                      /// Button
-                      GradientButton(
-                        backgroundColor: chooseStandard ? null : whiteColor,
-                        text: "Choose Plan",
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _feature(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.check_circle_outline,
-            color: Color(0xFF1F2A44),
-            size: 22,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(color: Color(0xFF1F2A44), fontSize: 15),
-            ),
-          ),
         ],
       ),
     );
