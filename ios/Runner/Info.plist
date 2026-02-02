@@ -71,5 +71,16 @@
 				<string>cstr6suwn9.skadnetwork</string>
 			</dict>
 		</array>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.1088338713221-hs1i9it5cucpjvgmdtkme2b6fhsukrfd</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>

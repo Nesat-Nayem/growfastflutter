@@ -17,3 +17,13 @@ class VerifyOtpEvent extends AuthEvent {
 }
 
 class ResetOtpSentEvent extends AuthEvent {}
+
+class GoogleLoginSuccessEvent extends AuthEvent {
+  final String token;
+  final Map<String, dynamic> user;
+  
+  GoogleLoginSuccessEvent({required this.token, required this.user});
+  
+  @override
+  List<Object?> get props => [token, user];
+}

@@ -17,6 +17,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ResetOtpSentEvent>((event, emit) {
       emit(state.copyWith(isOtpSent: false, isTestOtp: false, testOtp: null));
     });
+    on<GoogleLoginSuccessEvent>(_onGoogleLoginSuccess);
+  }
+
+  Future<void> _onGoogleLoginSuccess(
+    GoogleLoginSuccessEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    // Store token and user data - this will be handled by the calling code
+    // The event is just to notify the bloc that login was successful
+    emit(state.copyWith(
+      isLoading: false,
+      error: null,
+    ));
   }
 
   Future<void> _sendOtp(SendOtpEvent event, Emitter<AuthState> emit) async {

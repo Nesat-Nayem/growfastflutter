@@ -15,6 +15,13 @@ import 'package:grow_first/features/auth/presentation/bloc/country/country_cubit
 import 'package:grow_first/features/auth/presentation/bloc/country/country_state.dart';
 import 'package:grow_first/features/auth/presentation/widgets/mobile_number_filed_widget.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:grow_first/core/network/dio_client.dart';
+import 'package:grow_first/core/app_store/app_store.dart';
+import 'package:grow_first/features/auth/data/models/auth_user_model.dart';
+import 'package:grow_first/features/auth/data/models/auth_response_model.dart';
 
 class SigninPage extends StatefulWidget {
   final Map<String, dynamic>? redirectionData;
@@ -27,11 +34,143 @@ class SigninPage extends StatefulWidget {
 class _SigninPageState extends State<SigninPage> {
   TextEditingController customerMobileNumberController = TextEditingController();
   bool isOtpBtnEnabled = false;
+  bool isGoogleSignInLoading = false;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: '1088338713221-hs1i9it5cucpjvgmdtkme2b6fhsukrfd.apps.googleusercontent.com',
+    scopes: ['email', 'profile'],
+  );
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void dispose() {
     customerMobileNumberController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => isGoogleSignInLoading = true);
+
+    try {
+      // Sign out first to ensure account picker shows
+      await _googleSignIn.signOut();
+      
+      // Trigger Google Sign In
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        // User cancelled the sign-in
+        setState(() => isGoogleSignInLoading = false);
+        return;
+      }
+
+      // Obtain auth details from request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the Google credential
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      
+      // Get Firebase ID token
+      final String? idToken = await userCredential.user?.getIdToken();
+
+      if (idToken == null) {
+        throw Exception('Failed to get ID token');
+      }
+
+      // Send token to backend
+      final dioClient = sl<DioClient>();
+      final response = await dioClient.dio.post(
+        'customer/google-login',
+        data: {
+          'id_token': idToken,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final token = response.data['token'];
+        final userData = response.data['user'];
+        
+        // Create AuthUserModel from response
+        final userModel = AuthUserModel.fromJson({
+          'id': userData['id'],
+          'ref_code': userData['ref_code'] ?? '',
+          'ref_by': userData['ref_by'],
+          'name': userData['name'],
+          'user_name': userData['user_name'],
+          'gender': userData['gender'],
+          'date_of_birth': userData['date_of_birth'],
+          'country': userData['country'],
+          'state': userData['state'],
+          'city': userData['city'],
+          'post_code': userData['post_code'],
+          'email': userData['email'],
+          'phone': userData['phone'],
+          'address': userData['address'],
+          'sub_locality': userData['sub_locality'],
+          'image': userData['image'],
+          'balance': userData['balance'] ?? 0,
+          'company_name': userData['company_name'],
+          'company_address': userData['company_address'],
+          'gstin': userData['gstin'],
+          'adhar': userData['adhar'],
+          'pan': userData['pan'],
+          'domain': userData['domain'],
+          'codeid': userData['codeid'],
+          'team_type': userData['team_type'],
+          'job_title': userData['job_title'],
+          'customer_type_id': userData['customer_type_id'],
+          'is_block': userData['is_block'] ?? 'N',
+          'role': userData['role'],
+          'status': userData['status']?.toString() ?? 'active',
+          'otp_created_at': userData['otp_created_at'],
+          'step': userData['step'] ?? 0,
+          'otp': userData['otp'],
+          'created_at': userData['created_at'] ?? DateTime.now().toIso8601String(),
+          'updated_at': userData['updated_at'] ?? DateTime.now().toIso8601String(),
+          'description': userData['description'],
+          'facebook_url': userData['facebook_url'],
+          'instagram_url': userData['instagram_url'],
+          'twitter_url': userData['twitter_url'],
+          'whatsapp_number': userData['whatsapp_number'],
+          'youtube_url': userData['youtube_url'],
+          'linkedin_url': userData['linkedin_url'],
+          'service_id': userData['service_id'],
+        });
+        
+        // Store auth using saveAuth method
+        final appStore = sl<AppStore>();
+        await appStore.saveAuth(AuthResponseModel(
+          token: token,
+          user: userModel,
+        ));
+        
+        // Notify bloc
+        sl<AuthBloc>().add(GoogleLoginSuccessEvent(token: token, user: userData));
+        
+        if (mounted) {
+          context.goNamed(AppRouterNames.home);
+        }
+      } else {
+        throw Exception(response.data['message'] ?? 'Login failed');
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Google sign-in failed: ${e.toString()}',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isGoogleSignInLoading = false);
+      }
+    }
   }
 
   void _showTestOtpDialog(BuildContext context, String otp) {
@@ -274,44 +413,81 @@ class _SigninPageState extends State<SigninPage> {
                                 );
                               },
                             ),
-                            verticalMargin48,
-                            // Row(
-                            //   children: [
-                            //     Expanded(child: Divider(color: lightGreyColor)),
-                            //     const Padding(
-                            //       padding: EdgeInsets.symmetric(horizontal: 12),
-                            //       child: Text("OR"),
-                            //     ),
-                            //     Expanded(
-                            //       child: Divider(
-                            //         color: lightGreyColor,
-                            //         thickness: 1,
-                            //       ),
-                            //     ),
-                            //   ],
-                            // ),
-                            // verticalMargin48,
-                            // Center(
-                            //   child: Text.rich(
-                            //     TextSpan(
-                            //       style: context.labelLarge.copyWith(
-                            //         fontWeight: FontWeight.w400,
-                            //         letterSpacing: 1,
-                            //       ),
-                            //       children: [
-                            //         const TextSpan(text: "Don't have an account? "),
-                            //         TextSpan(
-                            //           text: "Register",
-                            //           style: context.labelLarge.copyWith(
-                            //             fontWeight: FontWeight.w600,
-                            //             color: aquaBlueColor,
-                            //             letterSpacing: 1,
-                            //           ),
-                            //         ),
-                            //       ],
-                            //     ),
-                            //   ),
-                            // ),
+                            verticalMargin24,
+                            Row(
+                              children: [
+                                Expanded(child: Divider(color: lightGreyColor)),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Text(
+                                    "OR",
+                                    style: context.labelMedium.copyWith(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Divider(
+                                    color: lightGreyColor,
+                                    thickness: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            verticalMargin24,
+                            // Google Sign-in Button
+                            GestureDetector(
+                              onTap: isGoogleSignInLoading ? null : _handleGoogleSignIn,
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (isGoogleSignInLoading)
+                                      const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    else
+                                      SvgPicture.asset(
+                                        'assets/svg/google_icon.svg',
+                                        width: 24,
+                                        height: 24,
+                                      ),
+                                    const SizedBox(width: 12),
+                                    Flexible(
+                                      child: Text(
+                                        isGoogleSignInLoading 
+                                            ? "Signing in..." 
+                                            : "Continue with Google",
+                                        style: context.labelLarge.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black87,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),

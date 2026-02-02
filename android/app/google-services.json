@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1088338713221",
+    "project_id": "growfirst-f01b0",
+    "storage_bucket": "growfirst-f01b0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1088338713221:android:96968d11fc541c322127ec",
+        "android_client_info": {
+          "package_name": "com.grow_first.app.grow_first"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1088338713221-clj3u738nu7cjjvvo2cs89789abvci3f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.grow_first.app.grow_first",
+            "certificate_hash": "1d7a79942ae6ff6bd855e2a659176f69633870e3"
+          }
+        },
+        {
+          "client_id": "1088338713221-ru9o516qn1fjudr4mro7nura0ms9f9vf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzn5LV_jk2TAKDK60Q8bnG5YSL_uEaUVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1088338713221-ru9o516qn1fjudr4mro7nura0ms9f9vf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1088338713221-hs1i9it5cucpjvgmdtkme2b6fhsukrfd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.growfirst.app.growFirst"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
