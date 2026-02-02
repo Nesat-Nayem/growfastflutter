@@ -84,17 +84,28 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
 
   @override
   Future<PlansResponse> getPlans(String token) async {
+    final headers = <String, dynamic>{};
+    if (token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    
+    print('VendorRemoteDatasource: Fetching plans with token: ${token.isNotEmpty ? "present" : "empty"}');
+    
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.get,
       'vendor/register/plan',
-      headers: {'Authorization': 'Bearer $token'},
+      headers: headers.isNotEmpty ? headers : null,
     );
 
+    print('VendorRemoteDatasource: Plans API response: $response');
+
     if (response['status'] == 'success') {
-      return PlansResponse.fromJson(response);
+      final plansResponse = PlansResponse.fromJson(response);
+      print('VendorRemoteDatasource: Parsed ${plansResponse.plans.length} plans');
+      return plansResponse;
     } else {
-      throw ServerException();
+      throw ServerException(message: response['message'] ?? 'Failed to load plans');
     }
   }
 

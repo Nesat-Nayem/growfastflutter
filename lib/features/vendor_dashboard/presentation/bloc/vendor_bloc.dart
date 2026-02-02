@@ -135,11 +135,14 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     LoadPlans event,
     Emitter<VendorState> emit,
   ) async {
-    if (state.vendorToken == null) return;
-
+    // Debug: Log the current state
+    print('VendorBloc: Loading plans, vendorToken: ${state.vendorToken}');
+    
     emit(state.copyWith(isLoadingPlans: true, plansError: null));
 
-    final result = await getPlansUseCase(state.vendorToken!);
+    // Use token if available, otherwise pass empty string (API should work without auth)
+    final token = state.vendorToken ?? '';
+    final result = await getPlansUseCase(token);
 
     result.fold(
       (failure) => emit(state.copyWith(

@@ -33,8 +33,11 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
     
-    // Load plans
-    sl<VendorBloc>().add(const LoadPlans());
+    // Load plans - debug log
+    print('VendorRegistrationChoosePlan: Loading plans...');
+    final vendorBloc = sl<VendorBloc>();
+    print('VendorRegistrationChoosePlan: Current state - vendorToken: ${vendorBloc.state.vendorToken}, plans: ${vendorBloc.state.plans.length}');
+    vendorBloc.add(const LoadPlans());
   }
 
   @override
@@ -155,14 +158,28 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
                 Expanded(
                   child: state.isLoadingPlans
                       ? const Center(child: CircularProgressIndicator())
-                      : SingleChildScrollView(
-                          child: PricingContent(
-                            plans: state.plans,
-                            selectedPlanId: selectedPlanId,
-                            isProcessing: isProcessingPayment || state.isCreatingOrder || state.isStoringPayment,
-                            onSelectPlan: _selectAndPay,
-                          ),
-                        ),
+                      : state.plansError != null
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Error: ${state.plansError}', style: const TextStyle(color: Colors.red)),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () => sl<VendorBloc>().add(const LoadPlans()),
+                                    child: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              child: PricingContent(
+                                plans: state.plans,
+                                selectedPlanId: selectedPlanId,
+                                isProcessing: isProcessingPayment || state.isCreatingOrder || state.isStoringPayment,
+                                onSelectPlan: _selectAndPay,
+                              ),
+                            ),
                 ),
               ],
             ),

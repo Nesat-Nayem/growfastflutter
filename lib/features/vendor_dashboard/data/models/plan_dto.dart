@@ -7,7 +7,7 @@ class PlanDto {
   final String? durationType;
   final int? serviceLimit;
   final int? bannerLimit;
-  final int status;
+  final dynamic status;
   final List<String> features;
 
   PlanDto({
@@ -28,14 +28,22 @@ class PlanDto {
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
       description: json['description'],
-      amount: (json['amount'] ?? 0).toDouble(),
+      amount: _parseAmount(json['amount']),
       duration: json['duration'] ?? 12,
       durationType: json['duration_type'],
       serviceLimit: json['service_limit'],
       bannerLimit: json['banner_limit'],
-      status: json['status'] ?? 0,
+      status: json['status'],
       features: _parseFeatures(json),
     );
+  }
+
+  static double _parseAmount(dynamic amount) {
+    if (amount == null) return 0.0;
+    if (amount is double) return amount;
+    if (amount is int) return amount.toDouble();
+    if (amount is String) return double.tryParse(amount) ?? 0.0;
+    return 0.0;
   }
 
   static List<String> _parseFeatures(Map<String, dynamic> json) {
@@ -47,7 +55,14 @@ class PlanDto {
       features.add('Up to ${json['banner_limit']} banners');
     }
     if (json['description'] != null && json['description'].toString().isNotEmpty) {
-      features.addAll(json['description'].toString().split(',').map((e) => e.trim()));
+      // Parse HTML or plain text description
+      final desc = json['description'].toString()
+          .replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
+          .replaceAll('&nbsp;', ' ')
+          .trim();
+      if (desc.isNotEmpty) {
+        features.addAll(desc.split('\n').where((e) => e.trim().isNotEmpty).map((e) => e.trim()));
+      }
     }
     return features;
   }
