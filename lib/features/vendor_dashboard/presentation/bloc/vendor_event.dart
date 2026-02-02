@@ -31,10 +31,11 @@ class LoadCities extends VendorEvent {
 // Step 1: Submit basic details
 class SubmitVendorStep1 extends VendorEvent {
   final VendorStep1Request request;
-  const SubmitVendorStep1(this.request);
+  final int? countryId; // Store country ID for KYC page
+  const SubmitVendorStep1(this.request, {this.countryId});
 
   @override
-  List<Object?> get props => [request];
+  List<Object?> get props => [request, countryId];
 }
 
 // Step 2: Load plans
@@ -81,3 +82,9 @@ class UploadKyc extends VendorEvent {
 
 // Reset registration state
 class ResetVendorRegistration extends VendorEvent {}
+
+// Clear KYC success state (to prevent infinite navigation loop)
+class ClearKycSuccess extends VendorEvent {}
+
+// Clear payment success state (to prevent infinite navigation loop)
+class ClearPaymentSuccess extends VendorEvent {}

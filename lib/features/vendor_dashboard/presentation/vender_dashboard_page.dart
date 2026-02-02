@@ -92,7 +92,7 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
       nameOfService: nameOfServiceController.text.trim(),
     );
 
-    sl<VendorBloc>().add(SubmitVendorStep1(request));
+    sl<VendorBloc>().add(SubmitVendorStep1(request, countryId: selectedCountryId));
   }
 
   @override
@@ -268,9 +268,9 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
           children: [
             _buildStep(Icons.info_outline, "Basic Info", isActive: true),
             _buildStepLine(),
-            _buildStep(Icons.cast_outlined, "Choose Plan"),
-            _buildStepLine(),
             _buildStep(Icons.description_outlined, "KYC Details"),
+            _buildStepLine(),
+            _buildStep(Icons.cast_outlined, "Choose Plan"),
             _buildStepLine(),
             _buildStep(Icons.check, "Confirmation"),
           ],
@@ -383,26 +383,31 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
   Widget _buildGenderDropdown() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: DropdownButtonFormField<String>(
-        dropdownColor: whiteColor,
-        value: selectedGender,
-        icon: const Icon(Icons.keyboard_arrow_down_rounded),
-        decoration: InputDecoration(
-          hintText: "Select Gender",
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+      child: SizedBox(
+        height: 52,
+        child: DropdownButtonFormField<String>(
+          dropdownColor: whiteColor,
+          value: selectedGender,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+          style: const TextStyle(fontSize: 14, color: Colors.black),
+          decoration: InputDecoration(
+            hintText: "Select Gender",
+            hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+            ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: lightGreyColor, width: 1),
-          ),
+          items: ["Male", "Female", "Other"]
+              .map((g) => DropdownMenuItem(value: g, child: Text(g, style: const TextStyle(fontSize: 14))))
+              .toList(),
+          onChanged: (v) => setState(() => selectedGender = v),
         ),
-        items: ["Male", "Female", "Other"]
-            .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-            .toList(),
-        onChanged: (v) => setState(() => selectedGender = v),
       ),
     );
   }
@@ -412,41 +417,46 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel("Country"),
-        DropdownButtonFormField<String>(
-          value: selectedCountry,
-          isExpanded: true,
-          dropdownColor: Colors.white,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-          decoration: InputDecoration(
-            hintText: "Select Country",
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+        SizedBox(
+          height: 52,
+          child: DropdownButtonFormField<String>(
+            value: selectedCountry,
+            isExpanded: true,
+            dropdownColor: Colors.white,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+            style: const TextStyle(fontSize: 14, color: Colors.black),
+            decoration: InputDecoration(
+              hintText: "Select Country",
+              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
-            ),
+            items: state.countries
+                .map((c) => DropdownMenuItem<String>(
+                      value: c.name,
+                      child: Text(c.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
+                    ))
+                .toList(),
+            onChanged: (value) {
+              if (value == null || state.countries.isEmpty) return;
+              final country = state.countries.firstWhere((c) => c.name == value);
+              setState(() {
+                selectedCountry = value;
+                selectedCountryId = country.id;
+                selectedState = null;
+                selectedStateId = null;
+                selectedCity = null;
+              });
+              sl<VendorBloc>().add(LoadStates(country.id));
+            },
           ),
-          items: state.countries
-              .map((c) => DropdownMenuItem<String>(
-                    value: c.name,
-                    child: Text(c.name, overflow: TextOverflow.ellipsis),
-                  ))
-              .toList(),
-          onChanged: (value) {
-            if (value == null || state.countries.isEmpty) return;
-            final country = state.countries.firstWhere((c) => c.name == value);
-            setState(() {
-              selectedCountry = value;
-              selectedCountryId = country.id;
-              selectedState = null;
-              selectedStateId = null;
-              selectedCity = null;
-            });
-            sl<VendorBloc>().add(LoadStates(country.id));
-          },
         ),
       ],
     );
@@ -457,39 +467,44 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel("State"),
-        DropdownButtonFormField<String>(
-          value: selectedState,
-          isExpanded: true,
-          dropdownColor: Colors.white,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-          decoration: InputDecoration(
-            hintText: state.isStatesLoading ? "Loading..." : "Select State",
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+        SizedBox(
+          height: 52,
+          child: DropdownButtonFormField<String>(
+            value: selectedState,
+            isExpanded: true,
+            dropdownColor: Colors.white,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+            style: const TextStyle(fontSize: 14, color: Colors.black),
+            decoration: InputDecoration(
+              hintText: state.isStatesLoading ? "Loading..." : "Select State",
+              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
-            ),
+            items: state.states
+                .map((s) => DropdownMenuItem<String>(
+                      value: s.name,
+                      child: Text(s.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
+                    ))
+                .toList(),
+            onChanged: (value) {
+              if (value == null || state.states.isEmpty) return;
+              final st = state.states.firstWhere((s) => s.name == value);
+              setState(() {
+                selectedState = value;
+                selectedStateId = st.id;
+                selectedCity = null;
+              });
+              sl<VendorBloc>().add(LoadCities(st.id));
+            },
           ),
-          items: state.states
-              .map((s) => DropdownMenuItem<String>(
-                    value: s.name,
-                    child: Text(s.name, overflow: TextOverflow.ellipsis),
-                  ))
-              .toList(),
-          onChanged: (value) {
-            if (value == null || state.states.isEmpty) return;
-            final st = state.states.firstWhere((s) => s.name == value);
-            setState(() {
-              selectedState = value;
-              selectedStateId = st.id;
-              selectedCity = null;
-            });
-            sl<VendorBloc>().add(LoadCities(st.id));
-          },
         ),
       ],
     );
@@ -500,30 +515,35 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel("City"),
-        DropdownButtonFormField<String>(
-          value: selectedCity,
-          isExpanded: true,
-          dropdownColor: Colors.white,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-          decoration: InputDecoration(
-            hintText: state.isCitiesLoading ? "Loading..." : "Select City",
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+        SizedBox(
+          height: 52,
+          child: DropdownButtonFormField<String>(
+            value: selectedCity,
+            isExpanded: true,
+            dropdownColor: Colors.white,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+            style: const TextStyle(fontSize: 14, color: Colors.black),
+            decoration: InputDecoration(
+              hintText: state.isCitiesLoading ? "Loading..." : "Select City",
+              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
-            ),
-          ),
-          items: state.cities
+            items: state.cities
               .map((city) => DropdownMenuItem<String>(
                     value: city.name,
-                    child: Text(city.name, overflow: TextOverflow.ellipsis),
+                    child: Text(city.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
                   ))
               .toList(),
           onChanged: (value) => setState(() => selectedCity = value),
+          ),
         ),
       ],
     );

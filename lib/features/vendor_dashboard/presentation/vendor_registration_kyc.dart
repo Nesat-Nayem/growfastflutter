@@ -26,15 +26,24 @@ class VendorUploadKycPage extends StatefulWidget {
 class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
   final ImagePicker _picker = ImagePicker();
   
+  // For India
   File? aadharFile;
   File? panFile;
+  
+  // For other countries
   File? passportFile;
-  final TextEditingController idCardController = TextEditingController();
+  final TextEditingController nationalIdController = TextEditingController();
 
   @override
   void dispose() {
-    idCardController.dispose();
+    nationalIdController.dispose();
     super.dispose();
+  }
+
+  bool get isIndianVendor {
+    final selectedCountryId = sl<VendorBloc>().state.selectedCountryId;
+    // India's country ID is 101
+    return selectedCountryId == 101;
   }
 
   Future<void> _pickImage(String type) async {
@@ -62,25 +71,32 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
   }
 
   void _submitKyc() {
-    if (aadharFile == null && panFile == null && passportFile == null && idCardController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload at least one document'), backgroundColor: Colors.red),
-      );
-      return;
+    if (isIndianVendor) {
+      // For India: require at least Aadhar or PAN
+      if (aadharFile == null && panFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please upload Aadhar or PAN card'), backgroundColor: Colors.red),
+        );
+        return;
+      }
+    } else {
+      // For other countries: require passport or national ID
+      if (passportFile == null && nationalIdController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please upload Passport or enter National ID'), backgroundColor: Colors.red),
+        );
+        return;
+      }
     }
 
     final request = KycUploadRequest(
       aadhar: aadharFile,
       pan: panFile,
       passport: passportFile,
-      idCard: idCardController.text.trim().isEmpty ? null : idCardController.text.trim(),
+      idCard: nationalIdController.text.trim().isEmpty ? null : nationalIdController.text.trim(),
     );
 
     sl<VendorBloc>().add(UploadKyc(request));
-  }
-
-  void _skipKyc() {
-    context.goNamed(AppRouterNames.vendorChoosePlan);
   }
 
   @override
@@ -89,9 +105,16 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
       appBar: CustomerHomeAppBar(singleTitle: "Become a vendor"),
       body: BlocConsumer<VendorBloc, VendorState>(
         bloc: sl<VendorBloc>(),
+        listenWhen: (previous, current) {
+          // Only listen when kycSuccess changes from false to true
+          return previous.kycSuccess != current.kycSuccess || 
+                 previous.kycError != current.kycError;
+        },
         listener: (context, state) {
           if (state.kycSuccess) {
-            context.goNamed(AppRouterNames.vendorChoosePlan);
+            // Clear the success state to prevent infinite loop when navigating back
+            sl<VendorBloc>().add(ClearKycSuccess());
+            context.pushNamed(AppRouterNames.vendorChoosePlan);
           }
           if (state.kycError != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -116,18 +139,7 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
                 verticalMargin24,
                 Expanded(
                   child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildUploadCard("Aadhar Card", "Upload your Aadhar card (front + back)", aadharFile, () => _pickImage('aadhar')),
-                        verticalMargin16,
-                        _buildUploadCard("PAN Card", "Upload your PAN card", panFile, () => _pickImage('pan')),
-                        verticalMargin16,
-                        _buildUploadCard("Passport (Optional)", "Upload your passport", passportFile, () => _pickImage('passport')),
-                        verticalMargin16,
-                        _buildIdCardField(),
-                        verticalMargin24,
-                      ],
-                    ),
+                    child: isIndianVendor ? _buildIndianKycFields() : _buildInternationalKycFields(),
                   ),
                 ),
               ],
@@ -136,26 +148,28 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
         },
       ),
       bottomNavigationBar: SafeArea(
-        bottom: true,
-        child: Padding(
-          padding: bottomPadding12 + horizontalPadding16,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 4,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
           child: BlocBuilder<VendorBloc, VendorState>(
             bloc: sl<VendorBloc>(),
             builder: (context, state) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GradientButton(
-                    text: state.isUploadingKyc ? "Uploading..." : "Submit KYC",
-                    onTap: state.isUploadingKyc ? null : _submitKyc,
-                    textStyle: context.labelLarge.copyWith(color: whiteColor),
-                  ),
-                  verticalMargin8,
-                  TextButton(
-                    onPressed: state.isUploadingKyc ? null : _skipKyc,
-                    child: Text("Skip for now", style: context.labelMedium.copyWith(color: textLightColor)),
-                  ),
-                ],
+              return SizedBox(
+                height: 52,
+                child: GradientButton(
+                  text: state.isUploadingKyc ? "Uploading..." : "Next",
+                  onTap: state.isUploadingKyc ? null : _submitKyc,
+                  textStyle: context.labelLarge.copyWith(color: whiteColor),
+                ),
               );
             },
           ),
@@ -164,7 +178,49 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
     );
   }
 
-  Widget _buildUploadCard(String title, String subtitle, File? file, VoidCallback onUpload) {
+  // KYC fields for Indian vendors
+  Widget _buildIndianKycFields() {
+    return Column(
+      children: [
+        _buildUploadCard(
+          "Aadhar Card",
+          "Upload your Aadhar card (front + back)",
+          aadharFile,
+          () => _pickImage('aadhar'),
+          () => setState(() => aadharFile = null),
+        ),
+        verticalMargin16,
+        _buildUploadCard(
+          "PAN Card",
+          "Upload your PAN card",
+          panFile,
+          () => _pickImage('pan'),
+          () => setState(() => panFile = null),
+        ),
+        verticalMargin24,
+      ],
+    );
+  }
+
+  // KYC fields for international vendors
+  Widget _buildInternationalKycFields() {
+    return Column(
+      children: [
+        _buildUploadCard(
+          "Passport",
+          "Upload your passport",
+          passportFile,
+          () => _pickImage('passport'),
+          () => setState(() => passportFile = null),
+        ),
+        verticalMargin16,
+        _buildNationalIdField(),
+        verticalMargin24,
+      ],
+    );
+  }
+
+  Widget _buildUploadCard(String title, String subtitle, File? file, VoidCallback onUpload, VoidCallback onRemove) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -181,11 +237,7 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
           const SizedBox(height: 20),
           
           if (file != null)
-            _buildFilePreview(file, () => setState(() {
-              if (title.contains("Aadhar")) aadharFile = null;
-              else if (title.contains("PAN")) panFile = null;
-              else passportFile = null;
-            }))
+            _buildFilePreview(file, onRemove)
           else
             Container(
               width: double.infinity,
@@ -250,7 +302,7 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
     );
   }
 
-  Widget _buildIdCardField() {
+  Widget _buildNationalIdField() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -261,14 +313,14 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("ID Card Number (Optional)", style: context.labelLarge.copyWith(fontWeight: FontWeight.w600, letterSpacing: 1)),
+          Text("National ID Card", style: context.labelLarge.copyWith(fontWeight: FontWeight.w600, letterSpacing: 1)),
           const SizedBox(height: 6),
-          Text("Enter your government ID card number", style: context.labelMedium.copyWith(fontWeight: FontWeight.w500, letterSpacing: 1, color: shipGreyColor1)),
+          Text("Enter your national ID card number", style: context.labelMedium.copyWith(fontWeight: FontWeight.w500, letterSpacing: 1, color: shipGreyColor1)),
           const SizedBox(height: 16),
           TextField(
-            controller: idCardController,
+            controller: nationalIdController,
             decoration: InputDecoration(
-              hintText: "Enter ID card number",
+              hintText: "Enter National ID number",
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),

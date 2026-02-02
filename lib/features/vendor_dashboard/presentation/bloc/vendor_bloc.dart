@@ -44,6 +44,8 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     on<StorePayment>(_onStorePayment);
     on<UploadKyc>(_onUploadKyc);
     on<ResetVendorRegistration>(_onResetRegistration);
+    on<ClearKycSuccess>(_onClearKycSuccess);
+    on<ClearPaymentSuccess>(_onClearPaymentSuccess);
   }
 
   Future<void> _onLoadCountries(
@@ -127,6 +129,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
         vendorToken: response.token,
         vendorId: response.vendor.id,
         vendorData: response.vendor,
+        selectedCountryId: event.countryId,
       )),
     );
   }
@@ -267,5 +270,19 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     Emitter<VendorState> emit,
   ) {
     emit(const VendorState());
+  }
+
+  void _onClearKycSuccess(
+    ClearKycSuccess event,
+    Emitter<VendorState> emit,
+  ) {
+    emit(state.copyWith(kycSuccess: false));
+  }
+
+  void _onClearPaymentSuccess(
+    ClearPaymentSuccess event,
+    Emitter<VendorState> emit,
+  ) {
+    emit(state.copyWith(paymentSuccess: false));
   }
 }

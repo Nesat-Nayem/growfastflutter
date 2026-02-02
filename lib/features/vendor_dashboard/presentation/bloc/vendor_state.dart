@@ -23,6 +23,7 @@ class VendorState extends Equatable {
   final String? vendorToken;
   final int? vendorId;
   final VendorData? vendorData;
+  final int? selectedCountryId; // Store country ID from step 1 for KYC page
 
   // Step 2: Plans
   final List<PlanDto> plans;
@@ -59,6 +60,7 @@ class VendorState extends Equatable {
     this.vendorToken,
     this.vendorId,
     this.vendorData,
+    this.selectedCountryId,
     this.plans = const [],
     this.isLoadingPlans = false,
     this.plansError,
@@ -88,6 +90,7 @@ class VendorState extends Equatable {
     String? vendorToken,
     int? vendorId,
     VendorData? vendorData,
+    int? selectedCountryId,
     List<PlanDto>? plans,
     bool? isLoadingPlans,
     String? plansError,
@@ -116,6 +119,7 @@ class VendorState extends Equatable {
       vendorToken: vendorToken ?? this.vendorToken,
       vendorId: vendorId ?? this.vendorId,
       vendorData: vendorData ?? this.vendorData,
+      selectedCountryId: selectedCountryId ?? this.selectedCountryId,
       plans: plans ?? this.plans,
       isLoadingPlans: isLoadingPlans ?? this.isLoadingPlans,
       plansError: plansError,
@@ -147,6 +151,7 @@ class VendorState extends Equatable {
     vendorToken,
     vendorId,
     vendorData,
+    selectedCountryId,
     plans,
     isLoadingPlans,
     plansError,

@@ -24,6 +24,7 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
   late Razorpay _razorpay;
   int? selectedPlanId;
   bool isProcessingPayment = false;
+  bool _hasLoadedPlans = false;
 
   @override
   void initState() {
@@ -33,11 +34,12 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
     
-    // Load plans - debug log
-    print('VendorRegistrationChoosePlan: Loading plans...');
+    // Only load plans if not already loaded
     final vendorBloc = sl<VendorBloc>();
-    print('VendorRegistrationChoosePlan: Current state - vendorToken: ${vendorBloc.state.vendorToken}, plans: ${vendorBloc.state.plans.length}');
-    vendorBloc.add(const LoadPlans());
+    if (vendorBloc.state.plans.isEmpty && !_hasLoadedPlans) {
+      _hasLoadedPlans = true;
+      vendorBloc.add(const LoadPlans());
+    }
   }
 
   @override
@@ -140,6 +142,12 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
       appBar: CustomerHomeAppBar(singleTitle: "Become a vendor"),
       body: BlocConsumer<VendorBloc, VendorState>(
         bloc: sl<VendorBloc>(),
+        listenWhen: (previous, current) {
+          // Only listen when relevant states change
+          return previous.paymentOrder != current.paymentOrder ||
+                 previous.paymentSuccess != current.paymentSuccess ||
+                 previous.paymentError != current.paymentError;
+        },
         listener: (context, state) {
           // When payment order is created, open Razorpay
           if (state.paymentOrder != null && isProcessingPayment) {
@@ -148,6 +156,8 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
           
           // When payment is stored successfully, navigate to Confirmation
           if (state.paymentSuccess) {
+            // Clear the success state to prevent infinite loop when navigating back
+            sl<VendorBloc>().add(ClearPaymentSuccess());
             context.pushNamed(AppRouterNames.vendorConfirmRegistration);
           }
           
