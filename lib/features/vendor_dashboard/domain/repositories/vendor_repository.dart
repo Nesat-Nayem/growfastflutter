@@ -19,8 +19,8 @@ abstract class VendorRepository {
   // Step 2
   Future<Either<Failure, PlansResponse>> getPlans(String token);
   Future<Either<Failure, PaymentOrderResponse>> createPaymentOrder(PaymentOrderRequest request);
-  Future<Either<Failure, StorePaymentResponse>> storePayment(StorePaymentRequest request, String token);
+  Future<Either<Failure, StorePaymentResponse>> storePayment(StorePaymentRequest request);
 
   // Step 3
-  Future<Either<Failure, KycUploadResponse>> uploadKyc(KycUploadRequest request, String token);
+  Future<Either<Failure, KycUploadResponse>> uploadKyc(KycUploadRequest request, int vendorId);
 }

@@ -8,7 +8,7 @@ class UploadKycUseCase {
 
   UploadKycUseCase(this.repository);
 
-  Future<Either<Failure, KycUploadResponse>> call(KycUploadRequest request, String token) {
-    return repository.uploadKyc(request, token);
+  Future<Either<Failure, KycUploadResponse>> call(KycUploadRequest request, int vendorId) {
+    return repository.uploadKyc(request, vendorId);
   }
 }

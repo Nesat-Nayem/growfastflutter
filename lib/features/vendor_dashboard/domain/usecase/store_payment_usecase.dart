@@ -8,7 +8,7 @@ class StorePaymentUseCase {
 
   StorePaymentUseCase(this.repository);
 
-  Future<Either<Failure, StorePaymentResponse>> call(StorePaymentRequest request, String token) {
-    return repository.storePayment(request, token);
+  Future<Either<Failure, StorePaymentResponse>> call(StorePaymentRequest request) {
+    return repository.storePayment(request);
   }
 }

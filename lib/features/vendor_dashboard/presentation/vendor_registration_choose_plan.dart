@@ -49,10 +49,19 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
     setState(() => isProcessingPayment = false);
     
-    // Store payment
+    // Store payment - vendorId will be added by the bloc
+    final vendorId = sl<VendorBloc>().state.vendorId;
+    if (vendorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Session expired. Please restart registration.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
     sl<VendorBloc>().add(StorePayment(StorePaymentRequest(
       planId: selectedPlanId!,
       transactionId: response.paymentId!,
+      vendorId: vendorId,
     )));
   }
 
@@ -99,6 +108,14 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
   }
 
   void _selectAndPay(PlanDto plan) {
+    final vendorId = sl<VendorBloc>().state.vendorId;
+    if (vendorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Session expired. Please restart registration.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
     setState(() {
       selectedPlanId = plan.id;
       isProcessingPayment = true;
@@ -109,6 +126,7 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
       sl<VendorBloc>().add(StorePayment(StorePaymentRequest(
         planId: plan.id,
         transactionId: 'FREE_${DateTime.now().millisecondsSinceEpoch}',
+        vendorId: vendorId,
       )));
     } else {
       // Create payment order for paid plans
@@ -150,9 +168,9 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
                   currentStep: 1,
                   steps: const [
                     StepItem(label: "Basic Info", icon: Icons.info_outline),
-                    StepItem(label: "Choose Plan", icon: Icons.cast_outlined),
+                    StepItem(label: "Choose\nPlan", icon: Icons.cast_outlined),
                     StepItem(label: "KYC Details", icon: Icons.description_outlined),
-                    StepItem(label: "Confirmation", icon: Icons.check),
+                    StepItem(label: "Confirm\non", icon: Icons.check),
                   ],
                 ),
                 Expanded(
@@ -260,7 +278,7 @@ class PlanCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        gradient: isSelected
+        gradient: plan.isPremium
             ? const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -270,38 +288,47 @@ class PlanCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 20, offset: const Offset(0, 10)),
         ],
-        border: isSelected ? Border.all(color: const Color(0xFF30D3D9), width: 2) : null,
+        border: plan.isPremium ? Border.all(color: const Color(0xFF30D3D9), width: 2) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                height: 52,
-                width: 52,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  gradient: const LinearGradient(colors: [Color(0xFF6DD5ED), Color(0xFF2193B0)]),
-                ),
-                child: Icon(plan.isFree ? Icons.star_outline : Icons.diamond_outlined, color: Colors.white),
-              ),
-              if (plan.isFree)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.green,
-                  ),
-                  child: const Text("FREE", style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
-                ),
-            ],
+          Container(
+            height: 52,
+            width: 52,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: const LinearGradient(colors: [Color(0xFF6DD5ED), Color(0xFF2193B0)]),
+            ),
+            child: Icon(plan.isPremium ? Icons.diamond_outlined : Icons.star_outline, color: Colors.white),
           ),
           const SizedBox(height: 20),
-          Text(plan.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          Text(plan.description ?? "Get started with our ${plan.name} plan", style: TextStyle(color: isSelected ? null : Colors.grey, fontSize: 15)),
+          Row(
+            children: [
+              Text(plan.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: plan.isPremium ? const Color(0xFF10326B) : Colors.green,
+                ),
+                child: Text(
+                  plan.isPremium ? "Premium" : "Basic",
+                  style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          if (plan.description != null && plan.description!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              plan.description!,
+              style: TextStyle(color: plan.isPremium ? Colors.black87 : Colors.grey, fontSize: 14),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
           const SizedBox(height: 20),
           RichText(
             text: TextSpan(
@@ -313,7 +340,7 @@ class PlanCard extends StatelessWidget {
                 if (!plan.isFree)
                   TextSpan(
                     text: "  / ${plan.duration} months",
-                    style: TextStyle(color: isSelected ? Colors.black : Colors.grey, fontSize: 14),
+                    style: TextStyle(color: plan.isPremium ? Colors.black : Colors.grey, fontSize: 14),
                   ),
               ],
             ),
@@ -321,8 +348,7 @@ class PlanCard extends StatelessWidget {
           const SizedBox(height: 20),
           const Divider(),
           const SizedBox(height: 16),
-          if (plan.serviceLimit != null) _featureItem("Up to ${plan.serviceLimit} services"),
-          if (plan.bannerLimit != null) _featureItem("Up to ${plan.bannerLimit} banners"),
+          if (plan.bannerLimit != null) _featureItem(plan.bannerLimit == 0 ? "Unlimited banners" : "Up to ${plan.bannerLimit} banners"),
           _featureItem("24/7 Customer Support"),
           _featureItem("Dashboard Access"),
           const SizedBox(height: 30),
@@ -334,8 +360,8 @@ class PlanCard extends StatelessWidget {
                 : ElevatedButton(
                     onPressed: onSelect,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isSelected ? Colors.white : const Color(0xFF10326B),
-                      foregroundColor: isSelected ? const Color(0xFF10326B) : Colors.white,
+                      backgroundColor: plan.isPremium ? Colors.white : const Color(0xFF10326B),
+                      foregroundColor: plan.isPremium ? const Color(0xFF10326B) : Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     child: Text(plan.isFree ? "Start Free" : "Choose Plan", style: const TextStyle(fontWeight: FontWeight.w600)),

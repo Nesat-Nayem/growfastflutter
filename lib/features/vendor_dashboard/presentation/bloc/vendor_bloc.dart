@@ -167,7 +167,13 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     CreatePaymentOrder event,
     Emitter<VendorState> emit,
   ) async {
-    if (state.vendorId == null) return;
+    if (state.vendorId == null || state.vendorToken == null) {
+      emit(state.copyWith(
+        isCreatingOrder: false,
+        paymentError: 'Session expired. Please restart registration.',
+      ));
+      return;
+    }
 
     emit(state.copyWith(isCreatingOrder: true, paymentError: null));
 
@@ -196,11 +202,24 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     StorePayment event,
     Emitter<VendorState> emit,
   ) async {
-    if (state.vendorToken == null) return;
+    if (state.vendorId == null) {
+      emit(state.copyWith(
+        isStoringPayment: false,
+        paymentError: 'Session expired. Please restart registration.',
+      ));
+      return;
+    }
 
     emit(state.copyWith(isStoringPayment: true, paymentError: null));
 
-    final result = await storePaymentUseCase(event.request, state.vendorToken!);
+    // Create request with vendor_id
+    final request = StorePaymentRequest(
+      planId: event.request.planId,
+      transactionId: event.request.transactionId,
+      vendorId: state.vendorId!,
+    );
+
+    final result = await storePaymentUseCase(request);
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -218,11 +237,17 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     UploadKyc event,
     Emitter<VendorState> emit,
   ) async {
-    if (state.vendorToken == null) return;
+    if (state.vendorId == null) {
+      emit(state.copyWith(
+        isUploadingKyc: false,
+        kycError: 'Session expired. Please restart registration.',
+      ));
+      return;
+    }
 
     emit(state.copyWith(isUploadingKyc: true, kycError: null));
 
-    final result = await uploadKycUseCase(event.request, state.vendorToken!);
+    final result = await uploadKycUseCase(event.request, state.vendorId!);
 
     result.fold(
       (failure) => emit(state.copyWith(

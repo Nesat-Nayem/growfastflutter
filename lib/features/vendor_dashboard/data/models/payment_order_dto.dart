@@ -54,15 +54,18 @@ class PaymentOrderResponse {
 class StorePaymentRequest {
   final int planId;
   final String transactionId;
+  final int vendorId;
 
   StorePaymentRequest({
     required this.planId,
     required this.transactionId,
+    required this.vendorId,
   });
 
   Map<String, dynamic> toJson() => {
     'plan_id': planId,
     'transaction_id': transactionId,
+    'vendor_id': vendorId,
   };
 }
 

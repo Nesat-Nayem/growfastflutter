@@ -108,9 +108,9 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
                   currentStep: 2,
                   steps: const [
                     StepItem(label: "Basic Info", icon: Icons.info_outline),
-                    StepItem(label: "Choose Plan", icon: Icons.cast_outlined),
+                    StepItem(label: "Choose\nPlan", icon: Icons.cast_outlined),
                     StepItem(label: "KYC Details", icon: Icons.description_outlined),
-                    StepItem(label: "Confirmation", icon: Icons.check),
+                    StepItem(label: "Confirm\non", icon: Icons.check),
                   ],
                 ),
                 verticalMargin24,

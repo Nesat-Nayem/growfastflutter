@@ -89,9 +89,9 @@ class VendorRepositoryImpl implements VendorRepository {
   }
 
   @override
-  Future<Either<Failure, StorePaymentResponse>> storePayment(StorePaymentRequest request, String token) async {
+  Future<Either<Failure, StorePaymentResponse>> storePayment(StorePaymentRequest request) async {
     try {
-      final result = await remoteDataSource.storePayment(request, token);
+      final result = await remoteDataSource.storePayment(request);
       return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message ?? 'Failed to store payment'));
@@ -101,9 +101,9 @@ class VendorRepositoryImpl implements VendorRepository {
   }
 
   @override
-  Future<Either<Failure, KycUploadResponse>> uploadKyc(KycUploadRequest request, String token) async {
+  Future<Either<Failure, KycUploadResponse>> uploadKyc(KycUploadRequest request, int vendorId) async {
     try {
-      final result = await remoteDataSource.uploadKyc(request, token);
+      final result = await remoteDataSource.uploadKyc(request, vendorId);
       return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message ?? 'KYC upload failed'));

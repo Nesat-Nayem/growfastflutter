@@ -22,8 +22,8 @@ abstract class VendorRemoteDatasource {
   Future<PaymentOrderResponse> createPaymentOrder(PaymentOrderRequest request);
 
   // Step 2: Store Payment (after successful payment)
-  Future<StorePaymentResponse> storePayment(StorePaymentRequest request, String token);
+  Future<StorePaymentResponse> storePayment(StorePaymentRequest request);
 
   // Step 3: Upload KYC
-  Future<KycUploadResponse> uploadKyc(KycUploadRequest request, String token);
+  Future<KycUploadResponse> uploadKyc(KycUploadRequest request, int vendorId);
 }

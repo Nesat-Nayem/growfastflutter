@@ -126,13 +126,12 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
   }
 
   @override
-  Future<StorePaymentResponse> storePayment(StorePaymentRequest request, String token) async {
+  Future<StorePaymentResponse> storePayment(StorePaymentRequest request) async {
     final response = await NetworkHelper.sendRequest(
       dio,
       RequestType.post,
       'vendor/register/storePayment',
       data: request.toJson(),
-      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response['status'] == 'success') {
@@ -143,8 +142,11 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
   }
 
   @override
-  Future<KycUploadResponse> uploadKyc(KycUploadRequest request, String token) async {
+  Future<KycUploadResponse> uploadKyc(KycUploadRequest request, int vendorId) async {
     final formData = FormData();
+
+    // Add vendor_id to the form data
+    formData.fields.add(MapEntry('vendor_id', vendorId.toString()));
 
     if (request.aadhar != null) {
       formData.files.add(MapEntry(
@@ -176,7 +178,6 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
       data: formData,
       options: Options(
         headers: {
-          'Authorization': 'Bearer $token',
           'Content-Type': 'multipart/form-data',
         },
       ),
