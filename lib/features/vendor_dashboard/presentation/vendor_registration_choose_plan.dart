@@ -330,16 +330,7 @@ class PlanCard extends StatelessWidget {
               ),
             ],
           ),
-          if (plan.description != null && plan.description!.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              plan.description!,
-              style: TextStyle(color: plan.isPremium ? Colors.black87 : Colors.grey, fontSize: 14),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           RichText(
             text: TextSpan(
               children: [
@@ -358,9 +349,7 @@ class PlanCard extends StatelessWidget {
           const SizedBox(height: 20),
           const Divider(),
           const SizedBox(height: 16),
-          if (plan.bannerLimit != null) _featureItem(plan.bannerLimit == 0 ? "Unlimited banners" : "Up to ${plan.bannerLimit} banners"),
-          _featureItem("24/7 Customer Support"),
-          _featureItem("Dashboard Access"),
+          ...plan.features.map((feature) => _featureItem(feature)),
           const SizedBox(height: 30),
           SizedBox(
             width: double.infinity,

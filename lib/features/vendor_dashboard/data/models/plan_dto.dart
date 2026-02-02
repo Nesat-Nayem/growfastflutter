@@ -66,13 +66,44 @@ class PlanDto {
 
   static List<String> _parseFeatures(Map<String, dynamic> json) {
     final features = <String>[];
-    if (json['service_limit'] != null) {
-      features.add('Up to ${json['service_limit']} services');
-    }
+    
+    // Add banner limit feature first
     if (json['banner_limit'] != null) {
       final limit = json['banner_limit'];
       features.add(limit == 0 ? 'Unlimited banners' : 'Up to $limit banners');
     }
+    
+    // Add service limit feature
+    if (json['service_limit'] != null) {
+      features.add('Up to ${json['service_limit']} services');
+    }
+    
+    // Parse description to extract feature lines
+    final description = json['description'];
+    if (description != null) {
+      String descText = description.toString();
+      
+      // Replace HTML line breaks with newlines
+      descText = descText.replaceAll(RegExp(r'<br\s*/?>'), '\n');
+      descText = descText.replaceAll(RegExp(r'</li>\s*<li>'), '\n');
+      descText = descText.replaceAll(RegExp(r'<[^>]*>'), ''); // Remove remaining HTML tags
+      descText = descText.replaceAll('&nbsp;', ' ');
+      descText = descText.replaceAll('&amp;', '&');
+      descText = descText.replaceAll('&lt;', '<');
+      descText = descText.replaceAll('&gt;', '>');
+      descText = descText.replaceAll('&quot;', '"');
+      descText = descText.replaceAll('&#39;', "'");
+      
+      // Split by newlines and add non-empty lines as features
+      final lines = descText.split('\n');
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isNotEmpty) {
+          features.add(trimmed);
+        }
+      }
+    }
+    
     return features;
   }
 
