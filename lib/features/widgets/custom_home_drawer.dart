@@ -279,7 +279,7 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
                                       (userImage == null || userImage.toString().isEmpty)
                                       ? null
                                       : CachedNetworkImageProvider(
-                                          userImage.toString().startsWith('http') ? userImage.toString() : "http://growsercode.test/$userImage",
+                                          userImage.toString().startsWith('http') ? userImage.toString() : "https://growfirst.org/$userImage",
                                         ),
                                   child: (userImage == null || userImage.toString().isEmpty)
                                       ? const Icon(Icons.person, color: Colors.grey)

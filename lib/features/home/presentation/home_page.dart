@@ -451,7 +451,7 @@ class _HomePageContentState extends State<HomePageContent> {
             //             itemBuilder: (context, index) {
             //               final item = state.recentSearches[index];
             //               final imageUrl = item.image != null
-            //                   ? "http://growsercode.test/${item.image}"
+            //                   ? "https://growfirst.org/${item.image}"
             //                   : "https://via.placeholder.com/300";
             //
             //               return Container(
