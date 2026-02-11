@@ -16,12 +16,14 @@ class AccountCubit extends Cubit<AccountState> {
     emit(AccountLoading());
     try {
       final response = await remoteDataSource.getProfile();
+      if (isClosed) return;
       if (response['status'] == 'success') {
         emit(AccountLoaded(response['user']));
       } else {
         emit(AccountError(response['message'] ?? 'Failed to load profile'));
       }
     } catch (e) {
+      if (isClosed) return;
       if (e is DioException && e.response?.statusCode == 401) {
         emit(AccountUnauthorized());
       } else if (e.toString().contains('401')) {
@@ -36,6 +38,7 @@ class AccountCubit extends Cubit<AccountState> {
     emit(AccountUpdating());
     try {
       final response = await remoteDataSource.updateProfile(data);
+      if (isClosed) return;
       if (response['status'] == 'success') {
         // Update AppStore with new user data
         final updatedUser = response['user'];
@@ -45,6 +48,7 @@ class AccountCubit extends Cubit<AccountState> {
         emit(AccountError(response['message'] ?? 'Failed to update profile'));
       }
     } catch (e) {
+      if (isClosed) return;
       if (e is DioException && e.response?.statusCode == 401) {
         emit(AccountUnauthorized());
       } else if (e.toString().contains('401')) {
@@ -59,6 +63,7 @@ class AccountCubit extends Cubit<AccountState> {
     emit(AccountUpdating());
     try {
       final response = await remoteDataSource.updateProfileWithImage(data, image);
+      if (isClosed) return;
       if (response['status'] == 'success') {
         // Update AppStore with new user data
         final updatedUser = response['user'];
@@ -68,6 +73,7 @@ class AccountCubit extends Cubit<AccountState> {
         emit(AccountError(response['message'] ?? 'Failed to update profile'));
       }
     } catch (e) {
+      if (isClosed) return;
       if (e is DioException && e.response?.statusCode == 401) {
         emit(AccountUnauthorized());
       } else if (e.toString().contains('401')) {

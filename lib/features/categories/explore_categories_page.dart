@@ -14,8 +14,8 @@ class ExploreCategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl.get<CategoryBloc>()..add(LoadCategories()),
+    return BlocProvider<CategoryBloc>.value(
+      value: sl.get<CategoryBloc>()..add(LoadCategories()),
       child: const _ExploreCategoriesView(),
     );
   }

@@ -21,7 +21,7 @@ class VendorInjections {
     // -----------------------------
     // Bloc
     // -----------------------------
-    sl.registerCachedFactory(
+    sl.registerLazySingleton(
       () => VendorBloc(
         sl<GetCountriesUseCase>(),
         sl<GetStatesUseCase>(),

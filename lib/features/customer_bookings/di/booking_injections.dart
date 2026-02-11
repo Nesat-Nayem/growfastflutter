@@ -54,7 +54,7 @@ class BookingInjections {
     // -----------------------------
     // Bloc
     // -----------------------------
-    sl.registerCachedFactory<BookingsBloc>(
+    sl.registerLazySingleton<BookingsBloc>(
       () => BookingsBloc(
         getLocations: sl<GetBookingLocationsUseCase>(),
         getStaffs: sl<GetBookingStaffsUseCase>(),

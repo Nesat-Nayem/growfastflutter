@@ -33,7 +33,7 @@ class AuthInjections {
     sl.registerLazySingleton(() => GetCountries(sl<CountryRepository>()));
 
     // Cubits / Blocs
-    sl.registerCachedFactory(() => CountryCubit(sl<GetCountries>()));
+    sl.registerFactory(() => CountryCubit(sl<GetCountries>()));
 
     // Datasource
     sl.registerLazySingleton<AuthRemoteDataSource>(
@@ -51,8 +51,9 @@ class AuthInjections {
     sl.registerLazySingleton(() => SendOtpUseCase(sl<AuthRepository>()));
     sl.registerLazySingleton(() => VerifyOtpUseCase(sl<AuthRepository>()));
 
-    // Bloc
-    sl.registerCachedFactory(
+    // Bloc — accessed directly via sl<AuthBloc>() across multiple pages,
+    // so it must be a singleton to keep state consistent.
+    sl.registerLazySingleton(
       () => AuthBloc(sl<SendOtpUseCase>(), sl<VerifyOtpUseCase>()),
     );
   }

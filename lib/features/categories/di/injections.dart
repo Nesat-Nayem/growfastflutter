@@ -15,7 +15,7 @@ class CategoryInjections {
     // -----------------------------
     // Bloc
     // -----------------------------
-    sl.registerCachedFactory(() => CategoryBloc(sl(), sl()));
+    sl.registerLazySingleton(() => CategoryBloc(sl(), sl()));
 
     // -----------------------------
     // Use cases

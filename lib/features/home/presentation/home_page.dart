@@ -34,9 +34,9 @@ class HomePage extends StatelessWidget {
           create: (_) => sl<HomePageBloc>()..add(LoadHomePage()),
         ),
 
-        // CategoryBloc
-        BlocProvider<CategoryBloc>(
-          create: (_) => sl<CategoryBloc>()..add(LoadCategories()),
+        // CategoryBloc — singleton, use .value so BlocProvider doesn't close it
+        BlocProvider<CategoryBloc>.value(
+          value: sl<CategoryBloc>()..add(LoadCategories()),
         ),
 
         // ServiceSectionsBloc
