@@ -11,6 +11,7 @@ import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/features/home/data/model/service_section_model.dart';
 import 'package:grow_first/features/listing/presentation/widgets/contact_supplier_simple_popup.dart';
+import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:grow_first/features/widgets/shimmer.dart';
 
 class HomeServiceSection extends StatelessWidget {
@@ -130,7 +131,9 @@ class _ServiceSectionCard extends StatelessWidget {
     final imageUrl = _resolveImageUrl();
     // Calculate card width: (screen width - horizontal padding - gap between cards) / 2
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final calculatedWidth = cardWidth ?? ((screenWidth - 6 - 8) / 2); // 6 = horizontalPadding3*2, 8 = gap
+    final calculatedWidth =
+        cardWidth ??
+        ((screenWidth - 6 - 8) / 2); // 6 = horizontalPadding3*2, 8 = gap
 
     return InkWell(
       onTap: () {
@@ -160,9 +163,8 @@ class _ServiceSectionCard extends StatelessWidget {
                           imageUrl: imageUrl,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
-                            color: Colors.grey.shade200,
-                          ),
+                          placeholder: (_, __) =>
+                              Container(color: Colors.grey.shade200),
                           errorWidget: (_, __, ___) => Container(
                             color: Colors.grey.shade300,
                             child: const Icon(Icons.image_not_supported),
@@ -191,7 +193,11 @@ class _ServiceSectionCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.location_on, size: 12, color: Colors.grey.shade700),
+                          Icon(
+                            Icons.location_on,
+                            size: 12,
+                            color: Colors.grey.shade700,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             service.city!,
@@ -220,12 +226,19 @@ class _ServiceSectionCard extends StatelessWidget {
                         Icon(Icons.star, size: 14, color: selectiveYellowColor),
                         const SizedBox(width: 2),
                         Text(
-                          "(4.5)",
+                          "(${service.rating ?? '0.0'})",
                           style: context.labelSmall.copyWith(
                             color: lightGreyTextColor,
                             fontSize: 11,
                           ),
                         ),
+                        // Text(
+                        //   "(4.5)",
+                        //   style: context.labelSmall.copyWith(
+                        //     color: lightGreyTextColor,
+                        //     fontSize: 11,
+                        //   ),
+                        // ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -236,7 +249,7 @@ class _ServiceSectionCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
@@ -249,57 +262,87 @@ class _ServiceSectionCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    // Book Now Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 34,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF00C6C6), Color(0xFF0099CC)],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            final appStore = sl<AppStore>();
-                            if (appStore.isLoggedIn) {
-                              context.pushNamed(
-                                AppRouterNames.customerSelectBookingLocation,
-                                pathParameters: {"listingId": service.id.toString()},
-                              );
-                            } else {
-                              context.pushNamed(
-                                AppRouterNames.signIn,
-                                extra: {
-                                  "redirectTo": AppRouterNames.customerSelectBookingLocation,
-                                  "listingId": service.id.toString(),
-                                },
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            foregroundColor: whiteColor,
-                            elevation: 0,
-                            padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Book Now",
-                            style: context.labelSmall.copyWith(
-                              color: whiteColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
+                    GradientButtonSecond(
+                      borderRadius: 5,
+                      text: "Book Now",
+                      padding: EdgeInsets.all(9),
+                      onTap: () {
+                        final appStore = sl<AppStore>();
+                        if (appStore.isLoggedIn) {
+                          context.pushNamed(
+                            AppRouterNames.customerSelectBookingLocation,
+                            pathParameters: {
+                              "listingId": service.id.toString(),
+                            },
+                          );
+                        } else {
+                          context.pushNamed(
+                            AppRouterNames.signIn,
+                            extra: {
+                              "redirectTo":
+                                  AppRouterNames.customerSelectBookingLocation,
+                              "listingId": service.id.toString(),
+                            },
+                          );
+                        }
+                      },
                     ),
+                    // Book Now Button
+                    // SizedBox(
+                    //   width: double.infinity,
+                    //   height: 34,
+                    //   child: DecoratedBox(
+                    //     decoration: BoxDecoration(
+                    //       gradient: const LinearGradient(
+                    //         colors: [Color(0xFF00C6C6), Color(0xFF0099CC)],
+                    //         begin: Alignment.centerLeft,
+                    //         end: Alignment.centerRight,
+                    //       ),
+                    //       borderRadius: BorderRadius.circular(6),
+                    //     ),
+                    //     child:
+
+                    // ElevatedButton(
+                    //   onPressed: () {
+                    //     final appStore = sl<AppStore>();
+                    //     if (appStore.isLoggedIn) {
+                    //       context.pushNamed(
+                    //         AppRouterNames.customerSelectBookingLocation,
+                    //         pathParameters: {
+                    //           "listingId": service.id.toString(),
+                    //         },
+                    //       );
+                    //     } else {
+                    //       context.pushNamed(
+                    //         AppRouterNames.signIn,
+                    //         extra: {
+                    //           "redirectTo": AppRouterNames
+                    //               .customerSelectBookingLocation,
+                    //           "listingId": service.id.toString(),
+                    //         },
+                    //       );
+                    //     }
+                    //   },
+                    //       style: ElevatedButton.styleFrom(
+                    //         backgroundColor: Colors.transparent,
+                    //         shadowColor: Colors.transparent,
+                    //         foregroundColor: whiteColor,
+                    //         elevation: 0,
+                    //         padding: EdgeInsets.zero,
+                    //         shape: RoundedRectangleBorder(
+                    //           borderRadius: BorderRadius.circular(6),
+                    //         ),
+                    //       ),
+                    //       child: Text(
+                    //         "Book Now",
+                    //         style: context.labelSmall.copyWith(
+                    //           color: whiteColor,
+                    //           fontWeight: FontWeight.w600,
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                     const SizedBox(height: 6),
                     // Contact Supplier Button
                     SizedBox(
@@ -307,13 +350,14 @@ class _ServiceSectionCard extends StatelessWidget {
                       height: 34,
                       child: OutlinedButton(
                         onPressed: () {
-                          Navigator.of(context).push(
+                          Navigator.of(context, rootNavigator: true).push(
                             MaterialPageRoute(
                               builder: (_) => ContactSupplierSimplePopup(
                                 serviceId: service.id,
                                 serviceTitle: service.title,
                                 servicePrice: service.price,
                                 serviceCity: service.city ?? '',
+                                rating: service.rating,
                                 serviceImageUrl: _resolveImageUrl(),
                               ),
                             ),
@@ -358,7 +402,7 @@ class _ServiceSectionCard extends StatelessWidget {
           return raw;
         }
         // Gallery images are stored in storage folder
-        return "https://growfirst.org/storage/$raw";
+        return "http://127.0.0.1:8000/storage/$raw";
       }
     }
 
@@ -371,7 +415,7 @@ class _ServiceSectionCard extends StatelessWidget {
       final normalized = raw.startsWith('storage/')
           ? raw.replaceFirst('storage/', '')
           : raw;
-      return "https://growfirst.org/storage/$normalized";
+      return "http://127.0.0.1:8000/storage/$normalized";
     }
 
     // Finally try image field
@@ -383,7 +427,7 @@ class _ServiceSectionCard extends StatelessWidget {
       final normalized = raw.startsWith('storage/')
           ? raw.replaceFirst('storage/', '')
           : raw;
-      return "https://growfirst.org/storage/$normalized";
+      return "http://127.0.0.1:8000/storage/$normalized";
     }
 
     return null;

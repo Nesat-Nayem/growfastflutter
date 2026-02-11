@@ -50,7 +50,7 @@ class _ContactSupplierPageState extends State<ContactSupplierPage> {
               crossAxisAlignment: .center,
               children: [
                 Text(
-                  "Login to get best \ndeals instantly",
+                  "Login To Get Best\nDeals Instantly",
                   style: context.bodyLarge.copyWith(
                     fontWeight: FontWeight.w700,
                   ),

@@ -4,11 +4,7 @@ import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 
 class CustomTextfield extends StatelessWidget {
-  const CustomTextfield({
-    super.key,
-    required this.hintText,
-    this.controller,
-  });
+  const CustomTextfield({super.key, required this.hintText, this.controller});
 
   final String hintText;
   final TextEditingController? controller;
@@ -27,7 +23,7 @@ class CustomTextfield extends StatelessWidget {
           return FocusManager.instance.primaryFocus?.unfocus();
         },
 
-        keyboardType: TextInputType.phone,
+        // keyboardType: TextInputType.phone,
         style: context.labelLarge.copyWith(
           fontWeight: FontWeight.w400,
           color: lightGreyTextColor.withValues(alpha: 0.4),

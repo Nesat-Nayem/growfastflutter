@@ -32,7 +32,7 @@ class ReviewsRemoteDataSourceImpl implements ReviewsRemoteDataSource {
       final response = await dio.post('customer/add-review', data: data);
       return response.data;
     } catch (e) {
-      throw Exception('Failed to add review: $e');
+      throw Exception('Failed to Add Review: $e');
     }
   }
 

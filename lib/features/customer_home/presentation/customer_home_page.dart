@@ -34,9 +34,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   @override
   void initState() {
     super.initState();
-    _dashboardCubit = DashboardCubit(
-      DashboardRemoteDataSourceImpl(sl<Dio>()),
-    );
+    _dashboardCubit = DashboardCubit(DashboardRemoteDataSourceImpl(sl<Dio>()));
   }
 
   @override
@@ -198,10 +196,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       padding: horizontalPadding16,
       child: ListView(
         physics: const NeverScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 16),
-          DashboardSkeleton(),
-        ],
+        children: const [SizedBox(height: 16), DashboardSkeleton()],
       ),
     );
   }
@@ -228,17 +223,17 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             verticalMargin24,
             Text(
               'Oops! Something went wrong',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             verticalMargin8,
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
             ),
             verticalMargin24,
             ElevatedButton.icon(
@@ -248,7 +243,10 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: aquaBlueColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -260,12 +258,16 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     );
   }
 
-  Widget _buildUserInfoSection(String userName, String userContact, dynamic userImage) {
+  Widget _buildUserInfoSection(
+    String userName,
+    String userContact,
+    dynamic userImage,
+  ) {
     return Row(
       children: [
         CircleAvatar(
           radius: 24,
-          backgroundColor: Colors.grey[200],
+          backgroundColor: Colors.white,
           backgroundImage: userImage != null && userImage.toString().isNotEmpty
               ? CachedNetworkImageProvider(
                   userImage.toString().startsWith('http')
@@ -283,9 +285,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text.rich(
-                style: context.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w400,
-                ),
+                style: context.bodyLarge.copyWith(fontWeight: FontWeight.w400),
                 TextSpan(
                   text: "Hey, ",
                   children: [
@@ -320,9 +320,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       children: [
         Text(
           "Dashboard",
-          style: context.labelLarge.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: context.labelLarge.copyWith(fontWeight: FontWeight.w500),
         ),
         verticalMargin16,
         DashboardStatCrump(
@@ -344,9 +342,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       children: [
         Text(
           "Recent Bookings",
-          style: context.labelLarge.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: context.labelLarge.copyWith(fontWeight: FontWeight.w500),
         ),
         verticalMargin12,
         if (recentBookings.isEmpty)

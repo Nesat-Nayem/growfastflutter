@@ -17,6 +17,8 @@ class ServiceSectionModel {
   final String? gstNumber;
   final String? serviceImage;
   final List<ServiceGalleryModel> gallery;
+  final String? rating;
+
 
   ServiceSectionModel({
     required this.id,
@@ -37,6 +39,7 @@ class ServiceSectionModel {
     this.gstNumber,
     this.serviceImage,
     this.gallery = const [],
+     this.rating,
   });
 
   factory ServiceSectionModel.fromJson(Map<String, dynamic> json) {
@@ -66,6 +69,11 @@ class ServiceSectionModel {
       gstNumber: json['gst_number'],
       serviceImage: json['service_image'],
       gallery: galleryList,
+          rating: (json['reviews'] != null &&
+            json['reviews'] is List &&
+            json['reviews'].isNotEmpty)
+        ? json['reviews'][0]['rating']?.toString()
+        : null,
     );
   }
 }

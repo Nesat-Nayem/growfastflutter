@@ -18,6 +18,7 @@ import 'package:grow_first/features/reviews/presentation/add_review_popup.dart';
 import 'package:grow_first/features/reviews/presentation/bloc/reviews_cubit.dart';
 import 'package:grow_first/features/reviews/presentation/widgets/review_card_listing.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
+import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:grow_first/features/widgets/status_button.dart';
 import 'package:share_plus/share_plus.dart';
@@ -35,7 +36,7 @@ class ListingDetailPage extends StatefulWidget {
 
 class _ListingDetailPageState extends State<ListingDetailPage> {
   late final ListingBloc _listingBloc;
-
+  int _selectedImageIndex = 0;
   @override
   void initState() {
     super.initState();
@@ -93,6 +94,26 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
 
   @override
   Widget build(BuildContext context) {
+    void _openDrawer(BuildContext context) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: const ModernCustomerDrawer(),
+          ),
+        ),
+      );
+    }
+
     Future<void> _callPhone(String phone) async {
       final Uri uri = Uri(scheme: 'tel', path: phone);
       await launchUrl(uri);
@@ -124,7 +145,16 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomerHomeAppBar(singleTitle: "Detail"),
+      appBar: CustomerHomeAppBar(
+        singleTitle: "Detail",
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => _openDrawer(context),
+          ),
+          horizontalMargin8,
+        ],
+      ),
       body: BlocBuilder<ListingBloc, ListingState>(
         bloc: _listingBloc,
         builder: (context, state) {
@@ -144,9 +174,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
 
           if (videoId != null) {
             videoChild = ServiceVideoDropDown(videoUrl: listing!.videoLink!);
-          } else {
-            videoChild = SizedBox.shrink();
-          }
+          } else {}
 
           return ListView(
             padding: horizontalPadding16,
@@ -160,7 +188,7 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                       borderRadius: BorderRadius.circular(12),
                       child: CachedNetworkImage(
                         imageUrl:
-                            "${sl<AppConfig>().imageBaseUrl}/storage/${listing?.gallery.first.img}",
+                            "${sl<AppConfig>().imageBaseUrl}/storage/${listing?.gallery[_selectedImageIndex].img}",
                         height: 220,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -174,16 +202,23 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                         scrollDirection: Axis.horizontal,
                         itemBuilder: (_, i) {
                           final url = listing?.gallery[i + 1].img;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: CachedNetworkImage(
-                                imageUrl:
-                                    "${sl<AppConfig>().imageBaseUrl}/storage/${url}",
-                                width: 70,
-                                height: 70,
-                                fit: BoxFit.cover,
+                          return InkWell(
+                            onTap: () {
+                              setState(() {
+                                _selectedImageIndex = i + 1;
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                  imageUrl:
+                                      "${sl<AppConfig>().imageBaseUrl}/storage/${url}",
+                                  width: 70,
+                                  height: 70,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                           );
@@ -194,11 +229,11 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   ],
                   Row(
                     children: [
-                      StatusButton(
-                        title: "50% Offer",
-                        backgroundColor: aquaGreenColor,
-                        titleColor: whiteColor,
-                      ),
+                      // StatusButton(
+                      //   title: "50% Offer",
+                      //   backgroundColor: aquaGreenColor,
+                      //   titleColor: whiteColor,
+                      // ),
                       const Spacer(),
                       Container(
                         padding: allPadding8,
@@ -213,7 +248,10 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                               size: 16,
                             ),
                             const SizedBox(width: 4),
-                            Text("6000+ Bookings", style: context.labelMedium),
+                            Text(
+                              "${listing?.totalBookings ?? ""} Bookings",
+                              style: context.labelMedium,
+                            ),
                           ],
                         ),
                       ),
@@ -267,14 +305,20 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Text(
-                        "View Location",
-                        style: context.labelSmall.copyWith(
-                          fontWeight: FontWeight.w300,
-                          color: Color(0XFF588540),
-                          height: 1.5,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Color(0XFF588540),
+
+                      InkWell(
+                        onTap: () {
+                          _openMap(listing?.address ?? '');
+                        },
+                        child: Text(
+                          "View Location",
+                          style: context.labelSmall.copyWith(
+                            fontWeight: FontWeight.w300,
+                            color: Color(0XFF588540),
+                            height: 1.5,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Color(0XFF588540),
+                          ),
                         ),
                       ),
                     ],
@@ -335,7 +379,8 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
 
                     if (listing != null)
                       InkWell(
-                        onTap: listing.website != null &&
+                        onTap:
+                            listing.website != null &&
                                 listing.website!.isNotEmpty
                             ? () => _openWebsite(listing.website!)
                             : null,
@@ -360,27 +405,28 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                       color: greyButttonColor,
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.share_outlined,
-                            size: 19,
-                            color: lightGreyTextColor,
+                          Container(
+                            padding: EdgeInsets.all(5),
+                            child: SvgPicture.asset(
+                              AppAssets.iconShareSvg,
+                              height: 18,
+                            ),
                           ),
                           horizontalMargin8,
                           Expanded(
                             child: Text(
                               "Share Now",
                               style: context.labelMedium.copyWith(
-                                fontWeight: FontWeight.w400,
-                                color: lightGreyTextColor,
+                                fontWeight: FontWeight.w600,
+                                color: const Color.fromARGB(255, 56, 87, 212),
                               ),
                             ),
                           ),
-                          SvgPicture.asset(
-                            AppAssets.iconWhatsAppSvg,
-                            height: 26,
-                            colorFilter: ColorFilter.mode(
-                              lightGreyTextColor,
-                              BlendMode.srcIn,
+                          Container(
+                            padding: EdgeInsets.all(5),
+                            child: SvgPicture.asset(
+                              AppAssets.iconWhatsAppSvg,
+                              height: 26,
                             ),
                           ),
                         ],
@@ -421,14 +467,16 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   ),
                   verticalMargin24,
                   IncludesDropdown(includes: listing?.includes),
-                  verticalMargin24,
-                  videoChild,
+                  verticalMargin8,
+                  ?videoChild,
                   FaqSection(faqs: listing?.faqs),
                   verticalMargin24,
                   ReviewsWidget(
                     listing: listing!,
                     onReviewAdded: () {
-                      _listingBloc.add(LoadListingDetail(listing.id.toString()));
+                      _listingBloc.add(
+                        LoadListingDetail(listing.id.toString()),
+                      );
                     },
                   ),
 
@@ -473,33 +521,37 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                     showIconFirst: true,
                   ),
                   verticalMargin8,
-                  GradientButton(
-                    text: "Book Service",
-                    onTap: () async {
-                      final isLoggedIn =
-                          await sl<ISecureStore>().read("isLoggedIn") == "true";
-                      if (isLoggedIn) {
-                        context.pushNamed(
-                          AppRouterNames.customerSelectBookingLocation,
-                          pathParameters: {
-                            "listingId": state.selectedListing!.id.toString(),
-                          },
-                        );
-                      } else {
-                        context.pushNamed(
-                          AppRouterNames.contactSupplier,
-                          pathParameters: {
-                            "listingId": state.selectedListing!.id.toString(),
-                          },
-                        );
-                      }
-                    },
-                    padding: verticalPadding16,
-                    iconWithTitle: Icon(
-                      Icons.shopping_bag_rounded,
-                      color: whiteColor,
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5),
+                    child: GradientButton(
+                      text: "Book Service",
+                      onTap: () async {
+                        final isLoggedIn =
+                            await sl<ISecureStore>().read("isLoggedIn") ==
+                            "true";
+                        if (isLoggedIn) {
+                          context.pushNamed(
+                            AppRouterNames.customerSelectBookingLocation,
+                            pathParameters: {
+                              "listingId": state.selectedListing!.id.toString(),
+                            },
+                          );
+                        } else {
+                          context.pushNamed(
+                            AppRouterNames.contactSupplier,
+                            pathParameters: {
+                              "listingId": state.selectedListing!.id.toString(),
+                            },
+                          );
+                        }
+                      },
+                      padding: verticalPadding16,
+                      iconWithTitle: Icon(
+                        Icons.shopping_bag_rounded,
+                        color: whiteColor,
+                      ),
+                      showIconFirst: true,
                     ),
-                    showIconFirst: true,
                   ),
                 ],
               ),
@@ -513,20 +565,34 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
   Widget _detailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
+      child: Column(
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          Row(
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(width: 27),
+              Expanded(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-          Spacer(),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.end,
-            ),
-          ),
+          const SizedBox(height: 4),
+          const Divider(thickness: 0.4),
         ],
       ),
     );
@@ -735,7 +801,12 @@ class _FaqSectionState extends State<FaqSection> {
     final faqs = widget.faqs ?? [];
 
     if (faqs.isEmpty) {
-      return const Center(child: Text("No FAQs available"));
+      return Center(
+        child: Container(
+          padding: EdgeInsets.all(6),
+          child: Text("No FAQ's Available"),
+        ),
+      );
     }
 
     return Column(
@@ -783,7 +854,7 @@ class _FaqSectionState extends State<FaqSection> {
                 title: Text(
                   faqs[index].question,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -809,12 +880,8 @@ class _FaqSectionState extends State<FaqSection> {
 class ReviewBuilder extends StatelessWidget {
   final double rating;
   final int totalReviews;
-  
-  const ReviewBuilder({
-    super.key,
-    this.rating = 0,
-    this.totalReviews = 0,
-  });
+
+  const ReviewBuilder({super.key, this.rating = 0, this.totalReviews = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -859,7 +926,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
     final visibleReviews = loadMore ? reviews : reviews.take(3).toList();
     final breakdown = widget.listing.reviewsBreakdown;
     final totalReviews = widget.listing.totalRatings;
-    
+
     // Calculate percentages for rating bars
     double getPercent(int count) {
       if (totalReviews == 0) return 0;
@@ -899,11 +966,14 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Reviews ($totalReviews)"),
+              Text(
+                "Reviews ($totalReviews)",
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
-                  padding: horizontalPadding12 + verticalPadding4,
+                  padding: horizontalPadding12 + verticalPadding2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1022,7 +1092,9 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                     });
                   },
                   child: Text(
-                    loadMore ? "Show Less" : "Load More (${reviews.length - 3} more)",
+                    loadMore
+                        ? "Show Less"
+                        : "Load More (${reviews.length - 3} more)",
                     style: context.labelSmall,
                   ),
                 ),
@@ -1116,7 +1188,7 @@ class LocationMapWidget extends StatelessWidget {
         ),
       );
     }
-    
+
     return GestureDetector(
       onTap: _openInMaps,
       child: ClipRRect(
@@ -1127,55 +1199,11 @@ class LocationMapWidget extends StatelessWidget {
             children: [
               // Map placeholder with address
               Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                ),
+                decoration: BoxDecoration(color: Colors.grey.shade200),
                 child: Stack(
                   children: [
                     // Use a network image of the map
-                    Positioned.fill(
-                      child: CachedNetworkImage(
-                        imageUrl: _getStaticMapUrl(),
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey.shade200,
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey.shade200,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.location_on, size: 48, color: Colors.red),
-                              const SizedBox(height: 8),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(
-                                  address,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Tap to view on map',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.blue.shade700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    Positioned.fill(child: _buildMap()),
                     // Map pin overlay
                     const Center(
                       child: Icon(
@@ -1193,7 +1221,10 @@ class LocationMapWidget extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     boxShadow: [
@@ -1206,7 +1237,11 @@ class LocationMapWidget extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on, size: 20, color: Colors.red),
+                      const Icon(
+                        Icons.location_on,
+                        size: 20,
+                        color: Colors.red,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -1221,7 +1256,10 @@ class LocationMapWidget extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.blue,
                           borderRadius: BorderRadius.circular(6),
@@ -1229,7 +1267,11 @@ class LocationMapWidget extends StatelessWidget {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.directions, size: 16, color: Colors.white),
+                            Icon(
+                              Icons.directions,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'Directions',
@@ -1254,8 +1296,10 @@ class LocationMapWidget extends StatelessWidget {
   }
 
   String _getStaticMapUrl() {
-    // Using OpenStreetMap static map service (free, no API key)
-    if (latitude != null && longitude != null && latitude != 0.0 && longitude != 0.0) {
+    if (latitude != null &&
+        longitude != null &&
+        latitude != 0.0 &&
+        longitude != 0.0) {
       return 'https://staticmap.openstreetmap.de/staticmap.php?center=$latitude,$longitude&zoom=15&size=600x300&maptype=mapnik';
     }
     // Fallback: use nominatim to geocode address
@@ -1263,14 +1307,59 @@ class LocationMapWidget extends StatelessWidget {
     return 'https://staticmap.openstreetmap.de/staticmap.php?center=$encodedAddress&zoom=15&size=600x300&maptype=mapnik';
   }
 
+  Widget _buildMap() {
+    final mapUrl = _getStaticMapUrl();
+
+    if (mapUrl.isEmpty) {
+      return _addressFallbackUI();
+    }
+
+    return CachedNetworkImage(
+      imageUrl: mapUrl,
+      fit: BoxFit.cover,
+      placeholder: (context, url) =>
+          const Center(child: CircularProgressIndicator()),
+      errorWidget: (context, url, error) => _addressFallbackUI(),
+    );
+  }
+
+  Widget _addressFallbackUI() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.location_on, size: 48, color: Colors.red),
+          const SizedBox(height: 8),
+          Text(
+            address,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Tap to view on map',
+            style: TextStyle(color: Colors.blue),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _openInMaps() async {
     String url;
-    if (latitude != null && longitude != null && latitude != 0.0 && longitude != 0.0) {
-      url = 'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    if (latitude != null &&
+        longitude != null &&
+        latitude != 0.0 &&
+        longitude != 0.0) {
+      url =
+          'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
     } else {
-      url = 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}';
+      url =
+          'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}';
     }
-    
+
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);

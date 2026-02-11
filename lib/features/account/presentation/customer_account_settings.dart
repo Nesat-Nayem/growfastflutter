@@ -45,7 +45,7 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
   // Dropdown and date values
   String? _selectedGender;
   DateTime? _selectedDateOfBirth;
-  
+
   // Image
   File? _selectedImage;
   String? _currentImageUrl;
@@ -140,7 +140,7 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
       if (pickedFile != null) {
         final file = File(pickedFile.path);
         final fileSize = await file.length();
-        
+
         // Check file size (500KB = 512000 bytes)
         if (fileSize > 512000) {
           if (mounted) {
@@ -174,9 +174,9 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
       }
     }
   }
@@ -216,7 +216,10 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
     return BlocProvider.value(
       value: _accountCubit,
       child: Scaffold(
-        appBar: CustomerHomeAppBar(singleTitle: "Account Settings", backOpensDrawer: true),
+        appBar: CustomerHomeAppBar(
+          singleTitle: "Account Settings",
+          backOpensDrawer: true,
+        ),
         body: BlocConsumer<AccountCubit, AccountState>(
           listener: (context, state) {
             if (state is AccountUnauthorized) {
@@ -256,11 +259,21 @@ class _CustomerAccountSettingsState extends State<CustomerAccountSettings> {
                           backgroundColor: Colors.grey[200],
                           backgroundImage: _selectedImage != null
                               ? FileImage(_selectedImage!)
-                              : (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
-                                  ? CachedNetworkImageProvider(_getImageUrl(_currentImageUrl))
-                                  : null,
-                          child: (_selectedImage == null && (_currentImageUrl == null || _currentImageUrl!.isEmpty))
-                              ? const Icon(Icons.person, color: Colors.grey, size: 30)
+                              : (_currentImageUrl != null &&
+                                    _currentImageUrl!.isNotEmpty)
+                              ? CachedNetworkImageProvider(
+                                  _getImageUrl(_currentImageUrl),
+                                )
+                              : null,
+                          child:
+                              (_selectedImage == null &&
+                                  (_currentImageUrl == null ||
+                                      _currentImageUrl!.isEmpty))
+                              ? const Icon(
+                                  Icons.person,
+                                  color: Colors.grey,
+                                  size: 30,
+                                )
                               : null,
                         ),
                         horizontalMargin16,

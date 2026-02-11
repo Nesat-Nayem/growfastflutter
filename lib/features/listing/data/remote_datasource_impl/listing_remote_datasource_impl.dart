@@ -22,7 +22,7 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
         'ListingRemoteDataSourceImpl.getListingsBySubcategory => params: ${params.toQuery()}',
         name: 'ListingRemoteDataSourceImpl',
       );
-      
+
       final response = await NetworkHelper.sendRequest(
         dio,
         RequestType.get,
@@ -48,7 +48,7 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
         'ListingRemoteDataSourceImpl.getListingsBySubcategory => services null? ${services == null}',
         name: 'ListingRemoteDataSourceImpl',
       );
-      
+
       if (services == null) {
         return const ListingResponseModel(
           listings: [],
@@ -65,7 +65,7 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
         'ListingRemoteDataSourceImpl.getListingsBySubcategory => rawList length: ${rawList.length}',
         name: 'ListingRemoteDataSourceImpl',
       );
-      
+
       final listings = <ListingModel>[];
       for (var e in rawList) {
         try {
@@ -102,7 +102,7 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
         'ListingRemoteDataSourceImpl.getListingsBySubcategory => mapped listings: ${listings.length}, total: $total, currentPage: $currentPage, lastPage: $lastPage, hasMore: $hasMorePages',
         name: 'ListingRemoteDataSourceImpl',
       );
-      
+
       return ListingResponseModel(
         listings: listings,
         total: total,
@@ -132,13 +132,19 @@ class ListingRemoteDataSourceImpl implements ListingRemoteDataSource {
     if (response['status'] == true) {
       final data = response['data'];
       final serviceJson = data['service'] as Map<String, dynamic>;
-      
+
       // Merge reviews data from response into service json
       serviceJson['reviews'] = data['reviews'] ?? [];
       serviceJson['over_all_rating'] = data['over_all_rating'] ?? 0;
       serviceJson['total_ratings'] = data['total_ratings'] ?? 0;
       serviceJson['reviews_breakdown'] = data['reviews_breakdown'];
-      
+      serviceJson['total_bookings'] = data['total_bookings'] ?? 0;
+
+      developer.log(
+        'TOTAL BOOKINGS FROM API => ${data['total_bookings']}',
+        name: 'DEBUG',
+      );
+
       return ListingModel.fromJson(serviceJson);
     } else {
       throw ServerException();

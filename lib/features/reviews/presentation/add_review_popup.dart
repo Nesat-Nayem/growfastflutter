@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:grow_first/app/di/app_injections.dart';
+import 'package:grow_first/core/storage/secure_storage.dart';
+import 'package:grow_first/core/utils/snackbar.dart';
 import 'package:grow_first/features/reviews/presentation/bloc/reviews_cubit.dart';
+import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class AddReviewPopup extends StatefulWidget {
   final int serviceId;
@@ -28,8 +32,9 @@ class _AddReviewPopupState extends State<AddReviewPopup> {
           listener: (context, state) {
             if (state is ReviewSubmitSuccess) {
               Navigator.pop(context, true);
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(state.message)));
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
           builder: (context, state) {
@@ -37,10 +42,11 @@ class _AddReviewPopupState extends State<AddReviewPopup> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Add Review", style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  "Add Review",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
                 const SizedBox(height: 16),
-
-                /// ⭐ Rating
                 Row(
                   children: List.generate(5, (i) {
                     return IconButton(
@@ -63,22 +69,65 @@ class _AddReviewPopupState extends State<AddReviewPopup> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("Cancel"),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(color: Colors.black45),
+                      ),
                     ),
-                    ElevatedButton(
-                      onPressed: state is ReviewsLoading
+                    SizedBox(width: 5),
+                    GradientButton(
+                      borderRadius: 7,
+                      text: "Submit",
+                      padding: const EdgeInsets.all(10),
+                      onTap: state is ReviewsLoading
                           ? null
-                          : () {
+                          : () async {
+                              debugPrint("SUBMIT BUTTON CLICKED");
+
+                              final token = await sl<ISecureStore>().read(
+                                "token",
+                              );
+
+                              if (token == null || token.isEmpty) {
+                                // ❌ User not logged in
+                                AppSnackBar.show(
+                                  context,
+                                  message: "Please login first",
+                                );
+                                Navigator.of(context).pop();
+
+                                return;
+                              }
+
+                              // ✅ User logged in → submit review
                               context.read<ReviewsCubit>().submitReview(
-                                    serviceId: widget.serviceId,
-                                    title: titleCtrl.text,
-                                    email: emailCtrl.text,
-                                    rating: rating,
-                                    details: detailsCtrl.text,
-                                  );
+                                serviceId: widget.serviceId,
+                                title: titleCtrl.text,
+                                email: emailCtrl.text,
+                                rating: rating,
+                                details: detailsCtrl.text,
+                              );
                             },
-                      child: const Text("Submit"),
                     ),
+
+                    // GradientButton(
+                    //   borderRadius: 7,
+                    //   text: "Submit",
+                    //   padding: const EdgeInsets.all(10),
+                    //   onTap: state is ReviewsLoading
+                    //       ? null
+                    //       : () {
+                    //           debugPrint("SUBMIT BUTTON CLICKED");
+
+                    //           context.read<ReviewsCubit>().submitReview(
+                    //             serviceId: widget.serviceId,
+                    //             title: titleCtrl.text,
+                    //             email: emailCtrl.text,
+                    //             rating: rating,
+                    //             details: detailsCtrl.text,
+                    //           );
+                    //         },
+                    // ),
                   ],
                 ),
               ],
@@ -89,14 +138,16 @@ class _AddReviewPopupState extends State<AddReviewPopup> {
     );
   }
 
-  Widget _field(String label, TextEditingController c,
-      {int maxLines = 1}) {
+  Widget _field(String label, TextEditingController c, {int maxLines = 1}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
         controller: c,
         maxLines: maxLines,
-        decoration: InputDecoration(labelText: label),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
       ),
     );
   }

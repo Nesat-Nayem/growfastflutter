@@ -25,7 +25,7 @@ class _SearchPageState extends State<SearchPage> {
   final FocusNode _focusNode = FocusNode();
   late final ListingBloc _listingBloc;
   Timer? _debounce;
-  
+
   List<String> _recentSearches = [];
   final List<String> _popularSearches = [
     'Plumber',
@@ -61,18 +61,18 @@ class _SearchPageState extends State<SearchPage> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (query.trim().isNotEmpty) {
-        _listingBloc.add(LoadListings(GetListingsParams(
-          keyword: query.trim(),
-          page: 1,
-          perPage: 5,
-        )));
+        _listingBloc.add(
+          LoadListings(
+            GetListingsParams(keyword: query.trim(), page: 1, perPage: 5),
+          ),
+        );
       }
     });
   }
 
   void _performSearch(String query) {
     if (query.trim().isEmpty) return;
-    
+
     // Add to recent searches
     setState(() {
       _recentSearches.remove(query);
@@ -81,7 +81,7 @@ class _SearchPageState extends State<SearchPage> {
         _recentSearches = _recentSearches.take(10).toList();
       }
     });
-    
+
     // Navigate to listing page with keyword filter using go() for shell routes
     context.go('/listings?keyword=${Uri.encodeComponent(query.trim())}');
   }
@@ -102,10 +102,23 @@ class _SearchPageState extends State<SearchPage> {
           backgroundColor: whiteColor,
           elevation: 0,
           scrolledUnderElevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: textBlackColor),
-            onPressed: () => context.pop(),
+          leading: Padding(
+            padding: const EdgeInsets.all(12.0), // AppBar spacing fix
+            child: InkWell(
+              borderRadius: BorderRadius.circular(50),
+              onTap: () => context.pop(),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: textBlackColor, width: 0.7),
+                ),
+                child: const Center(
+                  child: Icon(Icons.arrow_back, color: Colors.black, size: 14),
+                ),
+              ),
+            ),
           ),
+
           title: _buildSearchField(),
           titleSpacing: 0,
         ),
@@ -169,12 +182,12 @@ class _SearchPageState extends State<SearchPage> {
         if (_searchController.text.isNotEmpty && state.listings.isNotEmpty) {
           return _buildSearchResults(state);
         }
-        
+
         // Show loading indicator while searching
         if (_searchController.text.isNotEmpty && state.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        
+
         // Show default content (recent + popular searches)
         return _buildDefaultContent();
       },
@@ -226,13 +239,11 @@ class _SearchPageState extends State<SearchPage> {
             ),
             verticalMargin24,
           ],
-          
+
           // Popular Searches
           Text(
             'Popular Searches',
-            style: context.labelLarge.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: context.labelLarge.copyWith(fontWeight: FontWeight.w600),
           ),
           verticalMargin12,
           Wrap(
@@ -242,18 +253,17 @@ class _SearchPageState extends State<SearchPage> {
               return _buildSearchChip(
                 search,
                 icon: Icons.trending_up,
+
                 onTap: () => _performSearch(search),
               );
             }).toList(),
           ),
           verticalMargin24,
-          
+
           // Quick Categories
           Text(
             'Browse by Category',
-            style: context.labelLarge.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: context.labelLarge.copyWith(fontWeight: FontWeight.w600),
           ),
           verticalMargin12,
           _buildQuickCategories(),
@@ -281,19 +291,21 @@ class _SearchPageState extends State<SearchPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: const Color(0xFF7D8FAB)),
+            Icon(icon, size: 16, color: Color.fromARGB(255, 29, 126, 190)),
             const SizedBox(width: 6),
             Text(
               label,
-              style: context.labelMedium.copyWith(
-                fontWeight: FontWeight.w400,
-              ),
+              style: context.labelMedium.copyWith(fontWeight: FontWeight.w400),
             ),
             if (onDelete != null) ...[
               const SizedBox(width: 4),
               InkWell(
                 onTap: onDelete,
-                child: const Icon(Icons.close, size: 16, color: Color(0xFF7D8FAB)),
+                child: const Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Color(0xFF7D8FAB),
+                ),
               ),
             ],
           ],
@@ -339,7 +351,7 @@ class _SearchPageState extends State<SearchPage> {
                 Icon(
                   category['icon'] as IconData,
                   size: 28,
-                  color: aquaBlueColor,
+                  color: const Color.fromARGB(255, 29, 126, 190),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -386,7 +398,7 @@ class _SearchPageState extends State<SearchPage> {
 
         final listing = state.listings[index];
         final imageUrl = _resolveImageUrl(listing);
-        
+
         return ListTile(
           leading: Container(
             width: 50,
@@ -401,14 +413,10 @@ class _SearchPageState extends State<SearchPage> {
                     child: CachedNetworkImage(
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => const Icon(
-                        Icons.image,
-                        color: Colors.grey,
-                      ),
-                      errorWidget: (_, __, ___) => const Icon(
-                        Icons.image,
-                        color: Colors.grey,
-                      ),
+                      placeholder: (_, __) =>
+                          const Icon(Icons.image, color: Colors.grey),
+                      errorWidget: (_, __, ___) =>
+                          const Icon(Icons.image, color: Colors.grey),
                     ),
                   )
                 : const Icon(Icons.business, color: Colors.grey),

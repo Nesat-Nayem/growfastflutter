@@ -15,18 +15,23 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   @override
+  @override
   void initState() {
-    _navigateTo();
     super.initState();
+    _navigateTo();
   }
 
-  void _navigateTo() async {
+  Future<void> _navigateTo() async {
     await Future.delayed(const Duration(seconds: 2));
+
     final isLoggedIn = await sl<ISecureStore>().read("isLoggedIn") == "true";
+
+    if (!mounted) return;
+
     if (isLoggedIn) {
       context.goNamed(AppRouterNames.home);
     } else {
-      context.goNamed(AppRouterNames.home);
+      context.goNamed(AppRouterNames.signIn);
     }
   }
 

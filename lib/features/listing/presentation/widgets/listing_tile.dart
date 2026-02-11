@@ -65,7 +65,11 @@ class ListingTile extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.location_on, size: 12, color: Colors.grey.shade700),
+                    Icon(
+                      Icons.location_on,
+                      size: 12,
+                      color: Colors.grey.shade700,
+                    ),
                     const SizedBox(width: 2),
                     Text(
                       listing?.city ?? "",
@@ -104,7 +108,9 @@ class ListingTile extends StatelessWidget {
                     Icon(Icons.star, size: 14, color: selectiveYellowColor),
                     const SizedBox(width: 2),
                     Text(
-                      "(4.5)",
+                      listing != null && listing!.reviews.isNotEmpty
+                          ? listing!.reviews.first.rating ?? "0.0"
+                          : "0.0",
                       style: context.labelSmall.copyWith(
                         color: lightGreyTextColor,
                         fontSize: 11,
@@ -120,7 +126,7 @@ class ListingTile extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
@@ -135,57 +141,84 @@ class ListingTile extends StatelessWidget {
                 const Spacer(),
                 // Buttons
                 if (showActionButtons) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 34,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF00C6C6), Color(0xFF0099CC)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final appStore = sl<AppStore>();
-                          if (appStore.isLoggedIn) {
-                            context.pushNamed(
-                              AppRouterNames.customerSelectBookingLocation,
-                              pathParameters: {
-                                "listingId": listing?.id.toString() ?? "",
-                              },
-                            );
-                          } else {
-                            context.pushNamed(
-                              AppRouterNames.signIn,
-                              extra: {
-                                "redirectTo": AppRouterNames.customerSelectBookingLocation,
-                                "listingId": listing?.id.toString() ?? "",
-                              },
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          foregroundColor: whiteColor,
-                          elevation: 0,
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        child: Text(
-                          "Book Now",
-                          style: context.labelSmall.copyWith(
-                            color: whiteColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   height: 34,
+                  //   child: DecoratedBox(
+                  //     decoration: BoxDecoration(
+                  //       gradient: const LinearGradient(
+                  //         colors: [Color(0xFF00C6C6), Color(0xFF0099CC)],
+                  //         begin: Alignment.centerLeft,
+                  //         end: Alignment.centerRight,
+                  //       ),
+                  //       borderRadius: BorderRadius.circular(6),
+                  //     ),
+                  //     child: ElevatedButton(
+                  //       onPressed: () {
+                  //         final appStore = sl<AppStore>();
+                  //         if (appStore.isLoggedIn) {
+                  //           context.pushNamed(
+                  //             AppRouterNames.customerSelectBookingLocation,
+                  //             pathParameters: {
+                  //               "listingId": listing?.id.toString() ?? "",
+                  //             },
+                  //           );
+                  //         } else {
+                  //           context.pushNamed(
+                  //             AppRouterNames.signIn,
+                  //             extra: {
+                  //               "redirectTo": AppRouterNames
+                  //                   .customerSelectBookingLocation,
+                  //               "listingId": listing?.id.toString() ?? "",
+                  //             },
+                  //           );
+                  //         }
+                  //       },
+                  //       style: ElevatedButton.styleFrom(
+                  //         backgroundColor: Colors.transparent,
+                  //         shadowColor: Colors.transparent,
+                  //         foregroundColor: whiteColor,
+                  //         elevation: 0,
+                  //         padding: EdgeInsets.zero,
+                  //         shape: RoundedRectangleBorder(
+                  //           borderRadius: BorderRadius.circular(6),
+                  //         ),
+                  //       ),
+                  //       child: Text(
+                  //         "Book Now",
+                  //         style: context.labelSmall.copyWith(
+                  //           color: whiteColor,
+                  //           fontWeight: FontWeight.w600,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  GradientButtonSecond(
+                    borderRadius: 5,
+                    text: "Book Now",
+                    padding: EdgeInsets.all(9),
+                    onTap: () {
+                      final appStore = sl<AppStore>();
+                      if (appStore.isLoggedIn) {
+                        context.pushNamed(
+                          AppRouterNames.customerSelectBookingLocation,
+                          pathParameters: {
+                            "listingId": listing?.id.toString() ?? "",
+                          },
+                        );
+                      } else {
+                        context.pushNamed(
+                          AppRouterNames.signIn,
+                          extra: {
+                            "redirectTo":
+                                AppRouterNames.customerSelectBookingLocation,
+                            "listingId": listing?.id.toString() ?? "",
+                          },
+                        );
+                      }
+                      ;
+                    },
                   ),
                   const SizedBox(height: 6),
                   SizedBox(
@@ -194,9 +227,10 @@ class ListingTile extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () {
                         if (listing != null) {
-                          Navigator.of(context).push(
+                          Navigator.of(context, rootNavigator: true).push(
                             MaterialPageRoute(
-                              builder: (_) => ContactSupplierPopup(listing: listing!),
+                              builder: (_) =>
+                                  ContactSupplierPopup(listing: listing!),
                             ),
                           );
                         }
@@ -214,6 +248,7 @@ class ListingTile extends StatelessWidget {
                         child: Text(
                           "Contact Supplier",
                           style: context.labelSmall.copyWith(
+                            fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -255,18 +290,23 @@ class ListingTile extends StatelessWidget {
                     text: "Contact Supplier",
                     onTap: () {
                       if (listing != null) {
-                        Navigator.of(context).push(
+                        Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
-                            builder: (_) => ContactSupplierPopup(listing: listing!),
+                            builder: (_) =>
+                                ContactSupplierPopup(listing: listing!),
                           ),
                         );
                       }
                     },
                     hideGradient: true,
-                    padding: verticalPadding12,
+                    padding: EdgeInsets.all(10),
                     borderRadius: 6,
                     backgroundColor: whiteColor,
-                    textStyle: context.labelLarge.copyWith(color: textBlackColor),
+                    textStyle: context.labelLarge.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: textBlackColor,
+                    ),
                     enableBorder: true,
                     borderColor: aquaBlueColor,
                   ),
@@ -288,15 +328,20 @@ class ListingTile extends StatelessWidget {
                         context.pushNamed(
                           AppRouterNames.signIn,
                           extra: {
-                            "redirectTo": AppRouterNames.customerSelectBookingLocation,
+                            "redirectTo":
+                                AppRouterNames.customerSelectBookingLocation,
                             "listingId": listing?.id.toString() ?? "",
                           },
                         );
                       }
                     },
-                    padding: verticalPadding12,
+                    padding: EdgeInsets.all(12),
                     borderRadius: 6,
-                    textStyle: context.labelLarge.copyWith(color: whiteColor),
+                    textStyle: context.labelLarge.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: whiteColor,
+                    ),
                   ),
                 ),
               ],
@@ -400,8 +445,13 @@ class _ListingOrganizationAndRating extends StatelessWidget {
           children: [
             Icon(Icons.star_rounded, size: 16, color: selectiveYellowColor),
             Text(
-              "(4.5)",
-              style: context.labelSmall.copyWith(color: lightGreyTextColor),
+              listing != null && listing!.reviews.isNotEmpty
+                  ? listing!.reviews.first.rating ?? "0.0"
+                  : "0.0",
+              style: context.labelSmall.copyWith(
+                color: lightGreyTextColor,
+                fontSize: 11,
+              ),
             ),
           ],
         ),

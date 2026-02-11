@@ -15,7 +15,9 @@ class AppAssets {
 
   static const String iconUploadCloudSvg = "assets/svg/icon_upload_cloud.svg";
 
-  static const String iconWhatsAppSvg = "assets/svg/icon_whatsapp.svg";
+  static const String iconWhatsAppSvg = "assets/svg/whatsApp_icon.svg";
+
+  static const String iconShareSvg = "assets/svg/Share_icon.svg";
 
   static const String successCheckMarkSvg = "assets/svg/success_checkmark.svg";
 

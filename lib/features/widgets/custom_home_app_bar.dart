@@ -49,19 +49,150 @@ class CustomerHomeAppBar extends StatelessWidget
       scrolledUnderElevation: 0,
       leading: Row(
         children: [
-          IconButton(
-            onPressed: () {
-              if (backOpensDrawer) {
-                _openDrawer(context);
-              } else if (backGoesToHome) {
-                context.goNamed(AppRouterNames.home);
-              } else {
-                context.pop();
-              }
-            },
-            icon: Icon(Icons.arrow_back),
+          Padding(
+            padding: EdgeInsetsGeometry.symmetric(horizontal: 6),
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.black, width: 0.7),
+              ),
+              child: IconButton(
+                iconSize: 13,
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () {
+                  if (backOpensDrawer) {
+                    context.goNamed(AppRouterNames.home);
+                  } else if (backGoesToHome) {
+                    context.goNamed(AppRouterNames.home);
+                  } else {
+                    context.pop();
+                  }
+                },
+              ),
+            ),
           ),
 
+          // IconButton(
+          //   icon: const Icon(Icons.menu),
+          //   onPressed: () => _openDrawer(context),
+          // ),
+        ],
+      ),
+
+      title: singleTitle != null
+          ? Text(
+              singleTitle!,
+              style: context.bodySmall.copyWith(
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.1,
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Pune", style: context.labelSmall),
+                Row(
+                  children: [
+                    Text("BTM Layout, 500628", style: context.labelSmall),
+                    horizontalMargin4,
+                    const Icon(Icons.arrow_right_sharp),
+                  ],
+                ),
+              ],
+            ),
+      centerTitle: singleTitle != null,
+      actions: singleTitle != null
+          ? actions
+          : [
+              IconButton.filled(
+                icon: const Icon(Icons.search),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll(lightGreyColor),
+                ),
+                onPressed: () {
+                  context.push('/search');
+                },
+              ),
+              horizontalMargin16,
+            ],
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class CustomerHomeAppBarSecond extends StatelessWidget
+    implements PreferredSizeWidget {
+  const CustomerHomeAppBarSecond({
+    super.key,
+    this.singleTitle,
+    this.actions,
+    this.backOpensDrawer = false,
+    this.backGoesToHome = false,
+  });
+
+  final String? singleTitle;
+  final List<Widget>? actions;
+  final bool backOpensDrawer;
+  final bool backGoesToHome;
+
+  void _openDrawer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const ModernCustomerDrawer(),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      leadingWidth: 96,
+      backgroundColor: whiteColor,
+      scrolledUnderElevation: 0,
+      leading: Row(
+        children: [
+          // Padding(
+          //   padding: EdgeInsetsGeometry.symmetric(horizontal: 6),
+          //   child: Container(
+          //     width: 30,
+          //     height: 30,
+          //     decoration: BoxDecoration(
+          //       shape: BoxShape.circle,
+          //       border: Border.all(color: Colors.black, width: 0.7),
+          //     ),
+          //     child: IconButton(
+          //       iconSize: 13,
+          //       padding: EdgeInsets.zero,
+          //       icon: const Icon(Icons.arrow_back, color: Colors.black),
+          //       onPressed: () {
+          //         if (backOpensDrawer) {
+          //           context.goNamed(AppRouterNames.home);
+          //         } else if (backGoesToHome) {
+          //           context.goNamed(AppRouterNames.home);
+          //         } else {
+          //           context.pop();
+          //         }
+          //       },
+          //     ),
+          //   ),
+          // ),
           IconButton(
             icon: const Icon(Icons.menu),
             onPressed: () => _openDrawer(context),

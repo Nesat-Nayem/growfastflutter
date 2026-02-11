@@ -41,7 +41,8 @@ class HomePage extends StatelessWidget {
 
         // ServiceSectionsBloc
         BlocProvider<ServiceSectionsBloc>(
-          create: (_) => sl<ServiceSectionsBloc>()..add(LoadAllServiceSections()),
+          create: (_) =>
+              sl<ServiceSectionsBloc>()..add(LoadAllServiceSections()),
         ),
       ],
       child: const HomePageContent(),
@@ -59,12 +60,12 @@ class HomePageContent extends StatefulWidget {
 class _HomePageContentState extends State<HomePageContent> {
   final PageStorageKey _pageKey = PageStorageKey("customer-home-scroll");
   final LocationService _locationService = LocationService();
-  
+
   String _city = "Fetching...";
   String _address = "Getting your location";
   bool _isLoadingLocation = true;
   LocationStatus? _locationStatus;
-  
+
   BannerAd banner = BannerAd(
     size: AdSize.banner,
     adUnitId: 'ca-app-pub-3940256099942544/9214589741',
@@ -89,10 +90,10 @@ class _HomePageContentState extends State<HomePageContent> {
 
   Future<void> _fetchLocation() async {
     setState(() => _isLoadingLocation = true);
-    
+
     final status = await _locationService.checkAndRequestPermission();
     _locationStatus = status;
-    
+
     if (status == LocationStatus.granted) {
       final location = await _locationService.getCurrentLocation();
       if (mounted) {
@@ -100,7 +101,7 @@ class _HomePageContentState extends State<HomePageContent> {
           _isLoadingLocation = false;
           if (location != null) {
             _city = location.city;
-            _address = location.pincode.isNotEmpty 
+            _address = location.pincode.isNotEmpty
                 ? "${location.address}, ${location.pincode}"
                 : location.address;
           } else {
@@ -294,12 +295,17 @@ class _HomePageContentState extends State<HomePageContent> {
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             // Calculate tile width to fit exactly 3 tiles with spacing
-                            final screenWidth = MediaQuery.sizeOf(context).width;
-                            final horizontalPadding = 6.0; // horizontalPadding3 = 3 on each side
-                            final availableWidth = screenWidth - horizontalPadding;
+                            final screenWidth = MediaQuery.sizeOf(
+                              context,
+                            ).width;
+                            final horizontalPadding =
+                                6.0; // horizontalPadding3 = 3 on each side
+                            final availableWidth =
+                                screenWidth - horizontalPadding;
                             final spacing = 12.0;
-                            final tileWidth = (availableWidth - (spacing * 2)) / 3;
-                            
+                            final tileWidth =
+                                (availableWidth - (spacing * 2)) / 3;
+
                             return ListView.separated(
                               clipBehavior: Clip.none,
                               scrollDirection: Axis.horizontal,
@@ -318,10 +324,13 @@ class _HomePageContentState extends State<HomePageContent> {
                                       ),
                                       pageBuilder:
                                           (context, animation1, animation2) {
-                                            return BlocProvider<CategoryBloc>.value(
+                                            return BlocProvider<
+                                              CategoryBloc
+                                            >.value(
                                               value: categoryBloc,
                                               child: SubCategoriesScreen(
-                                                category: state.categories[index],
+                                                category:
+                                                    state.categories[index],
                                               ),
                                             );
                                           },
@@ -451,7 +460,7 @@ class _HomePageContentState extends State<HomePageContent> {
             //             itemBuilder: (context, index) {
             //               final item = state.recentSearches[index];
             //               final imageUrl = item.image != null
-            //                   ? "https://growfirst.org/${item.image}"
+            //                   ? "http://127.0.0.1:8000/${item.image}"
             //                   : "https://via.placeholder.com/300";
             //
             //               return Container(

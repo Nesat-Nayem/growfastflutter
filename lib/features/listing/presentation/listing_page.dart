@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:grow_first/features/listing/domain/usecases/params/listing_param
 import 'package:grow_first/features/listing/presentation/bloc/listing_bloc.dart';
 import 'package:grow_first/features/listing/presentation/widgets/listing_tile.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
+import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 
 class ListingPage extends StatefulWidget {
@@ -39,10 +41,27 @@ class _ListingPageState extends State<ListingPage> {
   late final ScrollController _scrollController;
   ListingFilterParams _currentFilters = const ListingFilterParams();
   String? _currentSortBy;
+  late PageController _bannerController;
+  int _currentBannerIndex = 0;
+  Timer? bannerTime;
 
   @override
   void initState() {
     super.initState();
+    _bannerController = PageController(viewportFraction: 1);
+    bannerTime = Timer.periodic(const Duration(seconds: 2), (Timer) {
+      final state = _listingBloc.state;
+      if (state.banners.isEmpty) return;
+      _currentBannerIndex = (_currentBannerIndex + 1) % state.banners.length;
+
+      if (_bannerController.hasClients) {
+        _bannerController.animateToPage(
+          _currentBannerIndex,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
     developer.log(
       'ListingPage.initState -> categoryId=${widget.categoryId}, subcategoryId=${widget.subcategoryId}, serviceType=${widget.serviceType}, keyword=${widget.keyword}',
       name: 'ListingPage',
@@ -116,6 +135,9 @@ class _ListingPageState extends State<ListingPage> {
 
   @override
   void dispose() {
+    bannerTime?.cancel();
+    _bannerController.dispose();
+
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _listingBloc.close();
@@ -171,29 +193,21 @@ class _ListingPageState extends State<ListingPage> {
           'ListingPage._mainContent -> builder invoked | isLoading=${state.isLoading} | total=${state.totalNumberOfListings} | listingsLen=${state.listings.length} | error=${state.error}',
           name: 'ListingPage',
         );
-        
+
         if (state.isLoading) {
           return const Expanded(
             child: Center(child: CircularProgressIndicator()),
           );
         }
-        
         if (state.error != null) {
           return Expanded(
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
+                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
                   verticalMargin16,
-                  Text(
-                    "Something went wrong",
-                    style: context.labelLarge,
-                  ),
+                  Text("Something went wrong", style: context.labelLarge),
                   verticalMargin8,
                   TextButton(
                     onPressed: _loadListings,
@@ -204,18 +218,13 @@ class _ListingPageState extends State<ListingPage> {
             ),
           );
         }
-        
         if (state.listings.isEmpty) {
           return Expanded(
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: lightGreyTextColor,
-                  ),
+                  Icon(Icons.search_off, size: 64, color: lightGreyTextColor),
                   verticalMargin16,
                   Text("No listings found", style: context.labelLarge),
                   if (_currentFilters.hasActiveFilters ||
@@ -254,10 +263,7 @@ class _ListingPageState extends State<ListingPage> {
         if (index >= state.listings.length) {
           return _buildLoadMoreIndicator(state);
         }
-        return ListingTile(
-          isGridView: true,
-          listing: state.listings[index],
-        );
+        return ListingTile(isGridView: true, listing: state.listings[index]);
       },
     );
   }
@@ -304,6 +310,26 @@ class _ListingPageState extends State<ListingPage> {
     );
   }
 
+  void _openDrawer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const ModernCustomerDrawer(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<ListingBloc>.value(
@@ -319,24 +345,8 @@ class _ListingPageState extends State<ListingPage> {
               icon: const Icon(Icons.search, size: 26),
             ),
             IconButton(
-              onPressed: () {
-                setState(() => isGridView = true);
-              },
-              icon: Icon(
-                Icons.grid_view_outlined,
-                size: 28,
-                color: isGridView ? aquaBlueColor : null,
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                setState(() => isGridView = false);
-              },
-              icon: Icon(
-                Icons.list,
-                size: 35,
-                color: !isGridView ? aquaBlueColor : null,
-              ),
+              icon: const Icon(Icons.menu),
+              onPressed: () => _openDrawer(context),
             ),
             horizontalMargin8,
           ],
@@ -352,18 +362,20 @@ class _ListingPageState extends State<ListingPage> {
                   if (state.banners.isEmpty) return const SizedBox();
                   return SizedBox(
                     height: 140,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
+                    child: PageView.builder(
+                      controller: _bannerController,
                       itemCount: state.banners.length,
+                      onPageChanged: (index) {
+                        _currentBannerIndex = index;
+                      },
                       itemBuilder: (context, index) {
                         return Padding(
-                          padding: const EdgeInsets.only(right: 3),
+                          padding: const EdgeInsets.only(right: 6),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(
                               state.banners[index],
-                              width: 397,
-                              height: 140,
+                              width: double.infinity,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -373,6 +385,34 @@ class _ListingPageState extends State<ListingPage> {
                   );
                 },
               ),
+
+              // BlocBuilder<ListingBloc, ListingState>(
+              //   bloc: _listingBloc,
+              //   builder: (context, state) {
+              //     if (state.banners.isEmpty) return const SizedBox();
+              //     return SizedBox(
+              //       height: 140,
+              //       child: ListView.builder(
+              //         scrollDirection: Axis.horizontal,
+              //         itemCount: state.banners.length,
+              //         itemBuilder: (context, index) {
+              //           return Padding(
+              //             padding: const EdgeInsets.only(right: 3),
+              //             child: ClipRRect(
+              //               borderRadius: BorderRadius.circular(12),
+              //               child: Image.network(
+              //                 state.banners[index],
+              //                 width: 397,
+              //                 height: 140,
+              //                 fit: BoxFit.cover,
+              //               ),
+              //             ),
+              //           );
+              //         },
+              //       ),
+              //     );
+              //   },
+              // ),
               const SizedBox(height: 10),
               BlocBuilder<ListingBloc, ListingState>(
                 bloc: _listingBloc,
@@ -397,18 +437,43 @@ class _ListingPageState extends State<ListingPage> {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      if (_currentFilters.hasActiveFilters ||
-                          _currentSortBy != null)
-                        TextButton.icon(
-                          onPressed: _clearAllFilters,
-                          icon: const Icon(Icons.clear, size: 16),
-                          label: const Text("Clear"),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
+                      Padding(
+                        padding: EdgeInsetsGeometry.symmetric(horizontal: 10),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => setState(() => isGridView = true),
+                              child: Icon(
+                                Icons.grid_view_outlined,
+                                size: 20,
+                                color: isGridView ? aquaBlueColor : null,
+                              ),
+                            ),
+                            const SizedBox(width: 10), // tiny gap
+                            GestureDetector(
+                              onTap: () => setState(() => isGridView = false),
+                              child: Icon(
+                                Icons.list,
+                                size: 25,
+                                color: !isGridView ? aquaBlueColor : null,
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+
+                      // if (_currentFilters.hasActiveFilters ||
+                      //     _currentSortBy != null)
+                      //   TextButton.icon(
+                      //     onPressed: _clearAllFilters,
+                      //     icon: const Icon(Icons.clear, size: 16),
+                      //     label: const Text("Clear"),
+                      //     style: TextButton.styleFrom(
+                      //       padding: const EdgeInsets.symmetric(horizontal: 8),
+                      //       minimumSize: Size.zero,
+                      //       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      //     ),
+                      //   ),
                     ],
                   );
                 },
@@ -494,40 +559,37 @@ class _ListingPageState extends State<ListingPage> {
 
     if (_currentFilters.keyword != null &&
         _currentFilters.keyword!.isNotEmpty) {
-      chips.add(_buildFilterChip(
-        'Search: ${_currentFilters.keyword}',
-        () {
+      chips.add(
+        _buildFilterChip('Search: ${_currentFilters.keyword}', () {
           setState(() {
             _currentFilters = _currentFilters.copyWith(clearKeyword: true);
           });
           _loadListings();
-        },
-      ));
+        }),
+      );
     }
 
     if (_currentFilters.location != null &&
         _currentFilters.location!.isNotEmpty) {
-      chips.add(_buildFilterChip(
-        'Location: ${_currentFilters.location}',
-        () {
+      chips.add(
+        _buildFilterChip('Location: ${_currentFilters.location}', () {
           setState(() {
             _currentFilters = _currentFilters.copyWith(clearLocation: true);
           });
           _loadListings();
-        },
-      ));
+        }),
+      );
     }
 
     if (_currentFilters.minPrice != null || _currentFilters.maxPrice != null) {
-      final priceText = _currentFilters.minPrice != null &&
-              _currentFilters.maxPrice != null
+      final priceText =
+          _currentFilters.minPrice != null && _currentFilters.maxPrice != null
           ? '₹${_currentFilters.minPrice!.toInt()} - ₹${_currentFilters.maxPrice!.toInt()}'
           : _currentFilters.minPrice != null
-              ? 'Min: ₹${_currentFilters.minPrice!.toInt()}'
-              : 'Max: ₹${_currentFilters.maxPrice!.toInt()}';
-      chips.add(_buildFilterChip(
-        priceText,
-        () {
+          ? 'Min: ₹${_currentFilters.minPrice!.toInt()}'
+          : 'Max: ₹${_currentFilters.maxPrice!.toInt()}';
+      chips.add(
+        _buildFilterChip(priceText, () {
           setState(() {
             _currentFilters = _currentFilters.copyWith(
               clearMinPrice: true,
@@ -535,57 +597,65 @@ class _ListingPageState extends State<ListingPage> {
             );
           });
           _loadListings();
-        },
-      ));
+        }),
+      );
     }
 
     if (_currentFilters.selectedCategories.isNotEmpty) {
-      chips.add(_buildFilterChip(
-        '${_currentFilters.selectedCategories.length} Categories',
-        () {
-          setState(() {
-            _currentFilters = _currentFilters.copyWith(selectedCategories: []);
-          });
-          _loadListings();
-        },
-      ));
+      chips.add(
+        _buildFilterChip(
+          '${_currentFilters.selectedCategories.length} Categories',
+          () {
+            setState(() {
+              _currentFilters = _currentFilters.copyWith(
+                selectedCategories: [],
+              );
+            });
+            _loadListings();
+          },
+        ),
+      );
     }
 
     if (_currentFilters.selectedSubcategories.isNotEmpty) {
-      chips.add(_buildFilterChip(
-        '${_currentFilters.selectedSubcategories.length} Subcategories',
-        () {
-          setState(() {
-            _currentFilters =
-                _currentFilters.copyWith(selectedSubcategories: []);
-          });
-          _loadListings();
-        },
-      ));
+      chips.add(
+        _buildFilterChip(
+          '${_currentFilters.selectedSubcategories.length} Subcategories',
+          () {
+            setState(() {
+              _currentFilters = _currentFilters.copyWith(
+                selectedSubcategories: [],
+              );
+            });
+            _loadListings();
+          },
+        ),
+      );
     }
 
     if (_currentFilters.selectedRatings.isNotEmpty) {
-      chips.add(_buildFilterChip(
-        '${_currentFilters.selectedRatings.length} Ratings',
-        () {
-          setState(() {
-            _currentFilters = _currentFilters.copyWith(selectedRatings: []);
-          });
-          _loadListings();
-        },
-      ));
+      chips.add(
+        _buildFilterChip(
+          '${_currentFilters.selectedRatings.length} Ratings',
+          () {
+            setState(() {
+              _currentFilters = _currentFilters.copyWith(selectedRatings: []);
+            });
+            _loadListings();
+          },
+        ),
+      );
     }
 
     if (_currentSortBy != null) {
-      chips.add(_buildFilterChip(
-        'Sort: ${_getSortLabel(_currentSortBy!)}',
-        () {
+      chips.add(
+        _buildFilterChip('Sort: ${_getSortLabel(_currentSortBy!)}', () {
           setState(() {
             _currentSortBy = null;
           });
           _loadListings();
-        },
-      ));
+        }),
+      );
     }
 
     return SingleChildScrollView(

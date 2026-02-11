@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grow_first/core/theme/colors.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,7 +25,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
   @override
   void initState() {
     super.initState();
-    
+
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -63,10 +64,30 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
         elevation: 1,
         shadowColor: Colors.grey.withOpacity(0.3),
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => context.pop(),
+        leading: Padding(
+          padding: const EdgeInsets.all(12.0), // AppBar spacing fix
+          child: InkWell(
+            borderRadius: BorderRadius.circular(50),
+            onTap: () => context.pop(),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: textBlackColor, width: 0.7),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.arrow_back,
+                  color: Color.fromARGB(255, 88, 84, 84),
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
         ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back, color: Colors.black87),
+        //   onPressed: () => context.pop(),
+        // ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -81,10 +102,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
             if (currentUrl.isNotEmpty)
               Text(
                 Uri.parse(currentUrl).host,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
           ],
         ),
@@ -103,7 +121,9 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
               // You can implement url_launcher here if needed
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Open in external browser feature can be added'),
+                  content: Text(
+                    'Open in external browser feature can be added',
+                  ),
                 ),
               );
             },
@@ -113,7 +133,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
       body: Stack(
         children: [
           WebViewWidget(controller: controller),
-          
+
           // Loading indicator
           if (isLoading)
             Container(
@@ -130,10 +150,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
                     SizedBox(height: 16),
                     Text(
                       'Loading...',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                   ],
                 ),
@@ -141,7 +158,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
             ),
         ],
       ),
-      
+
       // Modern bottom navigation bar with web controls
       bottomNavigationBar: Container(
         height: 60,
@@ -169,7 +186,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
                 }
               },
             ),
-            
+
             // Forward button
             _buildNavButton(
               icon: Icons.arrow_forward_ios,
@@ -179,7 +196,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
                 }
               },
             ),
-            
+
             // Home/Reset button
             _buildNavButton(
               icon: Icons.home,
@@ -187,7 +204,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
                 controller.loadRequest(Uri.parse(widget.url));
               },
             ),
-            
+
             // Close button
             _buildNavButton(
               icon: Icons.close,
@@ -211,11 +228,7 @@ class _VendorWebViewPageState extends State<VendorWebViewPage> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: IconButton(
-        icon: Icon(
-          icon,
-          color: color ?? Colors.black87,
-          size: 20,
-        ),
+        icon: Icon(icon, color: color ?? Colors.black87, size: 20),
         onPressed: onPressed,
         padding: const EdgeInsets.all(12),
       ),

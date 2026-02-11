@@ -30,54 +30,75 @@ class CustomBottomNavBar extends StatelessWidget {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Container(
-        height: 48,
-        padding: horizontalPadding16 + horizontalPadding4 + verticalPadding4,
-        color: whiteColor,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _navItem(
-              context,
-              icon: Icons.dashboard,
-              active: index == 0,
-              onTap: () => context.goNamed(AppRouterNames.exploreCategories),
-            ),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 12, // 👈 space from bottom (floating feel)
+        ),
+        child: Container(
+          height: 56,
+          padding: horizontalPadding16 + verticalPadding4,
+          decoration: BoxDecoration(
+            color: whiteColor,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 8), // 👈 shadow downwards
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(
+                context,
+                icon: Icons.dashboard,
+                active: index == 0,
+                onTap: () => context.goNamed(AppRouterNames.exploreCategories),
+              ),
 
-            /// CENTER BIG GRADIENT BUTTON
-            GestureDetector(
-              onTap: () => context.goNamed(AppRouterNames.home),
-              child: Container(
-                height: 55,
-                width: 55,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF004C97), Color(0xFF00E1D6)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              /// CENTER FLOATING BUTTON (already good)
+              GestureDetector(
+                onTap: () => context.goNamed(AppRouterNames.home),
+                child: Transform.translate(
+                  offset: const Offset(0, -14), // 👈 button thoda upar
+                  child: Container(
+                    height: 56,
+                    width: 56,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF004C97), Color(0xFF00E1D6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.home,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                 ),
-                child: const Center(
-                  child: Icon(Icons.home, color: Colors.white, size: 32),
-                ),
               ),
-            ),
 
-            GestureDetector(
-              onTap: () => _openDrawer(context),
-              child: const Center(
-                child: Icon(
+              GestureDetector(
+                onTap: () => _openDrawer(context),
+                child: const Icon(
                   Icons.person,
                   color: Color.fromARGB(255, 39, 139, 222),
                   size: 32,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

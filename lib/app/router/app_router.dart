@@ -92,7 +92,7 @@ class AppRouter {
           // return '/vendor-kyc-form';
           // return '/vendor-confirm-registration';
           // return AppRouterPaths.signInPath;
-          return AppRouterPaths.homePath;
+          return AppRouterPaths.splashPath;
           // return AppRouterPaths.customerSelectBookingLocationPath.replaceAll(
           //   ":bookingId",
           //   "234",
@@ -190,8 +190,7 @@ class AppRouter {
                         state.uri.queryParametersAll.containsKey("service_type")
                         ? state.uri.queryParameters["service_type"].toString()
                         : null,
-                    keyword:
-                        state.uri.queryParametersAll.containsKey("keyword")
+                    keyword: state.uri.queryParametersAll.containsKey("keyword")
                         ? state.uri.queryParameters["keyword"].toString()
                         : null,
                   ),
@@ -345,7 +344,7 @@ class AppRouter {
           builder: (_, state) => VendorWebViewPage(
             url:
                 state.uri.queryParameters['url'] ??
-                'https://growfirst.org/become-vendor',
+                'http://127.0.0.1:8000/become-vendor',
             title: state.uri.queryParameters['title'] ?? 'Become a Vendor',
           ),
         ),

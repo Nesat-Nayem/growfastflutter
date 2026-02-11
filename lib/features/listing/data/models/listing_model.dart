@@ -37,6 +37,8 @@ class ListingModel extends Listing {
     super.reviewsBreakdown,
     super.latitude,
     super.longitude,
+    required super.totalBookings,
+
   });
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {
@@ -85,6 +87,8 @@ class ListingModel extends Listing {
           : null,
       latitude: double.tryParse(json['latitude']?.toString() ?? ''),
       longitude: double.tryParse(json['longitude']?.toString() ?? ''),
+      totalBookings:
+      int.tryParse(json['total_bookings']?.toString() ?? '0') ?? 0,
     );
   }
 }

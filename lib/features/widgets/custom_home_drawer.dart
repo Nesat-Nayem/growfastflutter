@@ -159,16 +159,14 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final rootNavigator = Navigator.of(context, rootNavigator: true);
-    
+
     // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const PopScope(
         canPop: false,
-        child: Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        child: Center(child: CircularProgressIndicator(color: Colors.white)),
       ),
     );
 
@@ -185,18 +183,18 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
         if (mounted) {
           rootNavigator.pop();
         }
-        
+
         // Close drawer/modal
         if (mounted) {
           navigator.pop();
         }
-        
+
         // Navigate to sign in page
         await Future.delayed(const Duration(milliseconds: 100));
         if (mounted) {
           context.goNamed(AppRouterNames.signIn);
         }
-        
+
         scaffoldMessenger.showSnackBar(
           const SnackBar(
             content: Text('Account deleted successfully'),
@@ -210,7 +208,9 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
         }
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text(response.data['message'] ?? 'Failed to delete account'),
+            content: Text(
+              response.data['message'] ?? 'Failed to delete account',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -263,32 +263,48 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
                           builder: (context, appState) {
                             final appStore = sl<AppStore>();
                             final user = appStore.user;
-                            
+
                             // Use fresh data if available
-                            final userName = _userData?['name'] ?? user?.name ?? 'Guest';
-                            final userPhone = _userData?['phone'] ?? user?.phone;
-                            final userEmail = _userData?['email'] ?? user?.email;
+                            final userName =
+                                _userData?['name'] ?? user?.name ?? 'Guest';
+                            final userPhone =
+                                _userData?['phone'] ?? user?.phone;
+                            final userEmail =
+                                _userData?['email'] ?? user?.email;
                             final userContact = userPhone ?? userEmail ?? '';
-                            final userImage = _userData?['image'] ?? user?.image;
+                            final userImage =
+                                _userData?['image'] ?? user?.image;
 
                             return Row(
                               children: [
                                 CircleAvatar(
-                                  backgroundColor: Colors.grey[200],
+                                  backgroundColor: Colors.white,
                                   backgroundImage:
-                                      (userImage == null || userImage.toString().isEmpty)
+                                      (userImage == null ||
+                                          userImage.toString().isEmpty)
                                       ? null
                                       : CachedNetworkImageProvider(
-                                          userImage.toString().startsWith('http') ? userImage.toString() : "https://growfirst.org/$userImage",
+                                          userImage.toString().startsWith(
+                                                'http',
+                                              )
+                                              ? userImage.toString()
+                                              : "http://127.0.0.1:8000/$userImage",
                                         ),
-                                  child: (userImage == null || userImage.toString().isEmpty)
-                                      ? const Icon(Icons.person, color: Colors.grey)
+                                  child:
+                                      (userImage == null ||
+                                          userImage.toString().isEmpty)
+                                      ? Container(
+                                          height: 30,
+                                          width: 30,
+                                          child: Image.asset(
+                                            "assets/images/g_logo.png",
+                                          ),
+                                        )
                                       : null,
                                 ),
                                 SizedBox(width: 15),
                                 Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text.rich(
                                       TextSpan(
@@ -375,8 +391,8 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
               color: Color(0XFF5ECFE0),
             ),
             DrawerMenuItem(
-              icon: Icons.business,
-              label: "Become a vendor",
+              icon: Icons.person,
+              label: "Become a Vendor",
               onTap: () {
                 Navigator.of(context).pop(); // Close drawer first
                 context.pushNamed(AppRouterNames.vendorDashboard);
@@ -446,7 +462,7 @@ class DrawerMenuItem extends StatelessWidget {
                 color: color,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.calendar_today, color: Colors.white, size: 20),
+              child: Icon(icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 20),
             Expanded(

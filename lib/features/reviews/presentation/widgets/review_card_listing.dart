@@ -54,7 +54,10 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
       return;
     }
 
-    final result = await sl<ReviewsCubit>().likeReview(widget.review.id, isLike);
+    final result = await sl<ReviewsCubit>().likeReview(
+      widget.review.id,
+      isLike,
+    );
     if (result != null && mounted) {
       setState(() {
         _likes = result['like_count'] ?? _likes;
@@ -69,9 +72,9 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
     final isLoggedIn = await sl<ISecureStore>().read("isLoggedIn") == "true";
     if (!isLoggedIn) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please login to reply')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Please login to reply')));
       }
       return;
     }
@@ -88,9 +91,9 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
     if (success && mounted) {
       _replyController.clear();
       setState(() => _showReplyField = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reply submitted!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Reply submitted!')));
       widget.onReviewUpdated?.call();
     }
   }
@@ -99,7 +102,7 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
   Widget build(BuildContext context) {
     return Container(
       margin: topPadding12,
-      padding: topPadding16 + horizontalPadding12 + bottomPadding2,
+      padding: topPadding8 + horizontalPadding8 + bottomPadding8,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -133,19 +136,23 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
                 ),
               ),
               Container(
-                padding: verticalPadding4 + horizontalPadding16,
+                padding: verticalPadding2 + horizontalPadding8,
                 decoration: BoxDecoration(
-                  color: Colors.green,
+                  color: const Color.fromARGB(255, 118, 192, 121),
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star, color: Colors.white, size: 14),
+                    const Icon(Icons.star, color: Colors.yellow, size: 14),
                     const SizedBox(width: 2),
                     Text(
                       widget.review.rating,
-                      style: context.labelMedium.copyWith(color: whiteColor),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -168,9 +175,18 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
                 onTap: () => setState(() => _showReplyField = !_showReplyField),
                 child: Row(
                   children: [
-                    Icon(Icons.message_outlined, size: 18, color: lightGreyTextColor),
+                    Icon(
+                      Icons.message_outlined,
+                      size: 18,
+                      color: lightGreyTextColor,
+                    ),
                     const SizedBox(width: 4),
-                    Text('Reply', style: context.labelSmall.copyWith(color: lightGreyTextColor)),
+                    Text(
+                      'Reply',
+                      style: context.labelSmall.copyWith(
+                        color: lightGreyTextColor,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -179,9 +195,18 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
                 onTap: () => _handleLike(true),
                 child: Row(
                   children: [
-                    Icon(Icons.thumb_up_outlined, size: 18, color: lightGreyTextColor),
+                    Icon(
+                      Icons.thumb_up_outlined,
+                      size: 18,
+                      color: lightGreyTextColor,
+                    ),
                     const SizedBox(width: 4),
-                    Text('Like', style: context.labelSmall.copyWith(color: lightGreyTextColor)),
+                    Text(
+                      'Like',
+                      style: context.labelSmall.copyWith(
+                        color: lightGreyTextColor,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -190,9 +215,18 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
                 onTap: () => _handleLike(false),
                 child: Row(
                   children: [
-                    Icon(Icons.thumb_down_outlined, size: 18, color: lightGreyTextColor),
+                    Icon(
+                      Icons.thumb_down_outlined,
+                      size: 18,
+                      color: lightGreyTextColor,
+                    ),
                     const SizedBox(width: 4),
-                    Text('Dislike', style: context.labelSmall.copyWith(color: lightGreyTextColor)),
+                    Text(
+                      'Dislike',
+                      style: context.labelSmall.copyWith(
+                        color: lightGreyTextColor,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -224,7 +258,9 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
                     controller: _replyController,
                     decoration: InputDecoration(
                       hintText: 'Write a reply...',
-                      hintStyle: context.labelSmall.copyWith(color: lightGreyTextColor),
+                      hintStyle: context.labelSmall.copyWith(
+                        color: lightGreyTextColor,
+                      ),
                       contentPadding: horizontalPadding12 + verticalPadding8,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -257,7 +293,10 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
                             color: Colors.white,
                           ),
                         )
-                      : Text('Send', style: context.labelSmall.copyWith(color: whiteColor)),
+                      : Text(
+                          'Send',
+                          style: context.labelSmall.copyWith(color: whiteColor),
+                        ),
                 ),
               ],
             ),
@@ -279,7 +318,9 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
             ),
             if (_showReplies) ...[
               verticalMargin8,
-              ...widget.review.replies.map((reply) => _buildReplyCard(context, reply)),
+              ...widget.review.replies.map(
+                (reply) => _buildReplyCard(context, reply),
+              ),
             ],
           ],
         ],
@@ -315,8 +356,18 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(reply.userName, style: context.labelMedium.copyWith(fontWeight: FontWeight.w600)),
-                    Text(reply.time, style: context.labelSmall.copyWith(color: lightGreyTextColor)),
+                    Text(
+                      reply.userName,
+                      style: context.labelMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      reply.time,
+                      style: context.labelSmall.copyWith(
+                        color: lightGreyTextColor,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -334,4 +385,3 @@ class _ReviewCardListingState extends State<ReviewCardListing> {
     );
   }
 }
-

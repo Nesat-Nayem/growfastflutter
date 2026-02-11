@@ -44,17 +44,22 @@ class _CustomerSelectDataAndTimeForBookingPageState
     try {
       final dio = sl<Dio>();
       final dataSource = BookingRemoteDataSourceImpl(dio);
-      final result = await dataSource.getServiceSlots(int.parse(widget.listingId));
-      
+      final result = await dataSource.getServiceSlots(
+        int.parse(widget.listingId),
+      );
+
       setState(() {
         hasSlots = result['hasSlots'] as bool;
         if (hasSlots) {
           final slots = result['slots'] as List;
-          availableSlots = slots.map((slot) {
-            final from = slot['from']?.toString() ?? '';
-            final to = slot['to']?.toString() ?? '';
-            return {'from': from, 'to': to, 'display': '$from - $to'};
-          }).where((s) => s['from']!.isNotEmpty).toList();
+          availableSlots = slots
+              .map((slot) {
+                final from = slot['from']?.toString() ?? '';
+                final to = slot['to']?.toString() ?? '';
+                return {'from': from, 'to': to, 'display': '$from - $to'};
+              })
+              .where((s) => s['from']!.isNotEmpty)
+              .toList();
         }
         isLoading = false;
       });
@@ -70,7 +75,7 @@ class _CustomerSelectDataAndTimeForBookingPageState
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
-        appBar: CustomerHomeAppBar(singleTitle: "Select Date & Time"),
+        // appBar: CustomerHomeAppBar(singleTitle: "Select Date & Time"),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -174,44 +179,48 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             verticalMargin12,
-            const Text(
-              "Select Date & Time",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+            // const Text(
+            //   "Select Date & Time",
+            //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            // ),
+            // verticalMargin8,
+            // _buildMonthHeader(),
             verticalMargin12,
-            _buildMonthHeader(),
-            verticalMargin12,
-            _buildDatePicker(),
-            const SizedBox(height: 16),
-            if (widget.hasTimeSlots) ...[
-              Text("Select Time", style: context.labelLarge),
-              verticalMargin16,
-              Expanded(child: _buildTimeGrid()),
-            ] else ...[
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.schedule_outlined, size: 48, color: Colors.grey),
-                      verticalMargin16,
-                      Text(
-                        'No Time Slots Available',
-                        style: context.titleMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      verticalMargin8,
-                      Text(
-                        'This service does not have time slots.\nSelect a date and continue.',
-                        textAlign: TextAlign.center,
-                        style: context.bodySmall.copyWith(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            _buildMonthlyCalendar(),
+            // const SizedBox(height: 16),
+            // if (widget.hasTimeSlots) ...[
+            //   Text("Select Time", style: context.labelLarge),
+            //   verticalMargin16,
+            //   Expanded(child: _buildTimeGrid()),
+            // ] else ...[
+            //   Expanded(
+            //     child: Center(
+            //       child: Column(
+            //         mainAxisAlignment: MainAxisAlignment.center,
+            //         children: [
+            //           Icon(
+            //             Icons.schedule_outlined,
+            //             size: 48,
+            //             color: Colors.grey,
+            //           ),
+            //           verticalMargin16,
+            //           Text(
+            //             'No Time Slots Available',
+            //             style: context.titleMedium.copyWith(
+            //               fontWeight: FontWeight.w600,
+            //             ),
+            //           ),
+            //           verticalMargin8,
+            //           Text(
+            //             'This service does not have time slots.\nSelect a date and continue.',
+            //             textAlign: TextAlign.center,
+            //             style: context.bodySmall.copyWith(color: Colors.grey),
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ],
           ],
         ),
       ),
@@ -272,11 +281,33 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
   // -------------------------------------------------------------
   // DATE PICKER ROW - Shows 30 days starting from today
   // -------------------------------------------------------------
+  Widget _buildMonthlyCalendar() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: CalendarDatePicker(
+        initialDate: selectedDate,
+        firstDate: DateTime.now(),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+        currentDate: DateTime.now(),
+        onDateChanged: (date) {
+          setState(() {
+            selectedDate = date;
+            currentMonth = DateTime(date.year, date.month);
+            selectedTime = null;
+          });
+        },
+      ),
+    );
+  }
+
   Widget _buildDatePicker() {
     final today = DateTime.now();
     final startDate = DateTime(today.year, today.month, today.day);
     const totalDays = 30; // Show 30 days from today
-    
+
     return SizedBox(
       height: 80,
       child: ListView.builder(
@@ -285,9 +316,10 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
         itemCount: totalDays,
         itemBuilder: (context, index) {
           DateTime date = startDate.add(Duration(days: index));
-          bool isSelected = date.year == selectedDate.year && 
-                           date.month == selectedDate.month && 
-                           date.day == selectedDate.day;
+          bool isSelected =
+              date.year == selectedDate.year &&
+              date.month == selectedDate.month &&
+              date.day == selectedDate.day;
 
           return GestureDetector(
             onTap: () {
@@ -361,12 +393,16 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
         final selectedColor = isSelected ? Colors.white : null;
 
         return GestureDetector(
-          onTap: !isBooked ? () => setState(() => selectedTime = fromTime) : null,
+          onTap: !isBooked
+              ? () => setState(() => selectedTime = fromTime)
+              : null,
           child: Container(
             decoration: BoxDecoration(
               color: isBooked && !isSelected ? greyButttonColor : null,
               gradient: isSelected && !isBooked ? _selectedTileGradient : null,
-              border: !isSelected && !isBooked ? Border.all(color: Colors.grey.shade300) : null,
+              border: !isSelected && !isBooked
+                  ? Border.all(color: Colors.grey.shade300)
+                  : null,
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
@@ -374,14 +410,20 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.access_time, size: 14, color: selectedColor ?? Colors.grey),
+                Icon(
+                  Icons.access_time,
+                  size: 14,
+                  color: selectedColor ?? Colors.grey,
+                ),
                 horizontalMargin4,
                 Flexible(
                   child: Text(
                     displayTime,
                     style: context.labelSmall.copyWith(
                       color: selectedColor,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),

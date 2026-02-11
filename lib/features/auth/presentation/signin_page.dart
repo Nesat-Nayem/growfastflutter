@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_bloc.dart';
@@ -32,14 +33,30 @@ class SigninPage extends StatefulWidget {
 }
 
 class _SigninPageState extends State<SigninPage> {
-  TextEditingController customerMobileNumberController = TextEditingController();
+  TextEditingController customerMobileNumberController =
+      TextEditingController();
   bool isOtpBtnEnabled = false;
   bool isGoogleSignInLoading = false;
+  bool _isCountryInitialized = false;
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: '1088338713221-hs1i9it5cucpjvgmdtkme2b6fhsukrfd.apps.googleusercontent.com',
-    scopes: ['email', 'profile'],
-  );
+  String? _selectedCountryCode;
+  Widget _buildFlag(String flag) {
+    // If flag looks like an asset path
+    if (flag.contains('/') || flag.contains('.png')) {
+      return Image.asset(flag, width: 24, height: 16, fit: BoxFit.cover);
+    }
+
+    // Otherwise treat it as emoji
+    return Text(flag, style: const TextStyle(fontSize: 15));
+  }
+
+  // final GoogleSignIn _googleSignIn = GoogleSignIn(
+  //   clientId:
+  //       '1088338713221-hs1i9it5cucpjvgmdtkme2b6fhsukrfd.apps.googleusercontent.com',
+  //   scopes: ['email', 'profile'],
+  // );
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
@@ -54,10 +71,10 @@ class _SigninPageState extends State<SigninPage> {
     try {
       // Sign out first to ensure account picker shows
       await _googleSignIn.signOut();
-      
+
       // Trigger Google Sign In
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         // User cancelled the sign-in
         setState(() => isGoogleSignInLoading = false);
@@ -65,7 +82,8 @@ class _SigninPageState extends State<SigninPage> {
       }
 
       // Obtain auth details from request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -74,8 +92,10 @@ class _SigninPageState extends State<SigninPage> {
       );
 
       // Sign in to Firebase with the Google credential
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
       // Get Firebase ID token
       final String? idToken = await userCredential.user?.getIdToken();
 
@@ -87,15 +107,13 @@ class _SigninPageState extends State<SigninPage> {
       final dioClient = sl<DioClient>();
       final response = await dioClient.dio.post(
         'customer/google-login',
-        data: {
-          'id_token': idToken,
-        },
+        data: {'id_token': idToken},
       );
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         final token = response.data['token'];
         final userData = response.data['user'];
-        
+
         // Create AuthUserModel from response with proper null handling
         final userModel = AuthUserModel.fromJson({
           'id': userData['id'],
@@ -131,8 +149,10 @@ class _SigninPageState extends State<SigninPage> {
           'otp_created_at': userData['otp_created_at'] ?? '',
           'step': userData['step'] ?? 0,
           'otp': userData['otp'] ?? '',
-          'created_at': userData['created_at'] ?? DateTime.now().toIso8601String(),
-          'updated_at': userData['updated_at'] ?? DateTime.now().toIso8601String(),
+          'created_at':
+              userData['created_at'] ?? DateTime.now().toIso8601String(),
+          'updated_at':
+              userData['updated_at'] ?? DateTime.now().toIso8601String(),
           'description': userData['description'],
           'facebook_url': userData['facebook_url'],
           'instagram_url': userData['instagram_url'],
@@ -142,17 +162,18 @@ class _SigninPageState extends State<SigninPage> {
           'linkedin_url': userData['linkedin_url'],
           'service_id': userData['service_id'],
         });
-        
+
         // Store auth using saveAuth method
         final appStore = sl<AppStore>();
-        await appStore.saveAuth(AuthResponseModel(
-          token: token,
-          user: userModel,
-        ));
-        
+        await appStore.saveAuth(
+          AuthResponseModel(token: token, user: userModel),
+        );
+
         // Notify bloc
-        sl<AuthBloc>().add(GoogleLoginSuccessEvent(token: token, user: userData));
-        
+        sl<AuthBloc>().add(
+          GoogleLoginSuccessEvent(token: token, user: userData),
+        );
+
         if (mounted) {
           context.goNamed(AppRouterNames.home);
         }
@@ -218,6 +239,48 @@ class _SigninPageState extends State<SigninPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(12.0), // AppBar spacing fix
+          child: InkWell(
+            borderRadius: BorderRadius.circular(50),
+            onTap: () => context.goNamed(AppRouterNames.home),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color.fromARGB(255, 247, 244, 244),
+                  width: 0.7,
+                ),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.arrow_back,
+                  color: Color.fromARGB(255, 248, 246, 246),
+                  size: 14,
+                ),
+              ),
+            ),
+          ),
+        ),
+        // leading: IconButton(
+        //   onPressed: () {
+        //     context.goNamed(AppRouterNames.home);
+        //   },
+        //   icon: const Icon(Icons.arrow_back, color: Colors.white),
+        // ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF10326B), Color(0xFF10326B), Color(0xFF30D3D9)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              stops: [-1.4, -0.2, 1.0],
+            ),
+          ),
+        ),
+      ),
+
       body: Stack(
         children: [
           // Gradient background at top
@@ -225,13 +288,14 @@ class _SigninPageState extends State<SigninPage> {
             height: MediaQuery.of(context).size.height * 0.4,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF4DD0E1),
-                  Color(0xFF26C6DA),
-                  Color(0xFF00BCD4),
+                  Color(0xFF10326B),
+                  Color(0xFF10326B),
+                  Color(0xFF30D3D9),
                 ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                stops: [-1.4, -0.2, 1.0],
               ),
             ),
           ),
@@ -246,23 +310,23 @@ class _SigninPageState extends State<SigninPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Back button
-                      GestureDetector(
-                        onTap: () {
-                          context.goNamed(AppRouterNames.home);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
+                      // GestureDetector(
+                      //   onTap: () {
+                      //     context.goNamed(AppRouterNames.home);
+                      //   },
+                      //   child: Container(
+                      //     padding: const EdgeInsets.all(8),
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.white.withValues(alpha: 0.2),
+                      //       borderRadius: BorderRadius.circular(12),
+                      //     ),
+                      //     child: const Icon(
+                      //       Icons.arrow_back_ios_new,
+                      //       color: Colors.white,
+                      //       size: 20,
+                      //     ),
+                      //   ),
+                      // ),
                       verticalMargin16,
                       Text(
                         "Welcome To\nLogin",
@@ -323,48 +387,240 @@ class _SigninPageState extends State<SigninPage> {
                                 }
 
                                 if (state is CountryLoaded) {
-                                  return Center(
-                                    child: MobileNumberField(
-                                      controller: customerMobileNumberController,
-                                      initialCountryCode: state.countries
-                                          .where(
-                                            (element) =>
-                                                element.code ==
-                                                PlatformDispatcher
-                                                    .instance
-                                                    .locale
-                                                    .countryCode,
-                                          )
-                                          .first
-                                          .code,
-                                      initialFlagAsset: state.countries
-                                          .where(
-                                            (element) =>
-                                                element.code ==
-                                                PlatformDispatcher
-                                                    .instance
-                                                    .locale
-                                                    .countryCode,
-                                          )
-                                          .first
-                                          .flag,
-                                      onValidChanged: (isValid) {
-                                        setState(() => isOtpBtnEnabled = isValid);
+                                  if (!_isCountryInitialized &&
+                                      state.countries.isNotEmpty) {
+                                    final india = state.countries.firstWhere(
+                                      (c) => c.code == "IN", // 🇮🇳 FORCE INDIA
+                                      orElse: () {
+                                        final localeCode = PlatformDispatcher
+                                            .instance
+                                            .locale
+                                            .countryCode;
+
+                                        return state.countries.firstWhere(
+                                          (c) => c.code == localeCode,
+                                          orElse: () => state.countries.first,
+                                        );
                                       },
-                                    ),
+                                    );
+
+                                    _selectedCountryCode = india.code;
+                                    _isCountryInitialized = true;
+                                  }
+
+                                  // if (!_isCountryInitialized) {
+                                  //   _selectedCountryCode = state.countries
+                                  //       .firstWhere(
+                                  //         (c) =>
+                                  //             c.code ==
+                                  //             PlatformDispatcher
+                                  //                 .instance
+                                  //                 .locale
+                                  //                 .countryCode,
+                                  //         orElse: () => state.countries.first,
+                                  //       )
+                                  //       .code;
+
+                                  //   _isCountryInitialized = true;
+                                  // }
+
+                                  final selectedCountry = state.countries
+                                      .firstWhere(
+                                        (c) => c.code == _selectedCountryCode,
+                                      );
+                                  int _maxLocalDigits(String dialCode) {
+                                    const int maxTotalDigits = 13;
+                                    return maxTotalDigits - dialCode.length;
+                                  }
+
+                                  final maxDigits = _maxLocalDigits(
+                                    selectedCountry.dialCode,
+                                  ).clamp(6, 10);
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // 🌍 COUNTRY DROPDOWN
+                                      Container(
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 2,
+                                                  ),
+                                              child: DropdownButtonHideUnderline(
+                                                child: DropdownButton<String>(
+                                                  value: _selectedCountryCode,
+                                                  items: state.countries.map((
+                                                    country,
+                                                  ) {
+                                                    return DropdownMenuItem<
+                                                      String
+                                                    >(
+                                                      value: country.code,
+                                                      child: Row(
+                                                        children: [
+                                                          _buildFlag(
+                                                            country.flag,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 6,
+                                                          ),
+                                                          Text(
+                                                            "+${country.dialCode}",
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontSize: 12,
+                                                                ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      _selectedCountryCode =
+                                                          value;
+                                                      isOtpBtnEnabled = false;
+                                                      customerMobileNumberController
+                                                          .clear();
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+
+                                            // Divider
+                                            Container(
+                                              height: 30,
+                                              width: 1,
+                                              color: Colors.grey.shade300,
+                                            ),
+
+                                            // 📱 MOBILE NUMBER INPUT (NO FLAG / NO CODE)
+                                            Expanded(
+                                              child: TextField(
+                                                controller:
+                                                    customerMobileNumberController,
+                                                keyboardType:
+                                                    TextInputType.phone,
+                                                style: TextStyle(fontSize: 12),
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .digitsOnly,
+                                                  LengthLimitingTextInputFormatter(
+                                                    maxDigits,
+                                                  ),
+                                                ],
+                                                decoration:
+                                                    const InputDecoration(
+                                                      hintText:
+                                                          "Enter Mobile Number",
+                                                      border: InputBorder.none,
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 9,
+                                                          ),
+                                                    ),
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    final totalLength =
+                                                        selectedCountry
+                                                            .dialCode
+                                                            .length +
+                                                        value.length;
+
+                                                    isOtpBtnEnabled =
+                                                        value.isNotEmpty &&
+                                                        totalLength < 13;
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      verticalMargin12,
+                                    ],
                                   );
                                 }
 
                                 return emptyBox;
                               },
                             ),
+
+                            // BlocBuilder<CountryCubit, CountryState>(
+                            //   builder: (context, state) {
+                            //     if (state is CountryLoading) {
+                            //       return const Center(
+                            //         child: CircularProgressIndicator(),
+                            //       );
+                            //     }
+
+                            //     if (state is CountryError) {
+                            //       return Center(child: Text(state.message));
+                            //     }
+
+                            //     if (state is CountryLoaded) {
+                            //       return Center(
+                            //         child: MobileNumberField(
+                            //           controller:
+                            //               customerMobileNumberController,
+                            //           initialCountryCode: state.countries
+                            //               .where(
+                            //                 (element) =>
+                            //                     element.code ==
+                            //                     PlatformDispatcher
+                            //                         .instance
+                            //                         .locale
+                            //                         .countryCode,
+                            //               )
+                            //               .first
+                            //               .code,
+                            //           initialFlagAsset: state.countries
+                            //               .where(
+                            //                 (element) =>
+                            //                     element.code ==
+                            //                     PlatformDispatcher
+                            //                         .instance
+                            //                         .locale
+                            //                         .countryCode,
+                            //               )
+                            //               .first
+                            //               .flag,
+                            //           onValidChanged: (isValid) {
+                            //             setState(
+                            //               () => isOtpBtnEnabled = isValid,
+                            //             );
+                            //           },
+                            //         ),
+                            //       );
+                            //     }
+
+                            //     return emptyBox;
+                            //   },
+                            // ),
                             verticalMargin32,
                             BlocConsumer<AuthBloc, AuthState>(
                               bloc: sl<AuthBloc>(),
                               listener: (context, state) {
                                 if (state.isOtpSent) {
                                   // Check if it's a test OTP - show popup
-                                  if (state.isTestOtp && state.testOtp != null) {
+                                  if (state.isTestOtp &&
+                                      state.testOtp != null) {
                                     _showTestOtpDialog(context, state.testOtp!);
                                   } else {
                                     // Normal flow - navigate to OTP page
@@ -379,14 +635,19 @@ class _SigninPageState extends State<SigninPage> {
                                   }
                                 }
                                 if (state.error != null) {
-                                  AppSnackBar.show(context, message: state.error!);
+                                  AppSnackBar.show(
+                                    context,
+                                    message: state.error!,
+                                  );
                                 }
                               },
                               builder: (context, state) {
-                                return GradientButton(
+                                return GradientButtonThird(
                                   text: "Get OTP",
+                                  fontSize: 14,
                                   showLoadingIndicator: state.isLoading,
-                                  onTap: state.isLoading ||
+                                  onTap:
+                                      state.isLoading ||
                                           (!isOtpBtnEnabled &&
                                               customerMobileNumberController
                                                   .text
@@ -394,7 +655,8 @@ class _SigninPageState extends State<SigninPage> {
                                                   .isNotEmpty)
                                       ? null
                                       : () {
-                                          if (customerMobileNumberController.text
+                                          if (customerMobileNumberController
+                                              .text
                                               .trim()
                                               .isEmpty) {
                                             AppSnackBar.show(
@@ -406,7 +668,9 @@ class _SigninPageState extends State<SigninPage> {
                                           }
                                           sl<AuthBloc>().add(
                                             SendOtpEvent(
-                                                customerMobileNumberController.text),
+                                              customerMobileNumberController
+                                                  .text,
+                                            ),
                                           );
                                         },
                                   padding: verticalPadding16,
@@ -418,7 +682,9 @@ class _SigninPageState extends State<SigninPage> {
                               children: [
                                 Expanded(child: Divider(color: lightGreyColor)),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
                                   child: Text(
                                     "OR",
                                     style: context.labelMedium.copyWith(
@@ -437,13 +703,20 @@ class _SigninPageState extends State<SigninPage> {
                             verticalMargin24,
                             // Google Sign-in Button
                             GestureDetector(
-                              onTap: isGoogleSignInLoading ? null : _handleGoogleSignIn,
+                              onTap: isGoogleSignInLoading
+                                  ? null
+                                  : _handleGoogleSignIn,
                               child: Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                  horizontal: 16,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
@@ -474,14 +747,15 @@ class _SigninPageState extends State<SigninPage> {
                                     const SizedBox(width: 12),
                                     Flexible(
                                       child: Text(
-                                        isGoogleSignInLoading 
-                                            ? "Signing in..." 
+                                        isGoogleSignInLoading
+                                            ? "Signing in..."
                                             : "Continue with Google",
                                         style: context.labelLarge.copyWith(
                                           fontWeight: FontWeight.w500,
                                           color: Colors.black87,
                                         ),
                                         overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                   ],
