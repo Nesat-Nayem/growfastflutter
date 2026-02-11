@@ -166,15 +166,11 @@ flutter_launcher_icons:
 
 # Native Splash Screen
 flutter_native_splash:
-  color: "#ffffff"
-  image: assets/images/g_logo.png
+  color: "#D6FEFF"
   color_dark: "#121212"
-  image_dark: assets/images/g_logo.png
   android_12:
-    image: assets/images/g_logo.png
-    icon_background_color: "#ffffff"
-    image_dark: assets/images/g_logo.png
-    icon_background_color_dark: "#121212"
+    color: "#D6FEFF"
+    color_dark: "#121212"
 
 # Code Generation Configuration
 targets:
