@@ -25,8 +25,8 @@ Future<void> main() async {
     debugPrint('App will continue without Firebase features');
   }
 
-  // Choose environment (could be from --dart-define, here hardcoded for development)
-  const env = 'dev';
+  // Environment from --dart-define, defaults to 'dev' for debug builds
+  const env = String.fromEnvironment('ENV', defaultValue: 'dev');
 
   late AppConfig config;
   try {
