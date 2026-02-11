@@ -402,7 +402,7 @@ class _ServiceSectionCard extends StatelessWidget {
           return raw;
         }
         // Gallery images are stored in storage folder
-        return "http://10.0.2.2:8000/storage/$raw";
+        return "https://growfirst.org/storage/$raw";
       }
     }
 
@@ -415,7 +415,7 @@ class _ServiceSectionCard extends StatelessWidget {
       final normalized = raw.startsWith('storage/')
           ? raw.replaceFirst('storage/', '')
           : raw;
-      return "http://10.0.2.2:8000/storage/$normalized";
+      return "https://growfirst.org/storage/$normalized";
     }
 
     // Finally try image field
@@ -427,7 +427,7 @@ class _ServiceSectionCard extends StatelessWidget {
       final normalized = raw.startsWith('storage/')
           ? raw.replaceFirst('storage/', '')
           : raw;
-      return "http://10.0.2.2:8000/storage/$normalized";
+      return "https://growfirst.org/storage/$normalized";
     }
 
     return null;
