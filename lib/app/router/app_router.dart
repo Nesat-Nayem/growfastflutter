@@ -344,7 +344,7 @@ class AppRouter {
           builder: (_, state) => VendorWebViewPage(
             url:
                 state.uri.queryParameters['url'] ??
-                'http://127.0.0.1:8000/become-vendor',
+                'http://10.0.2.2:8000/become-vendor',
             title: state.uri.queryParameters['title'] ?? 'Become a Vendor',
           ),
         ),

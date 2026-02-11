@@ -50,12 +50,18 @@ class _SigninPageState extends State<SigninPage> {
     return Text(flag, style: const TextStyle(fontSize: 15));
   }
 
-  // final GoogleSignIn _googleSignIn = GoogleSignIn(
-  //   clientId:
-  //       '1088338713221-hs1i9it5cucpjvgmdtkme2b6fhsukrfd.apps.googleusercontent.com',
-  //   scopes: ['email', 'profile'],
-  // );
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  // Web client ID (client_type: 3) from google-services.json — required for
+  // Android to obtain an idToken. On iOS the plugin reads the CLIENT_ID from
+  // GoogleService-Info.plist automatically.
+  static const _webClientId =
+      '1088338713221-ru9o516qn1fjudr4mro7nura0ms9f9vf.apps.googleusercontent.com';
+
+  late final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+    // On iOS the native SDK uses the CLIENT_ID from GoogleService-Info.plist,
+    // so we only need to supply serverClientId on Android.
+    serverClientId: _webClientId,
+  );
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -77,7 +83,7 @@ class _SigninPageState extends State<SigninPage> {
 
       if (googleUser == null) {
         // User cancelled the sign-in
-        setState(() => isGoogleSignInLoading = false);
+        if (mounted) setState(() => isGoogleSignInLoading = false);
         return;
       }
 
@@ -92,15 +98,14 @@ class _SigninPageState extends State<SigninPage> {
       );
 
       // Sign in to Firebase with the Google credential
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
 
       // Get Firebase ID token
       final String? idToken = await userCredential.user?.getIdToken();
 
       if (idToken == null) {
-        throw Exception('Failed to get ID token');
+        throw Exception('Failed to get Firebase ID token');
       }
 
       // Send token to backend
@@ -111,10 +116,9 @@ class _SigninPageState extends State<SigninPage> {
       );
 
       if (response.statusCode == 200 && response.data['success'] == true) {
-        final token = response.data['token'];
-        final userData = response.data['user'];
+        final token = response.data['token'] as String;
+        final userData = response.data['user'] as Map<String, dynamic>;
 
-        // Create AuthUserModel from response with proper null handling
         final userModel = AuthUserModel.fromJson({
           'id': userData['id'],
           'ref_code': userData['ref_code'] ?? '',
@@ -163,7 +167,7 @@ class _SigninPageState extends State<SigninPage> {
           'service_id': userData['service_id'],
         });
 
-        // Store auth using saveAuth method
+        // Store auth
         final appStore = sl<AppStore>();
         await appStore.saveAuth(
           AuthResponseModel(token: token, user: userModel),
@@ -178,13 +182,45 @@ class _SigninPageState extends State<SigninPage> {
           context.goNamed(AppRouterNames.home);
         }
       } else {
-        throw Exception(response.data['message'] ?? 'Login failed');
+        throw Exception(
+          response.data['message'] ?? 'Login failed',
+        );
       }
-    } catch (e) {
+    } on PlatformException catch (e) {
+      // Google Sign-In specific errors (e.g. sign_in_failed, network_error)
+      debugPrint('Google Sign-In PlatformException: ${e.code} - ${e.message}');
+      if (mounted) {
+        String message;
+        switch (e.code) {
+          case 'sign_in_failed':
+            message =
+                'Google sign-in failed. Please check your Google Play Services and try again.';
+            break;
+          case 'network_error':
+            message = 'Network error. Please check your connection.';
+            break;
+          case 'sign_in_canceled':
+            // User cancelled — no need to show error
+            return;
+          default:
+            message = 'Google sign-in error: ${e.code}';
+        }
+        AppSnackBar.show(context, message: message);
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint('FirebaseAuthException: ${e.code} - ${e.message}');
       if (mounted) {
         AppSnackBar.show(
           context,
-          message: 'Google sign-in failed: ${e.toString()}',
+          message: 'Authentication failed: ${e.message ?? e.code}',
+        );
+      }
+    } catch (e) {
+      debugPrint('Google Sign-In error: $e');
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Google sign-in failed. Please try again.',
         );
       }
     } finally {
