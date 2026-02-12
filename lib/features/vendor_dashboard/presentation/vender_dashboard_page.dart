@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
+import 'package:grow_first/core/utils/countries.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 
-import 'package:grow_first/features/auth/presentation/bloc/country/country_cubit.dart';
-import 'package:grow_first/features/auth/presentation/bloc/country/country_state.dart';
-import 'package:grow_first/features/auth/presentation/widgets/mobile_number_filed_widget.dart';
+import 'package:grow_first/features/auth/domain/entities/country.dart';
+import 'package:grow_first/features/auth/presentation/widgets/country_picker_sheet.dart';
 import 'package:grow_first/features/home/di/injections.dart';
 import 'package:grow_first/features/vendor_dashboard/data/models/vendor_step_one_dto.dart';
 import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_bloc.dart';
@@ -45,6 +46,8 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
   int? selectedCountryId;
   int? selectedStateId;
   bool isMobileValid = false;
+  Country? _selectedPhoneCountry;
+  bool _phoneCountryInitialized = false;
 
   @override
   void initState() {
@@ -78,7 +81,7 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
       fullName: fullNameController.text.trim(),
       companyName: companyNameController.text.trim(),
       email: emailController.text.trim(),
-      phone: mobileController.text.trim(),
+      phone: '${_selectedPhoneCountry?.dialCode ?? '91'}${mobileController.text.trim()}',
       gender: selectedGender ?? 'Male',
       website: websiteController.text.trim().isEmpty ? null : websiteController.text.trim(),
       gst: gstNocontroller.text.trim().isEmpty ? null : gstNocontroller.text.trim(),
@@ -351,29 +354,151 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
     );
   }
 
+  void _openPhoneCountryPicker(List<Country> countries) async {
+    final picked = await showModalBottomSheet<Country>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (_, scrollController) =>
+            CountryPickerSheet(countries: countries),
+      ),
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _selectedPhoneCountry = picked;
+        mobileController.clear();
+        isMobileValid = false;
+      });
+    }
+  }
+
   Widget _buildMobileInput() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: BlocBuilder<CountryCubit, CountryState>(
-        bloc: sl<CountryCubit>(),
-        builder: (context, state) {
-          if (state is CountryLoaded) {
-            final defaultCountry = state.countries.firstWhere(
-              (e) => e.code == PlatformDispatcher.instance.locale.countryCode,
-              orElse: () => state.countries.first,
+      child: Builder(
+        builder: (context) {
+          // Use the static countries list directly — same data the CountryCubit returns
+          final countries = kCountriesList;
+
+          // Initialize default country on first load
+          if (!_phoneCountryInitialized && countries.isNotEmpty) {
+            _selectedPhoneCountry = countries.firstWhere(
+              (c) => c.code == "IN",
+              orElse: () {
+                final localeCode = PlatformDispatcher.instance.locale.countryCode;
+                return countries.firstWhere(
+                  (c) => c.code == localeCode,
+                  orElse: () => countries.first,
+                );
+              },
             );
-            return MobileNumberField(
+            _phoneCountryInitialized = true;
+          }
+
+          final country = _selectedPhoneCountry;
+          if (country == null) {
+            return CustomTextField(
               controller: mobileController,
-              initialCountryCode: defaultCountry.code,
-              initialFlagAsset: defaultCountry.flag,
-              onValidChanged: (isValid) => setState(() => isMobileValid = isValid),
+              hintText: "Mobile Number",
+              keyboardType: TextInputType.phone,
+              validator: (v) => v?.isEmpty == true ? "Required" : null,
             );
           }
-          return CustomTextField(
-            controller: mobileController,
-            hintText: "Mobile Number",
-            keyboardType: TextInputType.phone,
-            validator: (v) => v?.isEmpty == true ? "Required" : null,
+
+          final maxDigits = country.maxLength.clamp(6, 13);
+
+          return FormField<String>(
+            validator: (_) {
+              final text = mobileController.text.trim();
+              if (text.isEmpty) return "Mobile number is required";
+              if (text.length < country.minLength) {
+                return "Enter at least ${country.minLength} digits";
+              }
+              return null;
+            },
+            builder: (formState) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: formState.hasError ? Colors.red : Colors.grey.shade300,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        InkWell(
+                          onTap: () => _openPhoneCountryPicker(countries),
+                          borderRadius: const BorderRadius.horizontal(
+                            left: Radius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(country.flag, style: const TextStyle(fontSize: 20)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "+${country.dialCode}",
+                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.grey),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Container(height: 30, width: 1, color: Colors.grey.shade300),
+                        Expanded(
+                          child: TextField(
+                            controller: mobileController,
+                            keyboardType: TextInputType.phone,
+                            style: const TextStyle(fontSize: 14),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(maxDigits),
+                            ],
+                            decoration: const InputDecoration(
+                              hintText: "Enter Mobile Number",
+                              hintStyle: TextStyle(fontSize: 14),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                isMobileValid = value.length >= country.minLength;
+                              });
+                              // Trigger form field validation update
+                              formState.didChange(value);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (formState.hasError)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 12),
+                      child: Text(
+                        formState.errorText!,
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
+                ],
+              );
+            },
           );
         },
       ),

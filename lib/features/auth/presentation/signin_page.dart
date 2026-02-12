@@ -86,7 +86,8 @@ class _SigninPageState extends State<SigninPage> {
         maxChildSize: 0.95,
         minChildSize: 0.5,
         expand: false,
-        builder: (_, scrollController) => const CountryPickerSheet(),
+        builder: (_, scrollController) =>
+            CountryPickerSheet(countries: countries),
       ),
     );
 
@@ -532,8 +533,16 @@ class _SigninPageState extends State<SigninPage> {
   Widget _buildGetOtpButton() {
     return BlocConsumer<AuthBloc, AuthState>(
       bloc: sl<AuthBloc>(),
+      listenWhen: (previous, current) {
+        // Only react to fresh OTP-sent transitions
+        return (!previous.isOtpSent && current.isOtpSent) ||
+            (previous.error != current.error && current.error != null);
+      },
       listener: (context, state) {
         if (state.isOtpSent) {
+          // Reset immediately so stale state doesn't re-trigger navigation
+          sl<AuthBloc>().add(ResetOtpSentEvent());
+
           if (state.isTestOtp && state.testOtp != null) {
             _showTestOtpDialog(context, state.testOtp!);
           } else {

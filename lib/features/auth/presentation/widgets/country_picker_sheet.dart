@@ -1,20 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:grow_first/app/di/app_injections.dart';
-import 'package:grow_first/core/utils/extensions/context_extensions.dart';
-import 'package:grow_first/core/utils/sizing.dart';
-import 'package:grow_first/features/auth/presentation/bloc/country/country_cubit.dart';
-import 'package:grow_first/features/auth/presentation/bloc/country/country_state.dart';
+import 'package:grow_first/features/auth/domain/entities/country.dart';
 
 class CountryPickerSheet extends StatefulWidget {
-  const CountryPickerSheet({super.key});
+  final List<Country> countries;
+
+  const CountryPickerSheet({super.key, required this.countries});
 
   @override
   State<CountryPickerSheet> createState() => _CountryPickerSheetState();
 }
 
 class _CountryPickerSheetState extends State<CountryPickerSheet> {
-  String _query = "";
+  final TextEditingController _searchController = TextEditingController();
+  late List<Country> _filtered;
+
+  @override
+  void initState() {
+    super.initState();
+    _filtered = widget.countries;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    final q = query.toLowerCase().replaceAll('+', '');
+    setState(() {
+      if (q.isEmpty) {
+        _filtered = widget.countries;
+      } else {
+        _filtered = widget.countries.where((c) {
+          return c.name.toLowerCase().contains(q) ||
+              c.code.toLowerCase().contains(q) ||
+              c.dialCode.contains(q);
+        }).toList();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,90 +48,54 @@ class _CountryPickerSheetState extends State<CountryPickerSheet> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            const Text(
               "Select Country",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
-            verticalMargin16,
+            const SizedBox(height: 16),
+            TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: "Search by name, code, or dial code...",
+                hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.grey.shade200,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+              onChanged: _onSearchChanged,
+            ),
+            const SizedBox(height: 16),
             Expanded(
-              child: BlocBuilder<CountryCubit, CountryState>(
-                bloc: sl<CountryCubit>(),
-                builder: (context, state) {
-                  if (state is CountryLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (state is CountryError) {
-                    return Center(child: Text(state.message));
-                  }
-
-                  if (state is CountryLoaded) {
-                    final filtered = state.countries.where((c) {
-                      final name = c.name.toLowerCase();
-                      final code = c.code.toLowerCase();
-                      final dialCode = c.dialCode.toLowerCase();
-                      final q = _query.toLowerCase().replaceAll('+', '');
-
-                      return name.contains(q) ||
-                          code.contains(q) ||
-                          dialCode.contains(q);
-                    }).toList();
-
-                    return Column(
-                      children: [
-                        SearchBar(
-                          backgroundColor: WidgetStatePropertyAll(
-                            Colors.grey.shade200,
-                          ),
-                          shadowColor: const WidgetStatePropertyAll(
-                            Colors.transparent,
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _query = value;
-                            });
-                          },
-                          textStyle: WidgetStatePropertyAll(
-                            context.bodySmall.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          hintText: "Search by name, code, or dial code...",
-                          leading: const Icon(Icons.search),
-                          onTapOutside: (event) =>
-                              FocusManager.instance.primaryFocus?.unfocus(),
-                        ),
-                        verticalMargin24,
-                        Expanded(
-                          child: ListView.separated(
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, __) =>
-                                Divider(color: Colors.grey.shade300),
-                            itemBuilder: (context, index) {
-                              final c = filtered[index];
-
-                              return ListTile(
-                                leading: Text(
-                                  c.flag,
-                                  style: const TextStyle(fontSize: 24),
-                                ),
-                                title: Text(c.name, style: context.labelLarge),
-                                trailing: Text(
-                                  "+${c.dialCode}",
-                                  style: context.labelLarge,
-                                ),
-                                onTap: () => Navigator.pop(context, c),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-
-                  return const SizedBox.shrink();
+              child: ListView.separated(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                itemCount: _filtered.length,
+                separatorBuilder: (_, __) =>
+                    Divider(color: Colors.grey.shade300, height: 1),
+                itemBuilder: (context, index) {
+                  final c = _filtered[index];
+                  return ListTile(
+                    leading: Text(c.flag, style: const TextStyle(fontSize: 24)),
+                    title: Text(c.name, style: const TextStyle(fontSize: 14)),
+                    trailing: Text(
+                      "+${c.dialCode}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onTap: () => Navigator.pop(context, c),
+                  );
                 },
               ),
             ),

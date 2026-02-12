@@ -124,6 +124,11 @@ bool _navigated = false;
                       verticalMargin48,
                       BlocListener<AuthBloc, AuthState>(
                         bloc: sl<AuthBloc>(),
+                        listenWhen: (previous, current) {
+                          // Only navigate when token freshly appears
+                          return (previous.token == null || previous.token!.isEmpty) &&
+                              (current.token != null && current.token!.isNotEmpty);
+                        },
                         listener: (context, state) {
                           if (!_navigated && (state.token?.isNotEmpty ?? false)) {
                             // Trigger app-level authentication state
