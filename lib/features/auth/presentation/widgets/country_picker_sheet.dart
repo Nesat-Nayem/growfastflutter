@@ -46,9 +46,12 @@ class _CountryPickerSheetState extends State<CountryPickerSheet> {
                     final filtered = state.countries.where((c) {
                       final name = c.name.toLowerCase();
                       final code = c.code.toLowerCase();
-                      final q = _query.toLowerCase();
+                      final dialCode = c.dialCode.toLowerCase();
+                      final q = _query.toLowerCase().replaceAll('+', '');
 
-                      return name.contains(q) || code.contains(q);
+                      return name.contains(q) ||
+                          code.contains(q) ||
+                          dialCode.contains(q);
                     }).toList();
 
                     return Column(
@@ -70,7 +73,7 @@ class _CountryPickerSheetState extends State<CountryPickerSheet> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          hintText: "Search country...",
+                          hintText: "Search by name, code, or dial code...",
                           leading: const Icon(Icons.search),
                           onTapOutside: (event) =>
                               FocusManager.instance.primaryFocus?.unfocus(),
@@ -85,12 +88,9 @@ class _CountryPickerSheetState extends State<CountryPickerSheet> {
                               final c = filtered[index];
 
                               return ListTile(
-                                leading: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Text(
-                                    c.flag,
-                                    style: context.bodyMedium,
-                                  ),
+                                leading: Text(
+                                  c.flag,
+                                  style: const TextStyle(fontSize: 24),
                                 ),
                                 title: Text(c.name, style: context.labelLarge),
                                 trailing: Text(

@@ -12,9 +12,10 @@ import 'package:grow_first/core/theme/colors.dart';
 import 'package:grow_first/core/utils/extensions/context_extensions.dart';
 import 'package:grow_first/core/utils/sizing.dart';
 import 'package:grow_first/core/utils/snackbar.dart';
+import 'package:grow_first/features/auth/domain/entities/country.dart';
 import 'package:grow_first/features/auth/presentation/bloc/country/country_cubit.dart';
 import 'package:grow_first/features/auth/presentation/bloc/country/country_state.dart';
-import 'package:grow_first/features/auth/presentation/widgets/mobile_number_filed_widget.dart';
+import 'package:grow_first/features/auth/presentation/widgets/country_picker_sheet.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -39,27 +40,29 @@ class _SigninPageState extends State<SigninPage> {
   bool isGoogleSignInLoading = false;
   bool _isCountryInitialized = false;
 
-  String? _selectedCountryCode;
+  Country? _selectedCountry;
+
+  /// Returns the full international phone number: dialCode + localDigits
+  /// e.g. "8801617660907" for Bangladesh +880 1617660907
+  String get _fullPhoneNumber {
+    final dialCode = _selectedCountry?.dialCode ?? '91';
+    final local = customerMobileNumberController.text.trim();
+    return '$dialCode$local';
+  }
+
   Widget _buildFlag(String flag) {
-    // If flag looks like an asset path
     if (flag.contains('/') || flag.contains('.png')) {
       return Image.asset(flag, width: 24, height: 16, fit: BoxFit.cover);
     }
-
-    // Otherwise treat it as emoji
-    return Text(flag, style: const TextStyle(fontSize: 15));
+    return Text(flag, style: const TextStyle(fontSize: 20));
   }
 
-  // Web client ID (client_type: 3) from google-services.json — required for
-  // Android to obtain an idToken. On iOS the plugin reads the CLIENT_ID from
-  // GoogleService-Info.plist automatically.
+  // Web client ID (client_type: 3) from google-services.json
   static const _webClientId =
       '1088338713221-ru9o516qn1fjudr4mro7nura0ms9f9vf.apps.googleusercontent.com';
 
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
-    // On iOS the native SDK uses the CLIENT_ID from GoogleService-Info.plist,
-    // so we only need to supply serverClientId on Android.
     serverClientId: _webClientId,
   );
 
@@ -71,44 +74,60 @@ class _SigninPageState extends State<SigninPage> {
     super.dispose();
   }
 
+  void _openCountryPicker(List<Country> countries) async {
+    final picked = await showModalBottomSheet<Country>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (_, scrollController) => const CountryPickerSheet(),
+      ),
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _selectedCountry = picked;
+        isOtpBtnEnabled = false;
+        customerMobileNumberController.clear();
+      });
+    }
+  }
+
   Future<void> _handleGoogleSignIn() async {
     setState(() => isGoogleSignInLoading = true);
 
     try {
-      // Sign out first to ensure account picker shows
       await _googleSignIn.signOut();
-
-      // Trigger Google Sign In
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
-        // User cancelled the sign-in
         if (mounted) setState(() => isGoogleSignInLoading = false);
         return;
       }
 
-      // Obtain auth details from request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      // Create a new credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase with the Google credential
       final UserCredential userCredential =
           await _auth.signInWithCredential(credential);
 
-      // Get Firebase ID token
       final String? idToken = await userCredential.user?.getIdToken();
 
       if (idToken == null) {
         throw Exception('Failed to get Firebase ID token');
       }
 
-      // Send token to backend
       final dioClient = sl<DioClient>();
       final response = await dioClient.dio.post(
         'customer/google-login',
@@ -167,13 +186,11 @@ class _SigninPageState extends State<SigninPage> {
           'service_id': userData['service_id'],
         });
 
-        // Store auth
         final appStore = sl<AppStore>();
         await appStore.saveAuth(
           AuthResponseModel(token: token, user: userModel),
         );
 
-        // Notify bloc
         sl<AuthBloc>().add(
           GoogleLoginSuccessEvent(token: token, user: userData),
         );
@@ -187,7 +204,6 @@ class _SigninPageState extends State<SigninPage> {
         );
       }
     } on PlatformException catch (e) {
-      // Google Sign-In specific errors (e.g. sign_in_failed, network_error)
       debugPrint('Google Sign-In PlatformException: ${e.code} - ${e.message}');
       if (mounted) {
         String message;
@@ -200,7 +216,6 @@ class _SigninPageState extends State<SigninPage> {
             message = 'Network error. Please check your connection.';
             break;
           case 'sign_in_canceled':
-            // User cancelled — no need to show error
             return;
           default:
             message = 'Google sign-in error: ${e.code}';
@@ -256,11 +271,10 @@ class _SigninPageState extends State<SigninPage> {
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              // Navigate to OTP verification page
               context.pushNamed(
                 AppRouterNames.verifyOtp,
                 pathParameters: {
-                  "process_initiated_on": customerMobileNumberController.text,
+                  "process_initiated_on": _fullPhoneNumber,
                 },
                 extra: widget.redirectionData,
               );
@@ -277,7 +291,7 @@ class _SigninPageState extends State<SigninPage> {
     return Scaffold(
       appBar: AppBar(
         leading: Padding(
-          padding: const EdgeInsets.all(12.0), // AppBar spacing fix
+          padding: const EdgeInsets.all(12.0),
           child: InkWell(
             borderRadius: BorderRadius.circular(50),
             onTap: () => context.goNamed(AppRouterNames.home),
@@ -299,12 +313,6 @@ class _SigninPageState extends State<SigninPage> {
             ),
           ),
         ),
-        // leading: IconButton(
-        //   onPressed: () {
-        //     context.goNamed(AppRouterNames.home);
-        //   },
-        //   icon: const Icon(Icons.arrow_back, color: Colors.white),
-        // ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -316,10 +324,8 @@ class _SigninPageState extends State<SigninPage> {
           ),
         ),
       ),
-
       body: Stack(
         children: [
-          // Gradient background at top
           Container(
             height: MediaQuery.of(context).size.height * 0.4,
             decoration: const BoxDecoration(
@@ -335,34 +341,14 @@ class _SigninPageState extends State<SigninPage> {
               ),
             ),
           ),
-          // White content area
           SafeArea(
             child: Column(
               children: [
-                // Top section with gradient background
                 Container(
                   padding: horizontalPadding16 + verticalPadding32,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Back button
-                      // GestureDetector(
-                      //   onTap: () {
-                      //     context.goNamed(AppRouterNames.home);
-                      //   },
-                      //   child: Container(
-                      //     padding: const EdgeInsets.all(8),
-                      //     decoration: BoxDecoration(
-                      //       color: Colors.white.withValues(alpha: 0.2),
-                      //       borderRadius: BorderRadius.circular(12),
-                      //     ),
-                      //     child: const Icon(
-                      //       Icons.arrow_back_ios_new,
-                      //       color: Colors.white,
-                      //       size: 20,
-                      //     ),
-                      //   ),
-                      // ),
                       verticalMargin16,
                       Text(
                         "Welcome To\nLogin",
@@ -385,7 +371,6 @@ class _SigninPageState extends State<SigninPage> {
                     ],
                   ),
                 ),
-                // White rounded container for content
                 Expanded(
                   child: Container(
                     decoration: const BoxDecoration(
@@ -410,394 +395,13 @@ class _SigninPageState extends State<SigninPage> {
                               ),
                             ),
                             verticalMargin12,
-                            BlocBuilder<CountryCubit, CountryState>(
-                              builder: (context, state) {
-                                if (state is CountryLoading) {
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                }
-
-                                if (state is CountryError) {
-                                  return Center(child: Text(state.message));
-                                }
-
-                                if (state is CountryLoaded) {
-                                  if (!_isCountryInitialized &&
-                                      state.countries.isNotEmpty) {
-                                    final india = state.countries.firstWhere(
-                                      (c) => c.code == "IN", // 🇮🇳 FORCE INDIA
-                                      orElse: () {
-                                        final localeCode = PlatformDispatcher
-                                            .instance
-                                            .locale
-                                            .countryCode;
-
-                                        return state.countries.firstWhere(
-                                          (c) => c.code == localeCode,
-                                          orElse: () => state.countries.first,
-                                        );
-                                      },
-                                    );
-
-                                    _selectedCountryCode = india.code;
-                                    _isCountryInitialized = true;
-                                  }
-
-                                  // if (!_isCountryInitialized) {
-                                  //   _selectedCountryCode = state.countries
-                                  //       .firstWhere(
-                                  //         (c) =>
-                                  //             c.code ==
-                                  //             PlatformDispatcher
-                                  //                 .instance
-                                  //                 .locale
-                                  //                 .countryCode,
-                                  //         orElse: () => state.countries.first,
-                                  //       )
-                                  //       .code;
-
-                                  //   _isCountryInitialized = true;
-                                  // }
-
-                                  final selectedCountry = state.countries
-                                      .firstWhere(
-                                        (c) => c.code == _selectedCountryCode,
-                                      );
-                                  int _maxLocalDigits(String dialCode) {
-                                    const int maxTotalDigits = 13;
-                                    return maxTotalDigits - dialCode.length;
-                                  }
-
-                                  final maxDigits = _maxLocalDigits(
-                                    selectedCountry.dialCode,
-                                  ).clamp(6, 10);
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // 🌍 COUNTRY DROPDOWN
-                                      Container(
-                                        height: 56,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 2,
-                                                  ),
-                                              child: DropdownButtonHideUnderline(
-                                                child: DropdownButton<String>(
-                                                  value: _selectedCountryCode,
-                                                  items: state.countries.map((
-                                                    country,
-                                                  ) {
-                                                    return DropdownMenuItem<
-                                                      String
-                                                    >(
-                                                      value: country.code,
-                                                      child: Row(
-                                                        children: [
-                                                          _buildFlag(
-                                                            country.flag,
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 6,
-                                                          ),
-                                                          Text(
-                                                            "+${country.dialCode}",
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  fontSize: 12,
-                                                                ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  }).toList(),
-                                                  onChanged: (value) {
-                                                    setState(() {
-                                                      _selectedCountryCode =
-                                                          value;
-                                                      isOtpBtnEnabled = false;
-                                                      customerMobileNumberController
-                                                          .clear();
-                                                    });
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-
-                                            // Divider
-                                            Container(
-                                              height: 30,
-                                              width: 1,
-                                              color: Colors.grey.shade300,
-                                            ),
-
-                                            // 📱 MOBILE NUMBER INPUT (NO FLAG / NO CODE)
-                                            Expanded(
-                                              child: TextField(
-                                                controller:
-                                                    customerMobileNumberController,
-                                                keyboardType:
-                                                    TextInputType.phone,
-                                                style: TextStyle(fontSize: 12),
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter
-                                                      .digitsOnly,
-                                                  LengthLimitingTextInputFormatter(
-                                                    maxDigits,
-                                                  ),
-                                                ],
-                                                decoration:
-                                                    const InputDecoration(
-                                                      hintText:
-                                                          "Enter Mobile Number",
-                                                      border: InputBorder.none,
-                                                      contentPadding:
-                                                          EdgeInsets.symmetric(
-                                                            horizontal: 9,
-                                                          ),
-                                                    ),
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    final totalLength =
-                                                        selectedCountry
-                                                            .dialCode
-                                                            .length +
-                                                        value.length;
-
-                                                    isOtpBtnEnabled =
-                                                        value.isNotEmpty &&
-                                                        totalLength < 13;
-                                                  });
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      verticalMargin12,
-                                    ],
-                                  );
-                                }
-
-                                return emptyBox;
-                              },
-                            ),
-
-                            // BlocBuilder<CountryCubit, CountryState>(
-                            //   builder: (context, state) {
-                            //     if (state is CountryLoading) {
-                            //       return const Center(
-                            //         child: CircularProgressIndicator(),
-                            //       );
-                            //     }
-
-                            //     if (state is CountryError) {
-                            //       return Center(child: Text(state.message));
-                            //     }
-
-                            //     if (state is CountryLoaded) {
-                            //       return Center(
-                            //         child: MobileNumberField(
-                            //           controller:
-                            //               customerMobileNumberController,
-                            //           initialCountryCode: state.countries
-                            //               .where(
-                            //                 (element) =>
-                            //                     element.code ==
-                            //                     PlatformDispatcher
-                            //                         .instance
-                            //                         .locale
-                            //                         .countryCode,
-                            //               )
-                            //               .first
-                            //               .code,
-                            //           initialFlagAsset: state.countries
-                            //               .where(
-                            //                 (element) =>
-                            //                     element.code ==
-                            //                     PlatformDispatcher
-                            //                         .instance
-                            //                         .locale
-                            //                         .countryCode,
-                            //               )
-                            //               .first
-                            //               .flag,
-                            //           onValidChanged: (isValid) {
-                            //             setState(
-                            //               () => isOtpBtnEnabled = isValid,
-                            //             );
-                            //           },
-                            //         ),
-                            //       );
-                            //     }
-
-                            //     return emptyBox;
-                            //   },
-                            // ),
+                            _buildPhoneInput(),
                             verticalMargin32,
-                            BlocConsumer<AuthBloc, AuthState>(
-                              bloc: sl<AuthBloc>(),
-                              listener: (context, state) {
-                                if (state.isOtpSent) {
-                                  // Check if it's a test OTP - show popup
-                                  if (state.isTestOtp &&
-                                      state.testOtp != null) {
-                                    _showTestOtpDialog(context, state.testOtp!);
-                                  } else {
-                                    // Normal flow - navigate to OTP page
-                                    context.pushNamed(
-                                      AppRouterNames.verifyOtp,
-                                      pathParameters: {
-                                        "process_initiated_on":
-                                            customerMobileNumberController.text,
-                                      },
-                                      extra: widget.redirectionData,
-                                    );
-                                  }
-                                }
-                                if (state.error != null) {
-                                  AppSnackBar.show(
-                                    context,
-                                    message: state.error!,
-                                  );
-                                }
-                              },
-                              builder: (context, state) {
-                                return GradientButtonThird(
-                                  text: "Get OTP",
-                                  fontSize: 14,
-                                  showLoadingIndicator: state.isLoading,
-                                  onTap:
-                                      state.isLoading ||
-                                          (!isOtpBtnEnabled &&
-                                              customerMobileNumberController
-                                                  .text
-                                                  .trim()
-                                                  .isNotEmpty)
-                                      ? null
-                                      : () {
-                                          if (customerMobileNumberController
-                                              .text
-                                              .trim()
-                                              .isEmpty) {
-                                            AppSnackBar.show(
-                                              context,
-                                              message:
-                                                  "Please enter a mobile number to continue your journey",
-                                            );
-                                            return;
-                                          }
-                                          sl<AuthBloc>().add(
-                                            SendOtpEvent(
-                                              customerMobileNumberController
-                                                  .text,
-                                            ),
-                                          );
-                                        },
-                                  padding: verticalPadding16,
-                                );
-                              },
-                            ),
+                            _buildGetOtpButton(),
                             verticalMargin24,
-                            Row(
-                              children: [
-                                Expanded(child: Divider(color: lightGreyColor)),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: Text(
-                                    "OR",
-                                    style: context.labelMedium.copyWith(
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Divider(
-                                    color: lightGreyColor,
-                                    thickness: 1,
-                                  ),
-                                ),
-                              ],
-                            ),
+                            _buildOrDivider(),
                             verticalMargin24,
-                            // Google Sign-in Button
-                            GestureDetector(
-                              onTap: isGoogleSignInLoading
-                                  ? null
-                                  : _handleGoogleSignIn,
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                  horizontal: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (isGoogleSignInLoading)
-                                      const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    else
-                                      SvgPicture.asset(
-                                        'assets/svg/google_icon.svg',
-                                        width: 24,
-                                        height: 24,
-                                      ),
-                                    const SizedBox(width: 12),
-                                    Flexible(
-                                      child: Text(
-                                        isGoogleSignInLoading
-                                            ? "Signing in..."
-                                            : "Continue with Google",
-                                        style: context.labelLarge.copyWith(
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black87,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                            _buildGoogleSignInButton(),
                           ],
                         ),
                       ),
@@ -810,6 +414,236 @@ class _SigninPageState extends State<SigninPage> {
         ],
       ),
       resizeToAvoidBottomInset: false,
+    );
+  }
+
+  Widget _buildPhoneInput() {
+    return BlocBuilder<CountryCubit, CountryState>(
+      builder: (context, state) {
+        if (state is CountryLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is CountryError) {
+          return Center(child: Text(state.message));
+        }
+        if (state is CountryLoaded) {
+          // Initialize default country (India) on first load
+          if (!_isCountryInitialized && state.countries.isNotEmpty) {
+            _selectedCountry = state.countries.firstWhere(
+              (c) => c.code == "IN",
+              orElse: () {
+                final localeCode =
+                    PlatformDispatcher.instance.locale.countryCode;
+                return state.countries.firstWhere(
+                  (c) => c.code == localeCode,
+                  orElse: () => state.countries.first,
+                );
+              },
+            );
+            _isCountryInitialized = true;
+          }
+
+          final selectedCountry = _selectedCountry ?? state.countries.first;
+          final maxDigits = selectedCountry.maxLength.clamp(6, 13);
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    // Tappable country selector
+                    InkWell(
+                      onTap: () => _openCountryPicker(state.countries),
+                      borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildFlag(selectedCountry.flag),
+                            const SizedBox(width: 6),
+                            Text(
+                              "+${selectedCountry.dialCode}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.keyboard_arrow_down,
+                              size: 18,
+                              color: Colors.grey,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Divider
+                    Container(
+                      height: 30,
+                      width: 1,
+                      color: Colors.grey.shade300,
+                    ),
+                    // Phone number input
+                    Expanded(
+                      child: TextField(
+                        controller: customerMobileNumberController,
+                        keyboardType: TextInputType.phone,
+                        style: const TextStyle(fontSize: 14),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(maxDigits),
+                        ],
+                        decoration: const InputDecoration(
+                          hintText: "Enter Mobile Number",
+                          border: InputBorder.none,
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            isOtpBtnEnabled = value.length >=
+                                selectedCountry.minLength;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              verticalMargin12,
+            ],
+          );
+        }
+        return emptyBox;
+      },
+    );
+  }
+
+  Widget _buildGetOtpButton() {
+    return BlocConsumer<AuthBloc, AuthState>(
+      bloc: sl<AuthBloc>(),
+      listener: (context, state) {
+        if (state.isOtpSent) {
+          if (state.isTestOtp && state.testOtp != null) {
+            _showTestOtpDialog(context, state.testOtp!);
+          } else {
+            context.pushNamed(
+              AppRouterNames.verifyOtp,
+              pathParameters: {
+                "process_initiated_on": _fullPhoneNumber,
+              },
+              extra: widget.redirectionData,
+            );
+          }
+        }
+        if (state.error != null) {
+          AppSnackBar.show(context, message: state.error!);
+        }
+      },
+      builder: (context, state) {
+        return GradientButtonThird(
+          text: "Get OTP",
+          fontSize: 14,
+          showLoadingIndicator: state.isLoading,
+          onTap: state.isLoading ||
+                  (!isOtpBtnEnabled &&
+                      customerMobileNumberController.text.trim().isNotEmpty)
+              ? null
+              : () {
+                  if (customerMobileNumberController.text.trim().isEmpty) {
+                    AppSnackBar.show(
+                      context,
+                      message:
+                          "Please enter a mobile number to continue your journey",
+                    );
+                    return;
+                  }
+                  // Send full international number: dialCode + localDigits
+                  sl<AuthBloc>().add(SendOtpEvent(_fullPhoneNumber));
+                },
+          padding: verticalPadding16,
+        );
+      },
+    );
+  }
+
+  Widget _buildOrDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: lightGreyColor)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            "OR",
+            style: context.labelMedium.copyWith(color: Colors.grey),
+          ),
+        ),
+        Expanded(child: Divider(color: lightGreyColor, thickness: 1)),
+      ],
+    );
+  }
+
+  Widget _buildGoogleSignInButton() {
+    return GestureDetector(
+      onTap: isGoogleSignInLoading ? null : _handleGoogleSignIn,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isGoogleSignInLoading)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              SvgPicture.asset(
+                'assets/svg/google_icon.svg',
+                width: 24,
+                height: 24,
+              ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                isGoogleSignInLoading
+                    ? "Signing in..."
+                    : "Continue with Google",
+                style: context.labelLarge.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
