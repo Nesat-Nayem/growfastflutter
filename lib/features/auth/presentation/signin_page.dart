@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:grow_first/features/auth/presentation/bloc/auth/auth_bloc.dart';
@@ -38,6 +40,7 @@ class _SigninPageState extends State<SigninPage> {
       TextEditingController();
   bool isOtpBtnEnabled = false;
   bool isGoogleSignInLoading = false;
+  bool isAppleSignInLoading = false;
   bool _isCountryInitialized = false;
 
   Country? _selectedCountry;
@@ -64,6 +67,9 @@ class _SigninPageState extends State<SigninPage> {
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
     serverClientId: _webClientId,
+    // On iOS, forceCodeForRefreshToken enables the web-based OAuth flow
+    // which works correctly on both real devices and simulators.
+    forceCodeForRefreshToken: Platform.isIOS,
   );
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -97,6 +103,153 @@ class _SigninPageState extends State<SigninPage> {
         isOtpBtnEnabled = false;
         customerMobileNumberController.clear();
       });
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    setState(() => isAppleSignInLoading = true);
+
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(oauthCredential);
+
+      // Apple only sends name on the FIRST sign-in; persist it ourselves
+      final displayName = [
+        appleCredential.givenName,
+        appleCredential.familyName,
+      ].where((s) => s != null && s.isNotEmpty).join(' ');
+
+      if (displayName.isNotEmpty &&
+          (userCredential.user?.displayName == null ||
+              userCredential.user!.displayName!.isEmpty)) {
+        await userCredential.user?.updateDisplayName(displayName);
+      }
+
+      final String? idToken = await userCredential.user?.getIdToken();
+
+      if (idToken == null) {
+        throw Exception('Failed to get Firebase ID token');
+      }
+
+      final dioClient = sl<DioClient>();
+      final response = await dioClient.dio.post(
+        'customer/apple-login',
+        data: {'id_token': idToken},
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final token = response.data['token'] as String;
+        final userData = response.data['user'] as Map<String, dynamic>;
+
+        final userModel = AuthUserModel.fromJson({
+          'id': userData['id'],
+          'ref_code': userData['ref_code'] ?? '',
+          'ref_by': userData['ref_by'],
+          'name': userData['name'] ?? '',
+          'user_name': userData['user_name'],
+          'gender': userData['gender'],
+          'date_of_birth': userData['date_of_birth'],
+          'country': userData['country'],
+          'state': userData['state'],
+          'city': userData['city'],
+          'post_code': userData['post_code'],
+          'email': userData['email'] ?? '',
+          'phone': userData['phone'] ?? '',
+          'address': userData['address'],
+          'sub_locality': userData['sub_locality'],
+          'image': userData['image'],
+          'balance': userData['balance'] ?? 0,
+          'company_name': userData['company_name'],
+          'company_address': userData['company_address'],
+          'gstin': userData['gstin'],
+          'adhar': userData['adhar'],
+          'pan': userData['pan'],
+          'domain': userData['domain'],
+          'codeid': userData['codeid'],
+          'team_type': userData['team_type'],
+          'job_title': userData['job_title'],
+          'customer_type_id': userData['customer_type_id'],
+          'is_block': userData['is_block'] ?? 'N',
+          'role': userData['role'] ?? 'user',
+          'status': userData['status'] ?? 0,
+          'otp_created_at': userData['otp_created_at'] ?? '',
+          'step': userData['step'] ?? 0,
+          'otp': userData['otp'] ?? '',
+          'created_at':
+              userData['created_at'] ?? DateTime.now().toIso8601String(),
+          'updated_at':
+              userData['updated_at'] ?? DateTime.now().toIso8601String(),
+          'description': userData['description'],
+          'facebook_url': userData['facebook_url'],
+          'instagram_url': userData['instagram_url'],
+          'twitter_url': userData['twitter_url'],
+          'whatsapp_number': userData['whatsapp_number'],
+          'youtube_url': userData['youtube_url'],
+          'linkedin_url': userData['linkedin_url'],
+          'service_id': userData['service_id'],
+        });
+
+        final appStore = sl<AppStore>();
+        await appStore.saveAuth(
+          AuthResponseModel(token: token, user: userModel),
+        );
+
+        sl<AuthBloc>().add(
+          GoogleLoginSuccessEvent(token: token, user: userData),
+        );
+
+        if (mounted) {
+          context.goNamed(AppRouterNames.home);
+        }
+      } else {
+        throw Exception(
+          response.data['message'] ?? 'Apple login failed',
+        );
+      }
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        if (mounted) setState(() => isAppleSignInLoading = false);
+        return;
+      }
+      debugPrint('Apple Sign-In error: ${e.code} - ${e.message}');
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Apple sign-in failed: ${e.message}',
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint('FirebaseAuthException (Apple): ${e.code} - ${e.message}');
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Authentication failed: ${e.message ?? e.code}',
+        );
+      }
+    } catch (e) {
+      debugPrint('Apple Sign-In error: $e');
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Apple sign-in failed. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isAppleSignInLoading = false);
+      }
     }
   }
 
@@ -403,6 +556,8 @@ class _SigninPageState extends State<SigninPage> {
                             _buildOrDivider(),
                             verticalMargin24,
                             _buildGoogleSignInButton(),
+                            if (Platform.isIOS) ...
+                              [verticalMargin16, _buildAppleSignInButton()],
                           ],
                         ),
                       ),
@@ -599,6 +754,58 @@ class _SigninPageState extends State<SigninPage> {
         ),
         Expanded(child: Divider(color: lightGreyColor, thickness: 1)),
       ],
+    );
+  }
+
+  Widget _buildAppleSignInButton() {
+    return GestureDetector(
+      onTap: isAppleSignInLoading ? null : _handleAppleSignIn,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isAppleSignInLoading)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            else
+              const Icon(Icons.apple, color: Colors.white, size: 26),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                isAppleSignInLoading
+                    ? 'Signing in...'
+                    : 'Continue with Apple',
+                style: context.labelLarge.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
