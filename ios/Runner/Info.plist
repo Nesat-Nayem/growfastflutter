@@ -71,6 +71,21 @@
 				<string>cstr6suwn9.skadnetwork</string>
 			</dict>
 		</array>
+		<!-- ─── Meta (Facebook) SDK ────────────────────────────────────────────
+		 Replace YOUR_FACEBOOK_APP_ID and YOUR_FACEBOOK_CLIENT_TOKEN below
+		 with your real values from:
+		 https://developers.facebook.com → Your App → Settings → Basic
+		 ──────────────────────────────────────────────────────────────── -->
+		<key>FacebookAppID</key>
+		<string>813766171746729</string>
+		<key>FacebookClientToken</key>
+		<string>02608fca07909e489dd062a4cd372dc4</string>
+		<key>FacebookDisplayName</key>
+		<string>Grow First</string>
+		<key>FacebookAutoLogAppEventsEnabled</key>
+		<true/>
+		<key>FacebookAdvertiserIDCollectionEnabled</key>
+		<true/>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
@@ -79,6 +94,8 @@
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>com.googleusercontent.apps.1088338713221-hs1i9it5cucpjvgmdtkme2b6fhsukrfd</string>
+					<!-- Facebook URL Scheme: fb + YOUR_FACEBOOK_APP_ID -->
+					<string>fb813766171746729</string>
 				</array>
 			</dict>
 		</array>

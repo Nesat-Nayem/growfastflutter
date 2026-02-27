@@ -12,6 +12,7 @@ import 'package:grow_first/features/vendor_dashboard/presentation/bloc/vendor_st
 import 'package:grow_first/features/vendor_dashboard/presentation/vender_dashboard_page.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:grow_first/core/analytics/meta_analytics_service.dart';
 
 class VendorRegistrationChoosePlan extends StatefulWidget {
   const VendorRegistrationChoosePlan({super.key});
@@ -59,6 +60,18 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
       );
       return;
     }
+
+    // Log Meta Subscribe event for the selected paid plan
+    final selectedPlan = sl<VendorBloc>().state.plans.firstWhere(
+      (p) => p.id == selectedPlanId,
+      orElse: () => sl<VendorBloc>().state.plans.first,
+    );
+    MetaAnalyticsService.instance.logVendorSubscribe(
+      amount: selectedPlan.amount,
+      currency: 'INR',
+      planName: selectedPlan.name,
+      isFree: selectedPlan.isFree,
+    );
     
     sl<VendorBloc>().add(StorePayment(StorePaymentRequest(
       planId: selectedPlanId!,
@@ -124,6 +137,13 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
     });
 
     if (plan.isFree) {
+      // Log Meta Subscribe event for the free plan
+      MetaAnalyticsService.instance.logVendorSubscribe(
+        amount: 0,
+        currency: 'INR',
+        planName: plan.name,
+        isFree: true,
+      );
       // For free plan, directly store payment with empty transaction
       sl<VendorBloc>().add(StorePayment(StorePaymentRequest(
         planId: plan.id,

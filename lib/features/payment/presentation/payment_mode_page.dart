@@ -11,6 +11,7 @@ import 'package:grow_first/features/customer_bookings/presentation/bloc/bookings
 import 'package:grow_first/features/widgets/custom_bottom_nav_next_back_btns.dart';
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:grow_first/core/analytics/meta_analytics_service.dart';
 
 class PaymentModePage extends StatefulWidget {
   final String? cartId;
@@ -30,6 +31,7 @@ class _PaymentModePageState extends State<PaymentModePage> {
   String? errorMessage;
   String? razorpayOrderId;
   String? razorpayKey;
+  double _lastTotalAmount = 0;
 
   @override
   void initState() {
@@ -160,6 +162,14 @@ class _PaymentModePageState extends State<PaymentModePage> {
       }
 
       if (responseData['status'] == 'success') {
+        // Log Meta Purchase event for Razorpay payment
+        MetaAnalyticsService.instance.logPurchase(
+          amount: _lastTotalAmount,
+          currency: 'INR',
+          contentType: 'service_booking',
+          paymentMethod: 'razorpay',
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -222,6 +232,7 @@ class _PaymentModePageState extends State<PaymentModePage> {
   }
 
   void _startPayment(double totalAmount) {
+    _lastTotalAmount = totalAmount;
     if (selectedPaymentMethod == 'razorpay') {
       _processRazorpayPayment(totalAmount);
     } else if (selectedPaymentMethod == 'cash_on_delivery') {
@@ -287,6 +298,14 @@ class _PaymentModePageState extends State<PaymentModePage> {
       );
 
       if (response.data['status'] == 'success') {
+        // Log Meta Purchase event for Cash on Delivery
+        MetaAnalyticsService.instance.logPurchase(
+          amount: 0,
+          currency: 'INR',
+          contentType: 'service_booking',
+          paymentMethod: 'cash_on_delivery',
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

@@ -12,6 +12,7 @@ import 'package:grow_first/features/auth/presentation/bloc/auth/auth_state.dart'
 import 'package:grow_first/features/auth/presentation/widgets/otp_fields.dart';
 import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
 import 'package:grow_first/app/di/app_injections.dart';
+import 'package:grow_first/core/analytics/meta_analytics_service.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   final Map<String, dynamic>? redirectionData;
@@ -134,6 +135,7 @@ bool _navigated = false;
                             // Trigger app-level authentication state
                              _navigated = true;
                             sl<AppBloc>().add(AppLoggedIn());
+                            MetaAnalyticsService.instance.logLogin(loginMethod: 'otp');
                             
                             if (widget.redirectionData != null &&
                                 widget.redirectionData!["redirectTo"] != null) {

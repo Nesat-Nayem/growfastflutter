@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ─── Meta (Facebook) SDK ─────────────────────────────────────────────
+         Replace the values below with your actual App ID and Client Token
+         from https://developers.facebook.com → Your App → Settings → Basic
+         ──────────────────────────────────────────────────────────────────── -->
+    <string name="facebook_app_id">813766171746729</string>
+    <string name="facebook_client_token">02608fca07909e489dd062a4cd372dc4</string>
+</resources>

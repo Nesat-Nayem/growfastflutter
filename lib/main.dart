@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
+import 'package:grow_first/core/analytics/meta_analytics_service.dart';
 import 'package:grow_first/core/theme/theme.dart';
 import 'package:sizer/sizer.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -41,6 +42,10 @@ Future<void> main() async {
   
   // Load user data from secure storage
   await sl<AppStore>().load();
+
+  // Initialize Meta (Facebook) App Events SDK
+  await MetaAnalyticsService.instance.initialize();
+  await MetaAnalyticsService.instance.logFirstOpen();
 
   runApp(GrowFirstApp(config: config));
 }
