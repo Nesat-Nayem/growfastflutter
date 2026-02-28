@@ -12,11 +12,11 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   HomeRemoteDataSourceImpl(this.dio);
 
-  static const String url = "http://10.0.2.2:8000/api/home-page";
+  static const String url = "https://growfirst.org/api/home-page";
   static const String recentUrl =
-      "http://10.0.2.2:8000/api/customer/recent-searches?location=dewas";
+      "https://growfirst.org/api/customer/recent-searches?location=dewas";
   static const String servicesByTypeUrl =
-      "http://10.0.2.2:8000/api/customer/recent-searches";
+      "https://growfirst.org/api/customer/recent-searches";
 
   @override
   Future<HomePageResponse> getHomePageData() async {
