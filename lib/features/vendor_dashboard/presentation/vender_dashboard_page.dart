@@ -269,7 +269,9 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStep(Icons.info_outline, "Basic Info", isActive: true),
+            _buildStep(Icons.info_outline, "About Us", isCompleted: true),
+            _buildStepLine(),
+            _buildStep(Icons.person_outline, "Basic Details", isActive: true),
             _buildStepLine(),
             _buildStep(Icons.description_outlined, "KYC Details"),
             _buildStepLine(),

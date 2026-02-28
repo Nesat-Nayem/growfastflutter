@@ -59,6 +59,8 @@ class AppRouterNames {
 
   static const ModernCustomerDrawer = 'ModernCustomerDrawer';
 
+  static const vendorAbout = 'vendor-about';
+
   static const vendorDashboard = 'vendor-dashboard';
 
   static const vendorChoosePlan = 'vendor-choose-plan';

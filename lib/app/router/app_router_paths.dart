@@ -68,6 +68,8 @@ class AppRouterPaths {
 
   static String ModernCustomerDrawerPath= '/${AppRouterNames.ModernCustomerDrawer}';
 
+  static String vendorAboutPath = '/${AppRouterNames.vendorAbout}';
+
   static String vendorDashboardPath = '/${AppRouterNames.vendorDashboard}';
 
   static String vendorChoosePlanPath = '/${AppRouterNames.vendorChoosePlan}';

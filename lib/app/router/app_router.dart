@@ -35,6 +35,7 @@ import 'package:grow_first/features/splash/splash_page.dart';
 import 'package:grow_first/features/wallet/presentation/customer_wallet_page.dart';
 import 'package:grow_first/features/webview/vendor_webview_page.dart';
 import 'package:grow_first/features/widgets/custom_home_drawer.dart';
+import 'package:grow_first/features/vendor_dashboard/presentation/vendor_about_page.dart';
 import 'package:grow_first/features/vendor_dashboard/presentation/vender_dashboard_page.dart';
 import 'package:grow_first/features/vendor_dashboard/presentation/vendor_registration_choose_plan.dart';
 import 'package:grow_first/features/vendor_dashboard/presentation/vendor_registration_kyc.dart';
@@ -70,6 +71,7 @@ class AppRouter {
     AppRouterPaths.accountSettingsPath,
     AppRouterPaths.ModernCustomerDrawerPath,
     AppRouterPaths.vendorWebViewPath,
+    AppRouterPaths.vendorAboutPath,
     AppRouterPaths.vendorDashboardPath,
     AppRouterPaths.vendorChoosePlanPath,
     AppRouterPaths.vendorKycFormPath,
@@ -352,6 +354,11 @@ class AppRouter {
           name: AppRouterNames.search,
           path: AppRouterPaths.searchPath,
           builder: (_, state) => const SearchPage(),
+        ),
+        GoRoute(
+          name: AppRouterNames.vendorAbout,
+          path: AppRouterPaths.vendorAboutPath,
+          builder: (_, state) => const VendorAboutPage(),
         ),
         GoRoute(
           name: AppRouterNames.vendorDashboard,

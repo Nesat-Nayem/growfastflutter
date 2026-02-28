@@ -395,7 +395,7 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
               label: "Become a Vendor",
               onTap: () {
                 Navigator.of(context).pop(); // Close drawer first
-                context.pushNamed(AppRouterNames.vendorDashboard);
+                context.pushNamed(AppRouterNames.vendorAbout);
               },
               color: Color(0XFF5ECFE0),
             ),
