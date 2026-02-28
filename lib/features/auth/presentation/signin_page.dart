@@ -65,12 +65,14 @@ class _SigninPageState extends State<SigninPage> {
   static const _webClientId =
       '1088338713221-ru9o516qn1fjudr4mro7nura0ms9f9vf.apps.googleusercontent.com';
 
+  // iOS client ID from GoogleService-Info.plist (CLIENT_ID)
+  static const _iosClientId =
+      '1088338713221-hs1i9it5cucpjvgmdtkme2b6fhsukrfd.apps.googleusercontent.com';
+
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
     serverClientId: _webClientId,
-    // On iOS, forceCodeForRefreshToken enables the web-based OAuth flow
-    // which works correctly on both real devices and simulators.
-    forceCodeForRefreshToken: Platform.isIOS,
+    clientId: Platform.isIOS ? _iosClientId : null,
   );
 
   final FirebaseAuth _auth = FirebaseAuth.instance;

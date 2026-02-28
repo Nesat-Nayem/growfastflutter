@@ -758,14 +758,19 @@ class _RegistrationHookSection extends StatelessWidget {
               )).toList(),
             ),
             const SizedBox(height: 20),
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              mainAxisSize: MainAxisSize.min,
+              children: const [
                 Icon(Icons.shield_outlined, color: _kGreen, size: 14),
                 SizedBox(width: 5),
-                Text(
-                  'Your details are 100% secure and never shared.',
-                  style: TextStyle(fontSize: 12, color: _kMuted),
+                Flexible(
+                  child: Text(
+                    'Your details are 100% secure and never shared.',
+                    style: TextStyle(fontSize: 12, color: _kMuted),
+                    overflow: TextOverflow.visible,
+                    softWrap: true,
+                  ),
                 ),
               ],
             ),
