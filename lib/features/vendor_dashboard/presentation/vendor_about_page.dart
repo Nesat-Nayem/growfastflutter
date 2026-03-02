@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 // ─── Colours (matching GrowFirst design system) ─────────────────────────────
 const _kGreen     = Color(0xFF6AA84F);
@@ -44,6 +45,7 @@ class VendorAboutPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: const [
                     _HeroSection(),
+                    _VideoSection(),
                     _WhyJoinSection(),
                     _PricingSection(),
                     _HowItWorksSection(),
@@ -137,6 +139,124 @@ class _StepProgressBar extends StatelessWidget {
             );
           }),
         ),
+      ),
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SECTION 2 — VIDEO
+// ════════════════════════════════════════════════════════════════════════════
+class _VideoSection extends StatefulWidget {
+  const _VideoSection();
+
+  @override
+  State<_VideoSection> createState() => _VideoSectionState();
+}
+
+class _VideoSectionState extends State<_VideoSection> {
+  static const _videoId = 'lXGdy0ls0nc';
+  YoutubePlayerController? _controller;
+  bool _playing = false;
+
+  void _play() {
+    final ctrl = YoutubePlayerController(
+      initialVideoId: _videoId,
+      flags: const YoutubePlayerFlags(
+        autoPlay: true,
+        mute: false,
+        hideControls: false,
+        controlsVisibleAtStart: true,
+      ),
+    );
+    setState(() {
+      _controller = ctrl;
+      _playing = true;
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionWrapper(
+      bgColor: _kBg,
+      child: Column(
+        children: [
+          const _SectionHeader(
+            badge: 'See It In Action',
+            title: 'Watch How Grow First Works',
+          ),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'A quick 2-minute overview of the entire vendor journey',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: _kMuted),
+            ),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: _playing && _controller != null
+                ? YoutubePlayer(
+                    controller: _controller!,
+                    showVideoProgressIndicator: true,
+                    progressIndicatorColor: _kGreen,
+                    progressColors: const ProgressBarColors(
+                      playedColor: _kGreen,
+                      handleColor: _kGreenDark,
+                    ),
+                  )
+                : _VideoThumbnail(onPlay: _play),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VideoThumbnail extends StatelessWidget {
+  const _VideoThumbnail({required this.onPlay});
+  final VoidCallback onPlay;
+
+  static const _thumbUrl =
+      'https://img.youtube.com/vi/lXGdy0ls0nc/maxresdefault.jpg';
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPlay,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Image.network(
+              _thumbUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: const Color(0xFF1A73E8),
+                child: const Center(
+                  child: Icon(Icons.play_circle_fill, color: Colors.white, size: 64),
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withOpacity(.55),
+              border: Border.all(color: Colors.white, width: 2.5),
+            ),
+            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
+          ),
+        ],
       ),
     );
   }
