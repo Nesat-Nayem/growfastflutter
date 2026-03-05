@@ -335,7 +335,7 @@ class _HeroSection extends StatelessWidget {
           _GreenButton(
             label: '  Start Registration Now',
             icon: Icons.rocket_launch_rounded,
-            onTap: () {},
+            onTap: () => context.pushNamed(AppRouterNames.vendorDashboard),
           ),
           const SizedBox(height: 20),
           // meta info
@@ -516,16 +516,19 @@ class _PricingSection extends StatelessWidget {
                   ),
                 ))),
                 const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(50),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(.12), blurRadius: 12)],
-                  ),
-                  child: const Center(
-                    child: Text('🟢 Register Now @ ₹699', style: TextStyle(color: _kGreenDark, fontSize: 16, fontWeight: FontWeight.w800)),
+                GestureDetector(
+                  onTap: () => context.pushNamed(AppRouterNames.vendorDashboard),
+                  child: Container(
+                    width: double.infinity,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(.12), blurRadius: 12)],
+                    ),
+                    child: const Center(
+                      child: Text('🟢 Register Now @ ₹699', style: TextStyle(color: _kGreenDark, fontSize: 16, fontWeight: FontWeight.w800)),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1004,7 +1007,7 @@ class _FinalCtaSection extends StatelessWidget {
             style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.6),
           ),
           const SizedBox(height: 28),
-          _GreenButton(label: '🟢 Become a Vendor @ ₹699', onTap: () {}),
+          _GreenButton(label: '🟢 Become a Vendor @ ₹699', onTap: () => context.pushNamed(AppRouterNames.vendorDashboard)),
           const SizedBox(height: 24),
           Wrap(
             alignment: WrapAlignment.center,
