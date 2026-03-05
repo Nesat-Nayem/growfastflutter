@@ -1,7 +1,7 @@
 {
   "dev": {
-    "baseUrl": "https://growfirst.org/api/",
-    "imageBaseUrl": "https://growfirst.org",
+    "baseUrl": "http://public.test/api/",
+    "imageBaseUrl": "http://public.test",
     "enableDatadog": false,
     "enableSentry": false
   },

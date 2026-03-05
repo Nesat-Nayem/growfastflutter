@@ -288,7 +288,7 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
                                                 'http',
                                               )
                                               ? userImage.toString()
-                                              : "https://growfirst.org/$userImage",
+                                              : "http://public.test/$userImage",
                                         ),
                                   child:
                                       (userImage == null ||
