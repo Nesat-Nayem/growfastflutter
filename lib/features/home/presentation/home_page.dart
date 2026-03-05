@@ -360,65 +360,110 @@ class _HomePageContentState extends State<HomePageContent> {
               },
             ),
             verticalMargin24,
-            SizedBox(
-              height: 190,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: SizedBox(
-                        height: double.infinity,
-                        child: CachedNetworkImage(
-                          imageUrl:
-                              "https://static.vecteezy.com/system/resources/previews/011/826/370/large_2x/maldives-islands-ocean-tropical-beach-exotic-sea-lagoon-palm-trees-over-white-sand-idyllic-nature-landscape-amazing-beach-scenic-shore-bright-tropical-summer-sun-and-blue-sky-with-light-clouds-photo.jpg",
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                  horizontalMargin12,
-                  Expanded(
-                    child: Column(
+            BlocBuilder<HomePageBloc, HomePageState>(
+              builder: (context, state) {
+                if (state is HomePageLoading) {
+                  return SizedBox(
+                    height: 190,
+                    child: Row(
                       children: [
                         Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.network(
-                              "https://picsum.photos/seed/grow1/400/300",
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                            ),
+                          child: AppShimmer(
+                            height: 190,
                           ),
                         ),
-                        verticalMargin16,
+                        horizontalMargin12,
                         Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.network(
-                              "https://picsum.photos/seed/grow2/400/300",
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              alignment: Alignment.bottomRight,
-                            ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: AppShimmer(),
+                              ),
+                              verticalMargin16,
+                              Expanded(
+                                child: AppShimmer(),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
+                  );
+                } else if (state is HomePageLoaded && state.apkBanners.isNotEmpty) {
+                  final banners = state.apkBanners;
+                  return SizedBox(
+                    height: 190,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: SizedBox(
+                              height: double.infinity,
+                              child: CachedNetworkImage(
+                                imageUrl: banners.isNotEmpty ? banners[0].image : '',
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => AppShimmer(),
+                                errorWidget: (context, url, error) => Icon(Icons.error),
+                              ),
+                            ),
+                          ),
+                        ),
+                        horizontalMargin12,
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: CachedNetworkImage(
+                                    imageUrl: banners.length > 1 ? banners[1].image : '',
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    placeholder: (context, url) => AppShimmer(),
+                                    errorWidget: (context, url, error) => Icon(Icons.error),
+                                  ),
+                                ),
+                              ),
+                              verticalMargin16,
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: CachedNetworkImage(
+                                    imageUrl: banners.length > 2 ? banners[2].image : '',
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    alignment: Alignment.bottomRight,
+                                    placeholder: (context, url) => AppShimmer(),
+                                    errorWidget: (context, url, error) => Icon(Icons.error),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return emptyBox;
+              },
             ),
             verticalMargin24,
-            HomePageBanners(
-              height: context.height * 0.20,
-              images: [
-                "https://picsum.photos/seed/blog1/800/400",
-                "https://picsum.photos/seed/blog2/800/400",
-                "https://picsum.photos/seed/blog3/800/400",
-                "https://picsum.photos/seed/blog4/800/400",
-                "https://picsum.photos/seed/blog5/800/400",
-              ],
+            BlocBuilder<HomePageBloc, HomePageState>(
+              builder: (context, state) {
+                if (state is HomePageLoading) {
+                  return AppShimmer(
+                    height: context.height * 0.20,
+                  );
+                } else if (state is HomePageLoaded && state.apkSliders.isNotEmpty) {
+                  return HomePageBanners(
+                    height: context.height * 0.20,
+                    images: state.apkSliders.map((slider) => slider.image).toList(),
+                  );
+                }
+                return emptyBox;
+              },
             ),
             verticalMargin8,
             // Recent Searches Section - Hidden for now

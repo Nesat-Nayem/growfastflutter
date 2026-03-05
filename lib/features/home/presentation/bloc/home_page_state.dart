@@ -27,14 +27,19 @@ class HomePageError extends HomePageState {
 class HomePageLoaded extends HomePageState {
   final List<String> bannerImages;
   final List<HomeServiceModel> services;
- final List<RecentSearchModel> recentSearches;
+  final List<RecentSearchModel> recentSearches;
+  final List<BannerModel> apkBanners;
+  final List<SliderModel> apkSliders;
+  
   const HomePageLoaded({
     required this.bannerImages,
     required this.services,
     required this.recentSearches,
+    required this.apkBanners,
+    required this.apkSliders,
   });
 
   @override
-  List<Object?> get props => [bannerImages,services ,recentSearches]; //,recentSearches mention karshel re ba
+  List<Object?> get props => [bannerImages, services, recentSearches, apkBanners, apkSliders]; //,recentSearches mention karshel re ba
 }
 

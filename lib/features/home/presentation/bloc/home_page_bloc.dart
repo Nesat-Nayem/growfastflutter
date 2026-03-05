@@ -3,8 +3,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:grow_first/core/usecase.dart';
 import 'package:grow_first/core/utils/helpers.dart';
+import 'package:grow_first/features/home/data/model/banner_model.dart';
 import 'package:grow_first/features/home/data/model/home_service_model.dart';
 import 'package:grow_first/features/home/data/model/recent_search_model.dart';
+import 'package:grow_first/features/home/data/model/slider_model.dart';
 
 import '../../domain/usecases/get_home_banner_images_usecase.dart';
 
@@ -38,6 +40,8 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
             bannerImages: data.bannerImages,
             services: data.services,
             recentSearches: data.recentSearches,
+            apkBanners: data.apkBanners,
+            apkSliders: data.apkSliders,
           ),
         );
       },
