@@ -80,8 +80,8 @@ dependencies:
   firebase_auth: ^5.3.3
   google_sign_in: ^6.2.2
   sign_in_with_apple: ^6.1.4
+  firebase_analytics: ^11.3.8
   # firebase_crashlytics: ^4.1.8
-  # firebase_analytics: ^11.3.8
   # firebase_messaging: ^15.1.8
   # cloud_firestore: ^5.5.0
 

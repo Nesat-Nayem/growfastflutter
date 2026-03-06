@@ -12,6 +12,7 @@ import 'package:grow_first/features/widgets/custom_bottom_nav_next_back_btns.dar
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:grow_first/core/analytics/meta_analytics_service.dart';
+import 'package:grow_first/core/analytics/firebase_analytics_service.dart';
 
 class PaymentModePage extends StatefulWidget {
   final String? cartId;
@@ -169,6 +170,13 @@ class _PaymentModePageState extends State<PaymentModePage> {
           contentType: 'service_booking',
           paymentMethod: 'razorpay',
         );
+        // Log Firebase Analytics Purchase event
+        FirebaseAnalyticsService.instance.logPurchase(
+          amount: _lastTotalAmount,
+          currency: 'INR',
+          paymentMethod: 'razorpay',
+          transactionId: response.paymentId,
+        );
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -233,6 +241,11 @@ class _PaymentModePageState extends State<PaymentModePage> {
 
   void _startPayment(double totalAmount) {
     _lastTotalAmount = totalAmount;
+    // Log begin_checkout event to Firebase Analytics
+    FirebaseAnalyticsService.instance.logBeginCheckout(
+      amount: totalAmount,
+      currency: 'INR',
+    );
     if (selectedPaymentMethod == 'razorpay') {
       _processRazorpayPayment(totalAmount);
     } else if (selectedPaymentMethod == 'cash_on_delivery') {
@@ -303,6 +316,12 @@ class _PaymentModePageState extends State<PaymentModePage> {
           amount: 0,
           currency: 'INR',
           contentType: 'service_booking',
+          paymentMethod: 'cash_on_delivery',
+        );
+        // Log Firebase Analytics Purchase event
+        FirebaseAnalyticsService.instance.logPurchase(
+          amount: 0,
+          currency: 'INR',
           paymentMethod: 'cash_on_delivery',
         );
 

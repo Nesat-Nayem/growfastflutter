@@ -544,35 +544,14 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel("Country"),
-        SizedBox(
-          height: 52,
-          child: DropdownButtonFormField<String>(
-            value: selectedCountry,
-            isExpanded: true,
-            dropdownColor: Colors.white,
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-            style: const TextStyle(fontSize: 14, color: Colors.black),
-            decoration: InputDecoration(
-              hintText: "Select Country",
-              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-              ),
-            ),
-            items: state.countries
-                .map((c) => DropdownMenuItem<String>(
-                      value: c.name,
-                      child: Text(c.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              if (value == null || state.countries.isEmpty) return;
+        _buildSearchableField(
+          value: selectedCountry,
+          hintText: "Select Country",
+          onTap: () => _showSearchableBottomSheet<String>(
+            title: "Select Country",
+            items: state.countries.map((c) => c.name).toList(),
+            selectedValue: selectedCountry,
+            onSelected: (value) {
               final country = state.countries.firstWhere((c) => c.name == value);
               setState(() {
                 selectedCountry = value;
@@ -594,44 +573,25 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel("State"),
-        SizedBox(
-          height: 52,
-          child: DropdownButtonFormField<String>(
-            value: selectedState,
-            isExpanded: true,
-            dropdownColor: Colors.white,
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-            style: const TextStyle(fontSize: 14, color: Colors.black),
-            decoration: InputDecoration(
-              hintText: state.isStatesLoading ? "Loading..." : "Select State",
-              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-              ),
-            ),
-            items: state.states
-                .map((s) => DropdownMenuItem<String>(
-                      value: s.name,
-                      child: Text(s.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              if (value == null || state.states.isEmpty) return;
-              final st = state.states.firstWhere((s) => s.name == value);
-              setState(() {
-                selectedState = value;
-                selectedStateId = st.id;
-                selectedCity = null;
-              });
-              sl<VendorBloc>().add(LoadCities(st.id));
-            },
-          ),
+        _buildSearchableField(
+          value: selectedState,
+          hintText: state.isStatesLoading ? "Loading..." : "Select State",
+          onTap: state.isStatesLoading
+              ? null
+              : () => _showSearchableBottomSheet<String>(
+                    title: "Select State",
+                    items: state.states.map((s) => s.name).toList(),
+                    selectedValue: selectedState,
+                    onSelected: (value) {
+                      final st = state.states.firstWhere((s) => s.name == value);
+                      setState(() {
+                        selectedState = value;
+                        selectedStateId = st.id;
+                        selectedCity = null;
+                      });
+                      sl<VendorBloc>().add(LoadCities(st.id));
+                    },
+                  ),
         ),
       ],
     );
@@ -642,37 +602,224 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel("City"),
-        SizedBox(
-          height: 52,
-          child: DropdownButtonFormField<String>(
-            value: selectedCity,
-            isExpanded: true,
-            dropdownColor: Colors.white,
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-            style: const TextStyle(fontSize: 14, color: Colors.black),
-            decoration: InputDecoration(
-              hintText: state.isCitiesLoading ? "Loading..." : "Select City",
-              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-              ),
-            ),
-            items: state.cities
-              .map((city) => DropdownMenuItem<String>(
-                    value: city.name,
-                    child: Text(city.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
-                  ))
-              .toList(),
-          onChanged: (value) => setState(() => selectedCity = value),
-          ),
+        _buildSearchableField(
+          value: selectedCity,
+          hintText: state.isCitiesLoading ? "Loading..." : "Select City",
+          onTap: state.isCitiesLoading
+              ? null
+              : () => _showSearchableBottomSheet<String>(
+                    title: "Select City",
+                    items: state.cities.map((c) => c.name).toList(),
+                    selectedValue: selectedCity,
+                    onSelected: (value) => setState(() => selectedCity = value),
+                  ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSearchableField({
+    required String? value,
+    required String hintText,
+    required VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                value ?? hintText,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: value != null ? Colors.black : Colors.grey.shade500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSearchableBottomSheet<T>({
+    required String title,
+    required List<String> items,
+    required String? selectedValue,
+    required ValueChanged<String> onSelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SearchableListSheet(
+        title: title,
+        items: items,
+        selectedValue: selectedValue,
+        onSelected: (value) {
+          Navigator.pop(context);
+          onSelected(value);
+        },
+      ),
+    );
+  }
+}
+
+class _SearchableListSheet extends StatefulWidget {
+  final String title;
+  final List<String> items;
+  final String? selectedValue;
+  final ValueChanged<String> onSelected;
+
+  const _SearchableListSheet({
+    required this.title,
+    required this.items,
+    required this.selectedValue,
+    required this.onSelected,
+  });
+
+  @override
+  State<_SearchableListSheet> createState() => _SearchableListSheetState();
+}
+
+class _SearchableListSheetState extends State<_SearchableListSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  List<String> _filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredItems = widget.items;
+      } else {
+        _filteredItems = widget.items
+            .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: "Search...",
+                    hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              _onSearchChanged('');
+                            },
+                          )
+                        : null,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade400),
+                    ),
+                  ),
+                  onChanged: _onSearchChanged,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: _filteredItems.isEmpty
+                    ? Center(
+                        child: Text(
+                          "No results found",
+                          style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: _filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredItems[index];
+                          final isSelected = item == widget.selectedValue;
+                          return ListTile(
+                            title: Text(
+                              item,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                color: isSelected ? const Color(0xFF10326B) : Colors.black,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? const Icon(Icons.check_circle, color: Color(0xFF30D3D9), size: 20)
+                                : null,
+                            onTap: () => widget.onSelected(item),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

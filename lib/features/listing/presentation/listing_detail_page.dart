@@ -21,6 +21,8 @@ import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:grow_first/features/widgets/custom_home_drawer.dart';
 import 'package:grow_first/features/widgets/gradient_button.dart';
 import 'package:grow_first/features/widgets/status_button.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:grow_first/core/analytics/firebase_analytics_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -37,15 +39,44 @@ class ListingDetailPage extends StatefulWidget {
 class _ListingDetailPageState extends State<ListingDetailPage> {
   late final ListingBloc _listingBloc;
   int _selectedImageIndex = 0;
+  bool _isBannerAdLoaded = false;
+  late BannerAd _bannerAd;
+
   @override
   void initState() {
     super.initState();
     _listingBloc = sl.get<ListingBloc>();
     _listingBloc.add(LoadListingDetail(widget.listingId));
+    _createBannerAd();
+    FirebaseAnalyticsService.instance.logScreenView(screenName: 'listing_detail');
+  }
+
+  void _createBannerAd() {
+    _bannerAd = BannerAd(
+      size: AdSize.banner,
+      adUnitId: 'ca-app-pub-3940256099942544/9214589741',
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() => _isBannerAdLoaded = true);
+          FirebaseAnalyticsService.instance.logAdImpression(
+            adPlatform: 'admob',
+            adFormat: 'banner',
+            adUnitName: 'listing_detail_banner',
+          );
+        },
+        onAdFailedToLoad: (Ad ad, error) {
+          ad.dispose();
+          setState(() => _isBannerAdLoaded = false);
+        },
+      ),
+      request: const AdRequest(),
+    );
+    _bannerAd.load();
   }
 
   @override
   void dispose() {
+    _bannerAd.dispose();
     _listingBloc.close();
     super.dispose();
   }
@@ -471,6 +502,15 @@ ${sl<AppConfig>().imageBaseUrl}/service/${listing.slug}
                   ?videoChild,
                   FaqSection(faqs: listing?.faqs),
                   verticalMargin24,
+                  if (_isBannerAdLoaded)
+                    Container(
+                      height: 50,
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: AdWidget(ad: _bannerAd),
+                    ),
+
                   ReviewsWidget(
                     listing: listing!,
                     onReviewAdded: () {

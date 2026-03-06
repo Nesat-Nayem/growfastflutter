@@ -13,6 +13,7 @@ import 'package:grow_first/features/vendor_dashboard/presentation/vender_dashboa
 import 'package:grow_first/features/widgets/custom_home_app_bar.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:grow_first/core/analytics/meta_analytics_service.dart';
+import 'package:grow_first/core/analytics/firebase_analytics_service.dart';
 
 class VendorRegistrationChoosePlan extends StatefulWidget {
   const VendorRegistrationChoosePlan({super.key});
@@ -67,6 +68,12 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
       orElse: () => sl<VendorBloc>().state.plans.first,
     );
     MetaAnalyticsService.instance.logVendorSubscribe(
+      amount: selectedPlan.amount,
+      currency: 'INR',
+      planName: selectedPlan.name,
+      isFree: selectedPlan.isFree,
+    );
+    FirebaseAnalyticsService.instance.logVendorSubscribe(
       amount: selectedPlan.amount,
       currency: 'INR',
       planName: selectedPlan.name,
@@ -139,6 +146,12 @@ class _VendorRegistrationChoosePlanState extends State<VendorRegistrationChooseP
     if (plan.isFree) {
       // Log Meta Subscribe event for the free plan
       MetaAnalyticsService.instance.logVendorSubscribe(
+        amount: 0,
+        currency: 'INR',
+        planName: plan.name,
+        isFree: true,
+      );
+      FirebaseAnalyticsService.instance.logVendorSubscribe(
         amount: 0,
         currency: 'INR',
         planName: plan.name,

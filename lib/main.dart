@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:grow_first/app/bloc/app_bloc/app_bloc.dart';
+import 'package:grow_first/core/analytics/firebase_analytics_service.dart';
 import 'package:grow_first/core/analytics/meta_analytics_service.dart';
 import 'package:grow_first/core/theme/theme.dart';
 import 'package:sizer/sizer.dart';
@@ -43,6 +45,9 @@ Future<void> main() async {
   // Load user data from secure storage
   await sl<AppStore>().load();
 
+  // Initialize Google Mobile Ads SDK
+  await MobileAds.instance.initialize();
+
   // Initialize Meta (Facebook) App Events SDK
   await MetaAnalyticsService.instance.initialize();
   await MetaAnalyticsService.instance.logFirstOpen();
@@ -66,6 +71,8 @@ class _GrowFirstAppState extends State<GrowFirstApp> {
     super.initState();
     final appBloc = sl<AppBloc>()..add(AppStarted());
     _router = AppRouter.buildRouter(appBloc);
+    // Log app_open event to Firebase Analytics
+    FirebaseAnalyticsService.instance.logCustomEvent(name: 'app_open');
   }
 
   @override

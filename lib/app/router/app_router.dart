@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grow_first/app/di/app_injections.dart';
+import 'package:grow_first/core/analytics/firebase_analytics_service.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/app/router/app_router_paths.dart';
 import 'package:grow_first/app/router/refresh_streams/go_router_refresh_stream.dart';
@@ -82,6 +83,7 @@ class AppRouter {
     return GoRouter(
       initialLocation: AppRouterPaths.splashPath,
       refreshListenable: BlocRefreshStream(appBloc.stream),
+      observers: [FirebaseAnalyticsService.instance.observer],
       redirect: (context, state) async {
         final appState = appBloc.state;
 

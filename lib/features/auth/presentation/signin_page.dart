@@ -27,6 +27,7 @@ import 'package:grow_first/core/app_store/app_store.dart';
 import 'package:grow_first/features/auth/data/models/auth_user_model.dart';
 import 'package:grow_first/features/auth/data/models/auth_response_model.dart';
 import 'package:grow_first/core/analytics/meta_analytics_service.dart';
+import 'package:grow_first/core/analytics/firebase_analytics_service.dart';
 
 class SigninPage extends StatefulWidget {
   final Map<String, dynamic>? redirectionData;
@@ -214,6 +215,7 @@ class _SigninPageState extends State<SigninPage> {
         );
 
         MetaAnalyticsService.instance.logLogin(loginMethod: 'apple');
+        FirebaseAnalyticsService.instance.logLogin(loginMethod: 'apple');
 
         if (mounted) {
           context.goNamed(AppRouterNames.home);
@@ -355,6 +357,7 @@ class _SigninPageState extends State<SigninPage> {
         );
 
         MetaAnalyticsService.instance.logLogin(loginMethod: 'google');
+        FirebaseAnalyticsService.instance.logLogin(loginMethod: 'google');
 
         if (mounted) {
           context.goNamed(AppRouterNames.home);

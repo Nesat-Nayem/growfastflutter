@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:grow_first/core/analytics/firebase_analytics_service.dart';
 import 'package:grow_first/app/di/app_injections.dart';
 import 'package:grow_first/app/router/app_router_name.dart';
 import 'package:grow_first/core/theme/colors.dart';
@@ -65,27 +66,40 @@ class _HomePageContentState extends State<HomePageContent> {
   String _address = "Getting your location";
   bool _isLoadingLocation = true;
   LocationStatus? _locationStatus;
+  bool _isBannerAdLoaded = false;
 
-  BannerAd banner = BannerAd(
-    size: AdSize.banner,
-    adUnitId: 'ca-app-pub-3940256099942544/9214589741',
-    listener: BannerAdListener(
-      onAdLoaded: (Ad ad) {
-        print("banner is loading");
-      },
-      onAdFailedToLoad: (Ad ad, error) {
-        print("failed to load $error");
-        ad.dispose();
-      },
-    ),
-    request: AdRequest(),
-  );
+  late BannerAd banner;
+
+  void _createBannerAd() {
+    banner = BannerAd(
+      size: AdSize.banner,
+      adUnitId: 'ca-app-pub-3940256099942544/9214589741',
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() => _isBannerAdLoaded = true);
+          FirebaseAnalyticsService.instance.logAdImpression(
+            adPlatform: 'admob',
+            adFormat: 'banner',
+            adUnitName: 'home_page_banner',
+          );
+        },
+        onAdFailedToLoad: (Ad ad, error) {
+          print("failed to load $error");
+          ad.dispose();
+          setState(() => _isBannerAdLoaded = false);
+        },
+      ),
+      request: const AdRequest(),
+    );
+    banner.load();
+  }
 
   @override
   void initState() {
     super.initState();
-    banner.load();
+    _createBannerAd();
     _fetchLocation();
+    FirebaseAnalyticsService.instance.logScreenView(screenName: 'home_page');
   }
 
   Future<void> _fetchLocation() async {
@@ -257,11 +271,6 @@ class _HomePageContentState extends State<HomePageContent> {
                 } else if (state.categories.isNotEmpty) {
                   return Column(
                     children: [
-                      // Container(
-                      //   height: 50,
-                      //   width: double.infinity,
-                      //   child: AdWidget(ad: banner),
-                      // ),
                       Row(
                         children: [
                           Expanded(
@@ -598,6 +607,14 @@ class _HomePageContentState extends State<HomePageContent> {
             ),
 
             verticalMargin16,
+            if (_isBannerAdLoaded)
+              Container(
+                height: 50,
+                width: double.infinity,
+                alignment: Alignment.center,
+                margin: const EdgeInsets.only(bottom: 16),
+                child: AdWidget(ad: banner),
+              ),
             HowItWorksSection(),
             verticalMargin32,
           ],
