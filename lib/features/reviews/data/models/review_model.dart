@@ -20,7 +20,7 @@ class ReviewModel extends Review {
       id: json['id'] ?? 0,
       userName: json['user_name'] ?? 'Unknown User',
       userImage: json['user_image'] ??
-          'http://public.test/assets/img/default.png',
+          'https://growfirst.org/assets/img/default.png',
       rating: json['rating']?.toString() ?? '0',
       description: json['description'] ?? '',
       time: json['time'] ?? '',
