@@ -23,10 +23,10 @@ subprojects {
     configurations.all {
         resolutionStrategy.eachDependency {
             if (requested.group == "com.razorpay" && requested.name == "checkout") {
-                useVersion("1.6.40")
+                useVersion("1.6.41")
             }
-            if (requested.group == "com.razorpay" && requested.name == "core") {
-                useVersion("1.0.4")
+            if (requested.group == "com.razorpay" && requested.name == "standard-core") {
+                useVersion("1.7.4")
             }
         }
     }

@@ -245,6 +245,9 @@ class __CustomerSelectDataAndTimeForBookingPageContentState
             },
           );
         },
+        onPressedTwo: () {
+          context.pop(); // This takes the user to the previous screen
+        },
       ),
     );
   }

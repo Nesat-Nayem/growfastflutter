@@ -370,6 +370,9 @@ class _CustomerBookingAddPersonalInformationState
                       city: selectedLocation?.city.toString() ?? "1",
                     )));
                   },
+                  onPressedTwo: () {
+                    context.pop(); // This takes the user to the previous screen
+                  },
                 ),
         );
       },

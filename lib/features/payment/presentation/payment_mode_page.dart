@@ -276,13 +276,13 @@ class _PaymentModePageState extends State<PaymentModePage> {
         'contact': cart['cart_adresses']?[0]?['phone'] ?? '',
         'email': cart['cart_adresses']?[0]?['email'] ?? '',
       },
-      'config': {
-        'display': {
-          'hide': [
-            {'method': 'sdk_compatibility_check'}
-          ]
-        }
-      },
+      // 'config': {
+      //   'display': {
+      //     'hide': [
+      //       {'method': 'sdk_compatibility_check'}
+      //     ]
+      //   }
+      // },
     };
 
     try {
@@ -603,6 +603,9 @@ class _PaymentModePageState extends State<PaymentModePage> {
                     title2: "Back to Cart",
                     showIcon: false,
                     onPressedOne: () => _startPayment(totalAmount),
+                    onPressedTwo: () {
+                      context.pop(); // This takes the user to the previous screen
+                    }
                   ),
           );
         },

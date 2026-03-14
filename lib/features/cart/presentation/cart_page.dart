@@ -212,6 +212,9 @@ class _CartPageState extends State<CartPage> {
                 );
               }
             : null,
+        onPressedTwo: () {
+                 context.pop(); // This takes the user to the previous screen
+                    },
       ),
     );
   }

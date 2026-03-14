@@ -13,7 +13,7 @@ class AddReviewPopup extends StatefulWidget {
 
   @override
   State<AddReviewPopup> createState() => _AddReviewPopupState();
-}
+} 
 
 class _AddReviewPopupState extends State<AddReviewPopup> {
   int rating = 0;
@@ -64,16 +64,34 @@ class _AddReviewPopupState extends State<AddReviewPopup> {
                 _field("Write Your Review", detailsCtrl, maxLines: 3),
 
                 const SizedBox(height: 20),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(color: Colors.black45),
-                      ),
-                    ),
+                   Container(
+  height: 38,
+  decoration: BoxDecoration(
+    color: Colors.grey[500],
+    borderRadius: BorderRadius.circular(8),
+  ),
+  child: TextButton(
+    onPressed: () => Navigator.pop(context),
+    style: TextButton.styleFrom(
+      padding: EdgeInsets.zero, // Ensures text stays centered in small height
+      minimumSize: const Size(0, 38),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    ),
+    child: const Text(
+      "   Cancel   ",
+      style: TextStyle(
+        color: Color.fromARGB(115, 0, 0, 0),
+        fontWeight: FontWeight.w500,
+        fontSize: 12
+      ),
+    ),
+  ),
+),
+                    
                     SizedBox(width: 5),
                     GradientButton(
                       borderRadius: 7,

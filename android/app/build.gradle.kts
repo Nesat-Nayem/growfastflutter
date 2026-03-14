@@ -3,12 +3,9 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 // Load signing properties
@@ -21,7 +18,14 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.grow_first.app.grow_first"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.2.13676358"
+
+    packaging {
+    jniLibs {
+        useLegacyPackaging = true
+    }
+    }
+
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -60,7 +64,9 @@ android {
 }
 
 dependencies {
-    implementation("com.razorpay:checkout:1.6.40")
+    implementation("com.razorpay:checkout:1.6.41")
+    implementation("com.razorpay:standard-core:1.7.4")
+
 }
 
 flutter {
