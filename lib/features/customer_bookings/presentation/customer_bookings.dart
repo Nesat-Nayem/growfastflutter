@@ -140,8 +140,9 @@ class _CustomerBookingsPageState extends State<CustomerBookingsPage> {
                   padding: horizontalPadding16 + verticalPadding16,
                   itemBuilder: (context, index) {
                     final booking = state.bookings[index];
-                    return InkWell(
-                      child: CustomerBookingCard(booking: booking),
+                    return CustomerBookingCard(
+                      booking: booking,
+                      onRefresh: _onRefresh,
                     );
                   },
                   separatorBuilder: (context, index) => verticalMargin12,
