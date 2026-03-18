@@ -26,19 +26,8 @@ class VendorUploadKycPage extends StatefulWidget {
 class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
   final ImagePicker _picker = ImagePicker();
   
-  // For India
   File? aadharFile;
   File? panFile;
-  
-  // For other countries
-  File? passportFile;
-  final TextEditingController nationalIdController = TextEditingController();
-
-  @override
-  void dispose() {
-    nationalIdController.dispose();
-    super.dispose();
-  }
 
   bool get isIndianVendor {
     final selectedCountryId = sl<VendorBloc>().state.selectedCountryId;
@@ -62,38 +51,27 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
           case 'pan':
             panFile = File(image.path);
             break;
-          case 'passport':
-            passportFile = File(image.path);
-            break;
         }
       });
     }
   }
 
   void _submitKyc() {
-    if (isIndianVendor) {
-      // For India: require at least Aadhar or PAN
-      if (aadharFile == null && panFile == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please upload Aadhar or PAN card'), backgroundColor: Colors.red),
-        );
-        return;
-      }
-    } else {
-      // For other countries: require passport or national ID
-      if (passportFile == null && nationalIdController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please upload Passport or enter National ID'), backgroundColor: Colors.red),
-        );
-        return;
-      }
+    if (aadharFile == null && panFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isIndianVendor
+              ? 'Please upload Aadhar or PAN card'
+              : 'Please upload Passport or National ID card'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
 
     final request = KycUploadRequest(
       aadhar: aadharFile,
       pan: panFile,
-      passport: passportFile,
-      idCard: nationalIdController.text.trim().isEmpty ? null : nationalIdController.text.trim(),
     );
 
     sl<VendorBloc>().add(UploadKyc(request));
@@ -209,12 +187,18 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
         _buildUploadCard(
           "Passport",
           "Upload your passport",
-          passportFile,
-          () => _pickImage('passport'),
-          () => setState(() => passportFile = null),
+          aadharFile,
+          () => _pickImage('aadhar'),
+          () => setState(() => aadharFile = null),
         ),
         verticalMargin16,
-        _buildNationalIdField(),
+        _buildUploadCard(
+          "National ID Card",
+          "Upload your national ID card",
+          panFile,
+          () => _pickImage('pan'),
+          () => setState(() => panFile = null),
+        ),
         verticalMargin24,
       ],
     );
@@ -302,31 +286,4 @@ class _VendorUploadKycPageState extends State<VendorUploadKycPage> {
     );
   }
 
-  Widget _buildNationalIdField() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("National ID Card", style: context.labelLarge.copyWith(fontWeight: FontWeight.w600, letterSpacing: 1)),
-          const SizedBox(height: 6),
-          Text("Enter your national ID card number", style: context.labelMedium.copyWith(fontWeight: FontWeight.w500, letterSpacing: 1, color: shipGreyColor1)),
-          const SizedBox(height: 16),
-          TextField(
-            controller: nationalIdController,
-            decoration: InputDecoration(
-              hintText: "Enter National ID number",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

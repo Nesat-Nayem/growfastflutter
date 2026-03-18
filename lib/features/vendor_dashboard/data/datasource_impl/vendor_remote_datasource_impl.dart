@@ -162,17 +162,6 @@ class VendorRemoteDatasourceImpl implements VendorRemoteDatasource {
       ));
     }
 
-    if (request.passport != null) {
-      formData.files.add(MapEntry(
-        'passport',
-        await MultipartFile.fromFile(request.passport!.path, filename: 'passport.jpg'),
-      ));
-    }
-
-    if (request.idCard != null) {
-      formData.fields.add(MapEntry('id_card', request.idCard!));
-    }
-
     final response = await dio.post(
       'vendor/register/uploadKyc',
       data: formData,

@@ -3,14 +3,10 @@ import 'dart:io';
 class KycUploadRequest {
   final File? aadhar;
   final File? pan;
-  final File? passport;
-  final String? idCard;
 
   KycUploadRequest({
     this.aadhar,
     this.pan,
-    this.passport,
-    this.idCard,
   });
 }
 
