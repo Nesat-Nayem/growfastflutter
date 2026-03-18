@@ -13,6 +13,7 @@ import 'app/di/app_injections.dart';
 import 'app/router/app_router.dart';
 import 'core/config/app_config.dart';
 import 'core/app_store/app_store.dart';
+import 'core/utils/responsive_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,6 +87,8 @@ class _GrowFirstAppState extends State<GrowFirstApp> {
             theme: ApplicationTheme.getAppThemeData(),
             debugShowCheckedModeBanner: false,
             routerConfig: _router,
+            builder: (context, child) =>
+                ResponsiveWrapper(child: child ?? const SizedBox.shrink()),
           );
         },
       ),

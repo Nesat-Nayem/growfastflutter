@@ -232,7 +232,7 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,7 +422,7 @@ class _ModernCustomerDrawerState extends State<ModernCustomerDrawer> {
               color: Colors.red,
             ),
 
-            const Spacer(),
+            const SizedBox(height: 24),
           ],
         ),
       ),
